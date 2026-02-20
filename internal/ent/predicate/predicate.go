@@ -6,8 +6,20 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Address is the predicate function for address builders.
+type Address func(*sql.Selector)
+
+// City is the predicate function for city builders.
+type City func(*sql.Selector)
+
+// Commune is the predicate function for commune builders.
+type Commune func(*sql.Selector)
+
 // RefreshToken is the predicate function for refreshtoken builders.
 type RefreshToken func(*sql.Selector)
+
+// Region is the predicate function for region builders.
+type Region func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

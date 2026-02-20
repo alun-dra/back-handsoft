@@ -28,6 +28,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeRefreshTokens holds the string denoting the refresh_tokens edge name in mutations.
 	EdgeRefreshTokens = "refresh_tokens"
+	// EdgeAddresses holds the string denoting the addresses edge name in mutations.
+	EdgeAddresses = "addresses"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// RefreshTokensTable is the table that holds the refresh_tokens relation/edge.
@@ -37,6 +39,13 @@ const (
 	RefreshTokensInverseTable = "refresh_tokens"
 	// RefreshTokensColumn is the table column denoting the refresh_tokens relation/edge.
 	RefreshTokensColumn = "user_refresh_tokens"
+	// AddressesTable is the table that holds the addresses relation/edge.
+	AddressesTable = "addresses"
+	// AddressesInverseTable is the table name for the Address entity.
+	// It exists in this package in order to avoid circular dependency with the "address" package.
+	AddressesInverseTable = "addresses"
+	// AddressesColumn is the table column denoting the addresses relation/edge.
+	AddressesColumn = "user_addresses"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -130,10 +139,31 @@ func ByRefreshTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRefreshTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAddressesCount orders the results by addresses count.
+func ByAddressesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAddressesStep(), opts...)
+	}
+}
+
+// ByAddresses orders the results by addresses terms.
+func ByAddresses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAddressesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRefreshTokensStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RefreshTokensInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RefreshTokensTable, RefreshTokensColumn),
+	)
+}
+func newAddressesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AddressesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AddressesTable, AddressesColumn),
 	)
 }

@@ -3,7 +3,11 @@
 package ent
 
 import (
+	"back/internal/ent/address"
+	"back/internal/ent/city"
+	"back/internal/ent/commune"
 	"back/internal/ent/refreshtoken"
+	"back/internal/ent/region"
 	"back/internal/ent/schema"
 	"back/internal/ent/user"
 	"time"
@@ -13,6 +17,58 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	addressFields := schema.Address{}.Fields()
+	_ = addressFields
+	// addressDescStreet is the schema descriptor for street field.
+	addressDescStreet := addressFields[0].Descriptor()
+	// address.StreetValidator is a validator for the "street" field. It is called by the builders before save.
+	address.StreetValidator = addressDescStreet.Validators[0].(func(string) error)
+	// addressDescNumber is the schema descriptor for number field.
+	addressDescNumber := addressFields[1].Descriptor()
+	// address.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	address.NumberValidator = addressDescNumber.Validators[0].(func(string) error)
+	// addressDescCreatedAt is the schema descriptor for created_at field.
+	addressDescCreatedAt := addressFields[3].Descriptor()
+	// address.DefaultCreatedAt holds the default value on creation for the created_at field.
+	address.DefaultCreatedAt = addressDescCreatedAt.Default.(func() time.Time)
+	// addressDescUpdatedAt is the schema descriptor for updated_at field.
+	addressDescUpdatedAt := addressFields[4].Descriptor()
+	// address.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	address.DefaultUpdatedAt = addressDescUpdatedAt.Default.(func() time.Time)
+	// address.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	address.UpdateDefaultUpdatedAt = addressDescUpdatedAt.UpdateDefault.(func() time.Time)
+	cityFields := schema.City{}.Fields()
+	_ = cityFields
+	// cityDescName is the schema descriptor for name field.
+	cityDescName := cityFields[0].Descriptor()
+	// city.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	city.NameValidator = cityDescName.Validators[0].(func(string) error)
+	// cityDescCreatedAt is the schema descriptor for created_at field.
+	cityDescCreatedAt := cityFields[1].Descriptor()
+	// city.DefaultCreatedAt holds the default value on creation for the created_at field.
+	city.DefaultCreatedAt = cityDescCreatedAt.Default.(func() time.Time)
+	// cityDescUpdatedAt is the schema descriptor for updated_at field.
+	cityDescUpdatedAt := cityFields[2].Descriptor()
+	// city.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	city.DefaultUpdatedAt = cityDescUpdatedAt.Default.(func() time.Time)
+	// city.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	city.UpdateDefaultUpdatedAt = cityDescUpdatedAt.UpdateDefault.(func() time.Time)
+	communeFields := schema.Commune{}.Fields()
+	_ = communeFields
+	// communeDescName is the schema descriptor for name field.
+	communeDescName := communeFields[0].Descriptor()
+	// commune.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	commune.NameValidator = communeDescName.Validators[0].(func(string) error)
+	// communeDescCreatedAt is the schema descriptor for created_at field.
+	communeDescCreatedAt := communeFields[1].Descriptor()
+	// commune.DefaultCreatedAt holds the default value on creation for the created_at field.
+	commune.DefaultCreatedAt = communeDescCreatedAt.Default.(func() time.Time)
+	// communeDescUpdatedAt is the schema descriptor for updated_at field.
+	communeDescUpdatedAt := communeFields[2].Descriptor()
+	// commune.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	commune.DefaultUpdatedAt = communeDescUpdatedAt.Default.(func() time.Time)
+	// commune.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	commune.UpdateDefaultUpdatedAt = communeDescUpdatedAt.UpdateDefault.(func() time.Time)
 	refreshtokenFields := schema.RefreshToken{}.Fields()
 	_ = refreshtokenFields
 	// refreshtokenDescTokenHash is the schema descriptor for token_hash field.
@@ -23,6 +79,30 @@ func init() {
 	refreshtokenDescCreatedAt := refreshtokenFields[3].Descriptor()
 	// refreshtoken.DefaultCreatedAt holds the default value on creation for the created_at field.
 	refreshtoken.DefaultCreatedAt = refreshtokenDescCreatedAt.Default.(func() time.Time)
+	regionFields := schema.Region{}.Fields()
+	_ = regionFields
+	// regionDescCountryID is the schema descriptor for country_id field.
+	regionDescCountryID := regionFields[0].Descriptor()
+	// region.CountryIDValidator is a validator for the "country_id" field. It is called by the builders before save.
+	region.CountryIDValidator = regionDescCountryID.Validators[0].(func(int) error)
+	// regionDescName is the schema descriptor for name field.
+	regionDescName := regionFields[1].Descriptor()
+	// region.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	region.NameValidator = regionDescName.Validators[0].(func(string) error)
+	// regionDescCode is the schema descriptor for code field.
+	regionDescCode := regionFields[2].Descriptor()
+	// region.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	region.CodeValidator = regionDescCode.Validators[0].(func(string) error)
+	// regionDescCreatedAt is the schema descriptor for created_at field.
+	regionDescCreatedAt := regionFields[3].Descriptor()
+	// region.DefaultCreatedAt holds the default value on creation for the created_at field.
+	region.DefaultCreatedAt = regionDescCreatedAt.Default.(func() time.Time)
+	// regionDescUpdatedAt is the schema descriptor for updated_at field.
+	regionDescUpdatedAt := regionFields[4].Descriptor()
+	// region.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	region.DefaultUpdatedAt = regionDescUpdatedAt.Default.(func() time.Time)
+	// region.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	region.UpdateDefaultUpdatedAt = regionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescUsername is the schema descriptor for username field.

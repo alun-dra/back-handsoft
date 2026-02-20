@@ -39,9 +39,11 @@ type User struct {
 type UserEdges struct {
 	// RefreshTokens holds the value of the refresh_tokens edge.
 	RefreshTokens []*RefreshToken `json:"refresh_tokens,omitempty"`
+	// Addresses holds the value of the addresses edge.
+	Addresses []*Address `json:"addresses,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // RefreshTokensOrErr returns the RefreshTokens value or an error if the edge
@@ -51,6 +53,15 @@ func (e UserEdges) RefreshTokensOrErr() ([]*RefreshToken, error) {
 		return e.RefreshTokens, nil
 	}
 	return nil, &NotLoadedError{edge: "refresh_tokens"}
+}
+
+// AddressesOrErr returns the Addresses value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AddressesOrErr() ([]*Address, error) {
+	if e.loadedTypes[1] {
+		return e.Addresses, nil
+	}
+	return nil, &NotLoadedError{edge: "addresses"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -139,6 +150,11 @@ func (_m *User) Value(name string) (ent.Value, error) {
 // QueryRefreshTokens queries the "refresh_tokens" edge of the User entity.
 func (_m *User) QueryRefreshTokens() *RefreshTokenQuery {
 	return NewUserClient(_m.config).QueryRefreshTokens(_m)
+}
+
+// QueryAddresses queries the "addresses" edge of the User entity.
+func (_m *User) QueryAddresses() *AddressQuery {
+	return NewUserClient(_m.config).QueryAddresses(_m)
 }
 
 // Update returns a builder for updating this User.

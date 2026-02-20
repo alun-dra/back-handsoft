@@ -393,6 +393,29 @@ func HasRefreshTokensWith(preds ...predicate.RefreshToken) predicate.User {
 	})
 }
 
+// HasAddresses applies the HasEdge predicate on the "addresses" edge.
+func HasAddresses() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AddressesTable, AddressesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAddressesWith applies the HasEdge predicate on the "addresses" edge with a given conditions (other predicates).
+func HasAddressesWith(preds ...predicate.Address) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAddressesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

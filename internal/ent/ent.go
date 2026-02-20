@@ -3,7 +3,11 @@
 package ent
 
 import (
+	"back/internal/ent/address"
+	"back/internal/ent/city"
+	"back/internal/ent/commune"
 	"back/internal/ent/refreshtoken"
+	"back/internal/ent/region"
 	"back/internal/ent/user"
 	"context"
 	"errors"
@@ -74,7 +78,11 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			address.Table:      address.ValidColumn,
+			city.Table:         city.ValidColumn,
+			commune.Table:      commune.ValidColumn,
 			refreshtoken.Table: refreshtoken.ValidColumn,
+			region.Table:       region.ValidColumn,
 			user.Table:         user.ValidColumn,
 		})
 	})

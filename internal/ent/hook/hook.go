@@ -8,6 +8,42 @@ import (
 	"fmt"
 )
 
+// The AddressFunc type is an adapter to allow the use of ordinary
+// function as Address mutator.
+type AddressFunc func(context.Context, *ent.AddressMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AddressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AddressMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AddressMutation", m)
+}
+
+// The CityFunc type is an adapter to allow the use of ordinary
+// function as City mutator.
+type CityFunc func(context.Context, *ent.CityMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CityMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CityMutation", m)
+}
+
+// The CommuneFunc type is an adapter to allow the use of ordinary
+// function as Commune mutator.
+type CommuneFunc func(context.Context, *ent.CommuneMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommuneFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CommuneMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommuneMutation", m)
+}
+
 // The RefreshTokenFunc type is an adapter to allow the use of ordinary
 // function as RefreshToken mutator.
 type RefreshTokenFunc func(context.Context, *ent.RefreshTokenMutation) (ent.Value, error)
@@ -18,6 +54,18 @@ func (f RefreshTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RefreshTokenMutation", m)
+}
+
+// The RegionFunc type is an adapter to allow the use of ordinary
+// function as Region mutator.
+type RegionFunc func(context.Context, *ent.RegionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RegionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RegionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RegionMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary
