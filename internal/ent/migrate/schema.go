@@ -8,6 +8,95 @@ import (
 )
 
 var (
+	// AddressesColumns holds the columns for the "addresses" table.
+	AddressesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "street", Type: field.TypeString},
+		{Name: "number", Type: field.TypeString},
+		{Name: "apartment", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "commune_addresses", Type: field.TypeInt},
+		{Name: "user_addresses", Type: field.TypeInt},
+	}
+	// AddressesTable holds the schema information for the "addresses" table.
+	AddressesTable = &schema.Table{
+		Name:       "addresses",
+		Columns:    AddressesColumns,
+		PrimaryKey: []*schema.Column{AddressesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "addresses_communes_addresses",
+				Columns:    []*schema.Column{AddressesColumns[6]},
+				RefColumns: []*schema.Column{CommunesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "addresses_users_addresses",
+				Columns:    []*schema.Column{AddressesColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// CitiesColumns holds the columns for the "cities" table.
+	CitiesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "region_cities", Type: field.TypeInt},
+	}
+	// CitiesTable holds the schema information for the "cities" table.
+	CitiesTable = &schema.Table{
+		Name:       "cities",
+		Columns:    CitiesColumns,
+		PrimaryKey: []*schema.Column{CitiesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "cities_regions_cities",
+				Columns:    []*schema.Column{CitiesColumns[4]},
+				RefColumns: []*schema.Column{RegionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "city_name_region_cities",
+				Unique:  true,
+				Columns: []*schema.Column{CitiesColumns[1], CitiesColumns[4]},
+			},
+		},
+	}
+	// CommunesColumns holds the columns for the "communes" table.
+	CommunesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "city_communes", Type: field.TypeInt},
+	}
+	// CommunesTable holds the schema information for the "communes" table.
+	CommunesTable = &schema.Table{
+		Name:       "communes",
+		Columns:    CommunesColumns,
+		PrimaryKey: []*schema.Column{CommunesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "communes_cities_communes",
+				Columns:    []*schema.Column{CommunesColumns[4]},
+				RefColumns: []*schema.Column{CitiesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "commune_name_city_communes",
+				Unique:  true,
+				Columns: []*schema.Column{CommunesColumns[1], CommunesColumns[4]},
+			},
+		},
+	}
 	// RefreshTokensColumns holds the columns for the "refresh_tokens" table.
 	RefreshTokensColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -38,6 +127,28 @@ var (
 			},
 		},
 	}
+	// RegionsColumns holds the columns for the "regions" table.
+	RegionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "country_id", Type: field.TypeInt},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// RegionsTable holds the schema information for the "regions" table.
+	RegionsTable = &schema.Table{
+		Name:       "regions",
+		Columns:    RegionsColumns,
+		PrimaryKey: []*schema.Column{RegionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "region_code",
+				Unique:  true,
+				Columns: []*schema.Column{RegionsColumns[3]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -63,11 +174,19 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AddressesTable,
+		CitiesTable,
+		CommunesTable,
 		RefreshTokensTable,
+		RegionsTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	AddressesTable.ForeignKeys[0].RefTable = CommunesTable
+	AddressesTable.ForeignKeys[1].RefTable = UsersTable
+	CitiesTable.ForeignKeys[0].RefTable = RegionsTable
+	CommunesTable.ForeignKeys[0].RefTable = CitiesTable
 	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
 }
