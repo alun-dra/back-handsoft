@@ -12,6 +12,14 @@ import (
 	"back/internal/server"
 )
 
+// @title           Backend GO API
+// @version         1.0
+// @description     API REST del sistema
+// @BasePath        /
+// @schemes         http
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	_ = godotenv.Load()
 
