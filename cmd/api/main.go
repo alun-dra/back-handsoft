@@ -9,6 +9,7 @@ import (
 
 	"back/internal/config"
 	"back/internal/database"
+	_ "back/internal/docs"
 	"back/internal/server"
 )
 
@@ -47,6 +48,6 @@ func main() {
 
 	srv := server.New(cfg, client)
 
-	log.Println("🚀 Server escuchando en puerto:", cfg.Port)
+	log.Println("Server escuchando en puerto:", cfg.Port)
 	log.Fatal(srv.ListenAndServe())
 }
