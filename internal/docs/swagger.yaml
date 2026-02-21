@@ -1,0 +1,612 @@
+basePath: /
+definitions:
+  handlers.AddressResponse:
+    properties:
+      apartment:
+        example: 12B
+        type: string
+      city: {}
+      commune:
+        description: 'opcional: depende de tu service'
+      created_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      number:
+        example: "742"
+        type: string
+      region: {}
+      street:
+        example: Av. Siempre Viva
+        type: string
+      updated_at:
+        type: string
+    type: object
+  handlers.CityResponse:
+    properties:
+      id:
+        example: 13101
+        type: integer
+      name:
+        example: Santiago
+        type: string
+      region_id:
+        example: 13
+        type: integer
+    type: object
+  handlers.CommuneResponse:
+    properties:
+      city_id:
+        example: 13101
+        type: integer
+      id:
+        example: 13101
+        type: integer
+      name:
+        example: Santiago
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      message:
+        example: Unauthorized
+        type: string
+    type: object
+  handlers.MeAddress:
+    properties:
+      apartment:
+        example: 12B
+        type: string
+      city:
+        $ref: '#/definitions/handlers.MeCity'
+      commune:
+        $ref: '#/definitions/handlers.MeCommune'
+      created_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      number:
+        example: "742"
+        type: string
+      region:
+        $ref: '#/definitions/handlers.MeRegion'
+      street:
+        example: Av. Siempre Viva
+        type: string
+      updated_at:
+        type: string
+    type: object
+  handlers.MeCity:
+    properties:
+      id:
+        example: 13101
+        type: integer
+      name:
+        example: Santiago
+        type: string
+    type: object
+  handlers.MeCommune:
+    properties:
+      id:
+        example: 13101
+        type: integer
+      name:
+        example: Santiago
+        type: string
+    type: object
+  handlers.MeRegion:
+    properties:
+      code:
+        example: RM
+        type: string
+      id:
+        example: 13
+        type: integer
+      name:
+        example: Metropolitana
+        type: string
+    type: object
+  handlers.MeResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/handlers.MeAddress'
+        type: array
+      audience:
+        example:
+        - web
+        - ios
+        - android
+        items:
+          type: string
+        type: array
+      expires:
+        description: jwt.NumericDate en runtime
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      issuer:
+        example: dominio-api-development
+        type: string
+      role:
+        example: admin
+        type: string
+      username:
+        example: admin
+        type: string
+    type: object
+  handlers.NoContentResponse:
+    type: object
+  handlers.RegionResponse:
+    properties:
+      code:
+        example: RM
+        type: string
+      country_id:
+        example: 1
+        type: integer
+      id:
+        example: 13
+        type: integer
+      name:
+        example: Metropolitana
+        type: string
+    type: object
+  handlers.RegisterResponse:
+    properties:
+      id:
+        example: 1
+        type: integer
+      role:
+        example: admin
+        type: string
+      username:
+        example: admin
+        type: string
+    type: object
+  handlers.SessionsResponse:
+    properties:
+      count:
+        example: 2
+        type: integer
+      sessions:
+        description: si tienes DTO en tu service, lo tipamos
+        items: {}
+        type: array
+    type: object
+  handlers.TokenResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOi...
+        type: string
+      expires_at:
+        type: string
+      expires_in:
+        example: 3600
+        type: integer
+      refresh_expires_at:
+        type: string
+      refresh_token:
+        example: 441c5a...
+        type: string
+      role:
+        example: admin
+        type: string
+      token_type:
+        example: Bearer
+        type: string
+      username:
+        example: admin
+        type: string
+    type: object
+  handlers.createAddressRequest:
+    properties:
+      apartment:
+        example: 12B
+        type: string
+      commune_id:
+        example: 10
+        type: integer
+      number:
+        example: "742"
+        type: string
+      street:
+        example: Av. Siempre Viva
+        type: string
+    type: object
+  handlers.loginRequest:
+    properties:
+      password:
+        example: admin123
+        type: string
+      username:
+        example: admin
+        type: string
+    type: object
+  handlers.logoutRequest:
+    properties:
+      refresh_token:
+        example: 441c5a...
+        type: string
+    type: object
+  handlers.refreshRequest:
+    properties:
+      refresh_token:
+        example: 441c5a...
+        type: string
+    type: object
+  handlers.registerRequest:
+    properties:
+      password:
+        example: admin123
+        type: string
+      role:
+        example: admin
+        type: string
+      username:
+        example: admin
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API REST del sistema
+  title: Backend GO API
+  version: "1.0"
+paths:
+  /api/v1/addresses:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar direcciones del usuario
+      tags:
+      - Addresses
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dirección
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear dirección para el usuario autenticado
+      tags:
+      - Addresses
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Retorna access_token y refresh_token
+      parameters:
+      - description: Credenciales
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Login
+      tags:
+      - Auth
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revoca el refresh_token actual (cierra sesión actual)
+      parameters:
+      - description: Refresh token a revocar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.logoutRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/handlers.NoContentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Logout
+      tags:
+      - Auth
+  /api/v1/auth/logout-all:
+    post:
+      description: Revoca todos los refresh_tokens activos del usuario
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/handlers.NoContentResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout de todos los dispositivos
+      tags:
+      - Auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Rota refresh_token y entrega un nuevo access_token + refresh_token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.refreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Refresh token
+      tags:
+      - Auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Crea un usuario nuevo. Requiere rol admin.
+      parameters:
+      - description: Datos de registro
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Registrar usuario
+      tags:
+      - Auth
+  /api/v1/auth/sessions:
+    get:
+      description: Lista sesiones activas (refresh tokens no revocados) del usuario
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.SessionsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Sesiones activas
+      tags:
+      - Auth
+  /api/v1/cities/{id}/communes:
+    get:
+      parameters:
+      - description: City ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.CommuneResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Listar comunas por ciudad
+      tags:
+      - Location
+  /api/v1/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.MeResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Perfil del usuario autenticado
+      tags:
+      - Auth
+  /api/v1/regions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.RegionResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Listar regiones
+      tags:
+      - Location
+  /api/v1/regions/{id}/cities:
+    get:
+      parameters:
+      - description: Region ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.CityResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Listar ciudades por región
+      tags:
+      - Location
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

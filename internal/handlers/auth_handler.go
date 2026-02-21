@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"back/internal/config"
+	"back/internal/ent"
+	"back/internal/ent/user"
 	"back/internal/middleware"
 	"back/internal/services"
 )
@@ -26,28 +28,107 @@ func NewAuthHandler(cfg *config.Config, users *services.UsersService, tokens *se
    ========================= */
 
 type registerRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	Username string `json:"username" example:"admin"`
+	Password string `json:"password" example:"admin123"`
+	Role     string `json:"role" example:"admin"`
 }
 
 type loginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" example:"admin"`
+	Password string `json:"password" example:"admin123"`
 }
 
 type refreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token" example:"441c5a..."`
 }
 
 type logoutRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token" example:"441c5a..."`
+}
+
+/* =========================
+   RESPONSES (Swagger)
+   ========================= */
+
+type RegisterResponse struct {
+	ID       int    `json:"id" example:"1"`
+	Username string `json:"username" example:"admin"`
+	Role     string `json:"role" example:"admin"`
+}
+
+type TokenResponse struct {
+	AccessToken      string    `json:"access_token" example:"eyJhbGciOi..."`
+	TokenType        string    `json:"token_type" example:"Bearer"`
+	ExpiresIn        int       `json:"expires_in" example:"3600"`
+	ExpiresAt        time.Time `json:"expires_at"`
+	RefreshToken     string    `json:"refresh_token" example:"441c5a..."`
+	RefreshExpiresAt time.Time `json:"refresh_expires_at"`
+	Role             string    `json:"role" example:"admin"`
+	Username         string    `json:"username" example:"admin"`
+}
+
+type MeRegion struct {
+	ID   int    `json:"id" example:"13"`
+	Name string `json:"name" example:"Metropolitana"`
+	Code string `json:"code" example:"RM"`
+}
+
+type MeCity struct {
+	ID   int    `json:"id" example:"13101"`
+	Name string `json:"name" example:"Santiago"`
+}
+
+type MeCommune struct {
+	ID   int    `json:"id" example:"13101"`
+	Name string `json:"name" example:"Santiago"`
+}
+
+type MeAddress struct {
+	ID        int        `json:"id" example:"1"`
+	Street    string     `json:"street" example:"Av. Siempre Viva"`
+	Number    string     `json:"number" example:"742"`
+	Apartment *string    `json:"apartment,omitempty" example:"12B"`
+	Commune   *MeCommune `json:"commune,omitempty"`
+	City      *MeCity    `json:"city,omitempty"`
+	Region    *MeRegion  `json:"region,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+}
+
+type MeResponse struct {
+	ID        int         `json:"id" example:"1"`
+	Username  string      `json:"username" example:"admin"`
+	Role      string      `json:"role" example:"admin"`
+	IsActive  bool        `json:"is_active" example:"true"`
+	Issuer    string      `json:"issuer" example:"dominio-api-development"`
+	Audience  []string    `json:"audience" example:"web,ios,android"`
+	Expires   any         `json:"expires"` // jwt.NumericDate en runtime
+	Addresses []MeAddress `json:"addresses"`
+}
+
+type SessionsResponse struct {
+	Count    int   `json:"count" example:"2"`
+	Sessions []any `json:"sessions"` // si tienes DTO en tu service, lo tipamos
 }
 
 /* =========================
    REGISTER (admin-only)
    ========================= */
 
+// Register godoc
+// @Summary      Registrar usuario
+// @Description  Crea un usuario nuevo. Requiere rol admin.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param  body  body  registerRequest  true  "Datos de registro"
+// @Success      201   {object}  RegisterResponse
+// @Failure      400   {object}  ErrorResponse
+// @Failure      401   {object}  ErrorResponse
+// @Failure      409   {object}  ErrorResponse
+// @Failure      500   {object}  ErrorResponse
+// @Router       /api/v1/auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -93,6 +174,18 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
    LOGIN (access + refresh)
    ========================= */
 
+// Login godoc
+// @Summary      Login
+// @Description  Retorna access_token y refresh_token
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param  body  body  loginRequest  true  "Credenciales"
+// @Success      200   {object}  TokenResponse
+// @Failure      400   {object}  ErrorResponse
+// @Failure      401   {object}  ErrorResponse
+// @Failure      500   {object}  ErrorResponse
+// @Router       /api/v1/auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -139,6 +232,18 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
    REFRESH (rotation)
    ========================= */
 
+// Refresh godoc
+// @Summary      Refresh token
+// @Description  Rota refresh_token y entrega un nuevo access_token + refresh_token
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param  body  body  refreshRequest  true  "Refresh token"
+// @Success      200   {object}  TokenResponse
+// @Failure      400   {object}  ErrorResponse
+// @Failure      401   {object}  ErrorResponse
+// @Failure      500   {object}  ErrorResponse
+// @Router       /api/v1/auth/refresh [post]
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -179,6 +284,15 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
    ME (protected)
    ========================= */
 
+// Me godoc
+// @Summary      Perfil del usuario autenticado
+// @Tags         Auth
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  MeResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /api/v1/me [get]
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -186,19 +300,79 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims, ok := middleware.GetClaims(r)
-	if !ok {
+	if !ok || claims.Subject == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	u, err := h.Users.Client.User.
+		Query().
+		Where(user.IDEQ(userID)).
+		WithAddresses(func(aq *ent.AddressQuery) {
+			aq.WithCommune(func(cq *ent.CommuneQuery) {
+				cq.WithCity(func(cyq *ent.CityQuery) {
+					cyq.WithRegion()
+				})
+			})
+		}).
+		Only(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	addresses := make([]map[string]any, 0, len(u.Edges.Addresses))
+	for _, a := range u.Edges.Addresses {
+		var commune any = nil
+		var city any = nil
+		var region any = nil
+
+		if a.Edges.Commune != nil {
+			c := a.Edges.Commune
+			commune = map[string]any{"id": c.ID, "name": c.Name}
+
+			if c.Edges.City != nil {
+				cy := c.Edges.City
+				city = map[string]any{"id": cy.ID, "name": cy.Name}
+
+				if cy.Edges.Region != nil {
+					rg := cy.Edges.Region
+					region = map[string]any{"id": rg.ID, "name": rg.Name, "code": rg.Code}
+				}
+			}
+		}
+
+		addresses = append(addresses, map[string]any{
+			"id":         a.ID,
+			"street":     a.Street,
+			"number":     a.Number,
+			"apartment":  a.Apartment,
+			"commune":    commune,
+			"city":       city,
+			"region":     region,
+			"created_at": a.CreatedAt,
+			"updated_at": a.UpdatedAt,
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"id":       claims.Subject,
-		"username": claims.Username,
-		"role":     claims.Role,
+		"id":        u.ID,
+		"username":  u.Username,
+		"role":      u.Role,
+		"is_active": u.IsActive,
+
 		"issuer":   claims.Issuer,
 		"audience": []string(claims.Audience),
 		"expires":  claims.ExpiresAt,
+
+		"addresses": addresses,
 	})
 }
 
@@ -206,6 +380,16 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
    LOGOUT (revoke current refresh)
    ========================= */
 
+// Logout godoc
+// @Summary      Logout
+// @Description  Revoca el refresh_token actual (cierra sesión actual)
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param  body  body  logoutRequest  true  "Refresh token a revocar"
+// @Success      204   {object}  NoContentResponse
+// @Failure      400   {object}  ErrorResponse
+// @Router       /api/v1/auth/logout [post]
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -218,9 +402,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Seguridad: respondemos 204 siempre, aunque el token no exista o ya esté revocado
 	_ = h.Tokens.Revoke(r.Context(), req.RefreshToken)
-
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -228,6 +410,16 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
    LOGOUT ALL (revoke all refresh for user)
    ========================= */
 
+// LogoutAll godoc
+// @Summary      Logout de todos los dispositivos
+// @Description  Revoca todos los refresh_tokens activos del usuario
+// @Tags         Auth
+// @Produce      json
+// @Security     BearerAuth
+// @Success      204  {object}  NoContentResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /api/v1/auth/logout-all [post]
 func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -254,6 +446,16 @@ func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// Sessions godoc
+// @Summary      Sesiones activas
+// @Description  Lista sesiones activas (refresh tokens no revocados) del usuario
+// @Tags         Auth
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  SessionsResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /api/v1/auth/sessions [get]
 func (h *AuthHandler) Sessions(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
