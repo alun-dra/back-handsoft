@@ -6,8 +6,20 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// AccessPoint is the predicate function for accesspoint builders.
+type AccessPoint func(*sql.Selector)
+
 // Address is the predicate function for address builders.
 type Address func(*sql.Selector)
+
+// AttendanceDay is the predicate function for attendanceday builders.
+type AttendanceDay func(*sql.Selector)
+
+// Branch is the predicate function for branch builders.
+type Branch func(*sql.Selector)
+
+// BranchAddress is the predicate function for branchaddress builders.
+type BranchAddress func(*sql.Selector)
 
 // City is the predicate function for city builders.
 type City func(*sql.Selector)
@@ -23,3 +35,9 @@ type Region func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// UserAccessPoint is the predicate function for useraccesspoint builders.
+type UserAccessPoint func(*sql.Selector)
+
+// UserBranch is the predicate function for userbranch builders.
+type UserBranch func(*sql.Selector)

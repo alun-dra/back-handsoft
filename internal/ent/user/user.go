@@ -30,6 +30,12 @@ const (
 	EdgeRefreshTokens = "refresh_tokens"
 	// EdgeAddresses holds the string denoting the addresses edge name in mutations.
 	EdgeAddresses = "addresses"
+	// EdgeUserBranches holds the string denoting the user_branches edge name in mutations.
+	EdgeUserBranches = "user_branches"
+	// EdgeUserAccessPoints holds the string denoting the user_access_points edge name in mutations.
+	EdgeUserAccessPoints = "user_access_points"
+	// EdgeAttendanceDays holds the string denoting the attendance_days edge name in mutations.
+	EdgeAttendanceDays = "attendance_days"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// RefreshTokensTable is the table that holds the refresh_tokens relation/edge.
@@ -46,6 +52,27 @@ const (
 	AddressesInverseTable = "addresses"
 	// AddressesColumn is the table column denoting the addresses relation/edge.
 	AddressesColumn = "user_addresses"
+	// UserBranchesTable is the table that holds the user_branches relation/edge.
+	UserBranchesTable = "user_branches"
+	// UserBranchesInverseTable is the table name for the UserBranch entity.
+	// It exists in this package in order to avoid circular dependency with the "userbranch" package.
+	UserBranchesInverseTable = "user_branches"
+	// UserBranchesColumn is the table column denoting the user_branches relation/edge.
+	UserBranchesColumn = "user_id"
+	// UserAccessPointsTable is the table that holds the user_access_points relation/edge.
+	UserAccessPointsTable = "user_access_points"
+	// UserAccessPointsInverseTable is the table name for the UserAccessPoint entity.
+	// It exists in this package in order to avoid circular dependency with the "useraccesspoint" package.
+	UserAccessPointsInverseTable = "user_access_points"
+	// UserAccessPointsColumn is the table column denoting the user_access_points relation/edge.
+	UserAccessPointsColumn = "user_id"
+	// AttendanceDaysTable is the table that holds the attendance_days relation/edge.
+	AttendanceDaysTable = "attendance_days"
+	// AttendanceDaysInverseTable is the table name for the AttendanceDay entity.
+	// It exists in this package in order to avoid circular dependency with the "attendanceday" package.
+	AttendanceDaysInverseTable = "attendance_days"
+	// AttendanceDaysColumn is the table column denoting the attendance_days relation/edge.
+	AttendanceDaysColumn = "user_attendance_days"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -153,6 +180,48 @@ func ByAddresses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAddressesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByUserBranchesCount orders the results by user_branches count.
+func ByUserBranchesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserBranchesStep(), opts...)
+	}
+}
+
+// ByUserBranches orders the results by user_branches terms.
+func ByUserBranches(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserBranchesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUserAccessPointsCount orders the results by user_access_points count.
+func ByUserAccessPointsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserAccessPointsStep(), opts...)
+	}
+}
+
+// ByUserAccessPoints orders the results by user_access_points terms.
+func ByUserAccessPoints(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserAccessPointsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAttendanceDaysCount orders the results by attendance_days count.
+func ByAttendanceDaysCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAttendanceDaysStep(), opts...)
+	}
+}
+
+// ByAttendanceDays orders the results by attendance_days terms.
+func ByAttendanceDays(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAttendanceDaysStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRefreshTokensStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -165,5 +234,26 @@ func newAddressesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AddressesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AddressesTable, AddressesColumn),
+	)
+}
+func newUserBranchesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserBranchesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserBranchesTable, UserBranchesColumn),
+	)
+}
+func newUserAccessPointsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserAccessPointsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserAccessPointsTable, UserAccessPointsColumn),
+	)
+}
+func newAttendanceDaysStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AttendanceDaysInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AttendanceDaysTable, AttendanceDaysColumn),
 	)
 }

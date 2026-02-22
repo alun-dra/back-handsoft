@@ -8,6 +8,18 @@ import (
 	"fmt"
 )
 
+// The AccessPointFunc type is an adapter to allow the use of ordinary
+// function as AccessPoint mutator.
+type AccessPointFunc func(context.Context, *ent.AccessPointMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AccessPointFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AccessPointMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccessPointMutation", m)
+}
+
 // The AddressFunc type is an adapter to allow the use of ordinary
 // function as Address mutator.
 type AddressFunc func(context.Context, *ent.AddressMutation) (ent.Value, error)
@@ -18,6 +30,42 @@ func (f AddressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AddressMutation", m)
+}
+
+// The AttendanceDayFunc type is an adapter to allow the use of ordinary
+// function as AttendanceDay mutator.
+type AttendanceDayFunc func(context.Context, *ent.AttendanceDayMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AttendanceDayFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AttendanceDayMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AttendanceDayMutation", m)
+}
+
+// The BranchFunc type is an adapter to allow the use of ordinary
+// function as Branch mutator.
+type BranchFunc func(context.Context, *ent.BranchMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BranchFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BranchMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BranchMutation", m)
+}
+
+// The BranchAddressFunc type is an adapter to allow the use of ordinary
+// function as BranchAddress mutator.
+type BranchAddressFunc func(context.Context, *ent.BranchAddressMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BranchAddressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BranchAddressMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BranchAddressMutation", m)
 }
 
 // The CityFunc type is an adapter to allow the use of ordinary
@@ -78,6 +126,30 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The UserAccessPointFunc type is an adapter to allow the use of ordinary
+// function as UserAccessPoint mutator.
+type UserAccessPointFunc func(context.Context, *ent.UserAccessPointMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserAccessPointFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserAccessPointMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserAccessPointMutation", m)
+}
+
+// The UserBranchFunc type is an adapter to allow the use of ordinary
+// function as UserBranch mutator.
+type UserBranchFunc func(context.Context, *ent.UserBranchMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserBranchFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserBranchMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserBranchMutation", m)
 }
 
 // Condition is a hook condition function.

@@ -3,13 +3,19 @@
 package ent
 
 import (
+	"back/internal/ent/accesspoint"
 	"back/internal/ent/address"
+	"back/internal/ent/attendanceday"
+	"back/internal/ent/branch"
+	"back/internal/ent/branchaddress"
 	"back/internal/ent/city"
 	"back/internal/ent/commune"
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/region"
 	"back/internal/ent/schema"
 	"back/internal/ent/user"
+	"back/internal/ent/useraccesspoint"
+	"back/internal/ent/userbranch"
 	"time"
 )
 
@@ -17,6 +23,16 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	accesspointFields := schema.AccessPoint{}.Fields()
+	_ = accesspointFields
+	// accesspointDescName is the schema descriptor for name field.
+	accesspointDescName := accesspointFields[1].Descriptor()
+	// accesspoint.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	accesspoint.NameValidator = accesspointDescName.Validators[0].(func(string) error)
+	// accesspointDescIsActive is the schema descriptor for is_active field.
+	accesspointDescIsActive := accesspointFields[2].Descriptor()
+	// accesspoint.DefaultIsActive holds the default value on creation for the is_active field.
+	accesspoint.DefaultIsActive = accesspointDescIsActive.Default.(bool)
 	addressFields := schema.Address{}.Fields()
 	_ = addressFields
 	// addressDescStreet is the schema descriptor for street field.
@@ -37,6 +53,38 @@ func init() {
 	address.DefaultUpdatedAt = addressDescUpdatedAt.Default.(func() time.Time)
 	// address.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	address.UpdateDefaultUpdatedAt = addressDescUpdatedAt.UpdateDefault.(func() time.Time)
+	attendancedayFields := schema.AttendanceDay{}.Fields()
+	_ = attendancedayFields
+	// attendancedayDescCreatedAt is the schema descriptor for created_at field.
+	attendancedayDescCreatedAt := attendancedayFields[8].Descriptor()
+	// attendanceday.DefaultCreatedAt holds the default value on creation for the created_at field.
+	attendanceday.DefaultCreatedAt = attendancedayDescCreatedAt.Default.(func() time.Time)
+	// attendancedayDescUpdatedAt is the schema descriptor for updated_at field.
+	attendancedayDescUpdatedAt := attendancedayFields[9].Descriptor()
+	// attendanceday.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	attendanceday.DefaultUpdatedAt = attendancedayDescUpdatedAt.Default.(func() time.Time)
+	// attendanceday.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	attendanceday.UpdateDefaultUpdatedAt = attendancedayDescUpdatedAt.UpdateDefault.(func() time.Time)
+	branchFields := schema.Branch{}.Fields()
+	_ = branchFields
+	// branchDescName is the schema descriptor for name field.
+	branchDescName := branchFields[0].Descriptor()
+	// branch.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	branch.NameValidator = branchDescName.Validators[0].(func(string) error)
+	// branchDescIsActive is the schema descriptor for is_active field.
+	branchDescIsActive := branchFields[2].Descriptor()
+	// branch.DefaultIsActive holds the default value on creation for the is_active field.
+	branch.DefaultIsActive = branchDescIsActive.Default.(bool)
+	branchaddressFields := schema.BranchAddress{}.Fields()
+	_ = branchaddressFields
+	// branchaddressDescStreet is the schema descriptor for street field.
+	branchaddressDescStreet := branchaddressFields[2].Descriptor()
+	// branchaddress.StreetValidator is a validator for the "street" field. It is called by the builders before save.
+	branchaddress.StreetValidator = branchaddressDescStreet.Validators[0].(func(string) error)
+	// branchaddressDescNumber is the schema descriptor for number field.
+	branchaddressDescNumber := branchaddressFields[3].Descriptor()
+	// branchaddress.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	branchaddress.NumberValidator = branchaddressDescNumber.Validators[0].(func(string) error)
 	cityFields := schema.City{}.Fields()
 	_ = cityFields
 	// cityDescName is the schema descriptor for name field.
@@ -133,4 +181,20 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	useraccesspointFields := schema.UserAccessPoint{}.Fields()
+	_ = useraccesspointFields
+	// useraccesspointDescIsActive is the schema descriptor for is_active field.
+	useraccesspointDescIsActive := useraccesspointFields[2].Descriptor()
+	// useraccesspoint.DefaultIsActive holds the default value on creation for the is_active field.
+	useraccesspoint.DefaultIsActive = useraccesspointDescIsActive.Default.(bool)
+	// useraccesspointDescAssignedAt is the schema descriptor for assigned_at field.
+	useraccesspointDescAssignedAt := useraccesspointFields[3].Descriptor()
+	// useraccesspoint.DefaultAssignedAt holds the default value on creation for the assigned_at field.
+	useraccesspoint.DefaultAssignedAt = useraccesspointDescAssignedAt.Default.(func() time.Time)
+	userbranchFields := schema.UserBranch{}.Fields()
+	_ = userbranchFields
+	// userbranchDescIsActive is the schema descriptor for is_active field.
+	userbranchDescIsActive := userbranchFields[2].Descriptor()
+	// userbranch.DefaultIsActive holds the default value on creation for the is_active field.
+	userbranch.DefaultIsActive = userbranchDescIsActive.Default.(bool)
 }

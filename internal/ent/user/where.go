@@ -416,6 +416,75 @@ func HasAddressesWith(preds ...predicate.Address) predicate.User {
 	})
 }
 
+// HasUserBranches applies the HasEdge predicate on the "user_branches" edge.
+func HasUserBranches() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UserBranchesTable, UserBranchesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserBranchesWith applies the HasEdge predicate on the "user_branches" edge with a given conditions (other predicates).
+func HasUserBranchesWith(preds ...predicate.UserBranch) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newUserBranchesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUserAccessPoints applies the HasEdge predicate on the "user_access_points" edge.
+func HasUserAccessPoints() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UserAccessPointsTable, UserAccessPointsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserAccessPointsWith applies the HasEdge predicate on the "user_access_points" edge with a given conditions (other predicates).
+func HasUserAccessPointsWith(preds ...predicate.UserAccessPoint) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newUserAccessPointsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAttendanceDays applies the HasEdge predicate on the "attendance_days" edge.
+func HasAttendanceDays() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AttendanceDaysTable, AttendanceDaysColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAttendanceDaysWith applies the HasEdge predicate on the "attendance_days" edge with a given conditions (other predicates).
+func HasAttendanceDaysWith(preds ...predicate.AttendanceDay) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAttendanceDaysStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

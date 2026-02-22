@@ -6,7 +6,6 @@ import (
 	"back/internal/ent/address"
 	"back/internal/ent/commune"
 	"back/internal/ent/user"
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -36,10 +35,6 @@ type Address struct {
 	commune_addresses *int
 	user_addresses    *int
 	selectValues      sql.SelectValues
-}
-
-func (_m *Address) Delete(ctx context.Context) error {
-	panic("unimplemented")
 }
 
 // AddressEdges holds the relations/edges for other nodes in the graph.

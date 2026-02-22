@@ -4,8 +4,11 @@ package ent
 
 import (
 	"back/internal/ent/address"
+	"back/internal/ent/attendanceday"
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/user"
+	"back/internal/ent/useraccesspoint"
+	"back/internal/ent/userbranch"
 	"context"
 	"errors"
 	"fmt"
@@ -118,6 +121,51 @@ func (_c *UserCreate) AddAddresses(v ...*Address) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddAddressIDs(ids...)
+}
+
+// AddUserBranchIDs adds the "user_branches" edge to the UserBranch entity by IDs.
+func (_c *UserCreate) AddUserBranchIDs(ids ...int) *UserCreate {
+	_c.mutation.AddUserBranchIDs(ids...)
+	return _c
+}
+
+// AddUserBranches adds the "user_branches" edges to the UserBranch entity.
+func (_c *UserCreate) AddUserBranches(v ...*UserBranch) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUserBranchIDs(ids...)
+}
+
+// AddUserAccessPointIDs adds the "user_access_points" edge to the UserAccessPoint entity by IDs.
+func (_c *UserCreate) AddUserAccessPointIDs(ids ...int) *UserCreate {
+	_c.mutation.AddUserAccessPointIDs(ids...)
+	return _c
+}
+
+// AddUserAccessPoints adds the "user_access_points" edges to the UserAccessPoint entity.
+func (_c *UserCreate) AddUserAccessPoints(v ...*UserAccessPoint) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUserAccessPointIDs(ids...)
+}
+
+// AddAttendanceDayIDs adds the "attendance_days" edge to the AttendanceDay entity by IDs.
+func (_c *UserCreate) AddAttendanceDayIDs(ids ...int) *UserCreate {
+	_c.mutation.AddAttendanceDayIDs(ids...)
+	return _c
+}
+
+// AddAttendanceDays adds the "attendance_days" edges to the AttendanceDay entity.
+func (_c *UserCreate) AddAttendanceDays(v ...*AttendanceDay) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAttendanceDayIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -283,6 +331,54 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(address.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UserBranchesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserBranchesTable,
+			Columns: []string{user.UserBranchesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userbranch.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UserAccessPointsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserAccessPointsTable,
+			Columns: []string{user.UserAccessPointsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(useraccesspoint.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AttendanceDaysIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AttendanceDaysTable,
+			Columns: []string{user.AttendanceDaysColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(attendanceday.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
