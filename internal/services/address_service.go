@@ -91,12 +91,20 @@ func (s *AddressService) UpdateForUser(ctx context.Context, userID, addressID in
 }
 
 func (s *AddressService) DeleteForUser(ctx context.Context, userID, addressID int) error {
-	// asegurar ownership + existencia
-	a, err := s.GetForUser(ctx, userID, addressID)
+	n, err := s.Client.Address.
+		Delete().
+		Where(
+			address.IDEQ(addressID),
+			address.HasUserWith(user.IDEQ(userID)),
+		).
+		Exec(ctx)
 	if err != nil {
 		return err
 	}
-	return a.Delete(ctx)
+	if n == 0 {
+		return &ent.NotFoundError{} // para que tu handler devuelva 404
+	}
+	return nil
 }
 
 func (s *AddressService) CreateForUser(ctx context.Context, userID int, in CreateAddressInput) (*ent.Address, error) {
