@@ -105,11 +105,21 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// =========================
 	// Protected routes (ADDRESSES)
 	// =========================
+
+	// /api/v1/addresses  (GET, POST)
 	protectedAddresses := middleware.Chain(
 		http.HandlerFunc(addressHandler.Addresses),
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/addresses", protectedAddresses)
+
+	// /api/v1/addresses/{id}  (PATCH, DELETE)
+	// IMPORTANTE: debe llevar slash final
+	protectedAddressByID := middleware.Chain(
+		http.HandlerFunc(addressHandler.AddressByID),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/addresses/", protectedAddressByID)
 
 	// =========================
 	// Global middlewares
