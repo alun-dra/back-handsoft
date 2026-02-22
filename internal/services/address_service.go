@@ -27,6 +27,78 @@ type CreateAddressInput struct {
 	Apartment *string
 }
 
+type UpdateAddressInput struct {
+	CommuneID *int
+	Street    *string
+	Number    *string
+	Apartment *string // si viene: actualiza; si viene "" => limpia
+}
+
+func (s *AddressService) GetForUser(ctx context.Context, userID, addressID int) (*ent.Address, error) {
+	return s.Client.Address.
+		Query().
+		Where(
+			address.IDEQ(addressID),
+			address.HasUserWith(user.IDEQ(userID)),
+		).
+		Only(ctx)
+}
+
+func (s *AddressService) UpdateForUser(ctx context.Context, userID, addressID int, in UpdateAddressInput) (*ent.Address, error) {
+	// 1) asegurar que existe y pertenece al usuario
+	a, err := s.GetForUser(ctx, userID, addressID)
+	if err != nil {
+		return nil, err // ent.NotFoundError -> handler devuelve 404
+	}
+
+	// 2) preparar update con validaciones
+	upd := a.Update()
+
+	if in.CommuneID != nil {
+		if *in.CommuneID <= 0 {
+			return nil, ErrAddressInvalidInput
+		}
+		upd.SetCommuneID(*in.CommuneID)
+	}
+
+	if in.Street != nil {
+		st := strings.TrimSpace(*in.Street)
+		if st == "" {
+			return nil, ErrAddressInvalidInput
+		}
+		upd.SetStreet(st)
+	}
+
+	if in.Number != nil {
+		num := strings.TrimSpace(*in.Number)
+		if num == "" {
+			return nil, ErrAddressInvalidInput
+		}
+		upd.SetNumber(num)
+	}
+
+	// Apartment: si viene nil => no tocar; si viene "" => limpiar
+	if in.Apartment != nil {
+		ap := strings.TrimSpace(*in.Apartment)
+		if ap == "" {
+			upd.ClearApartment()
+		} else {
+			upd.SetApartment(ap)
+		}
+	}
+
+	return upd.Save(ctx)
+}
+
+func (s *AddressService) DeleteForUser(ctx context.Context, userID, addressID int) error {
+	// asegurar ownership + existencia
+	a, err := s.GetForUser(ctx, userID, addressID)
+	if err != nil {
+		return err
+	}
+	return a.Delete(ctx)
+}
+
 func (s *AddressService) CreateForUser(ctx context.Context, userID int, in CreateAddressInput) (*ent.Address, error) {
 	in.Street = strings.TrimSpace(in.Street)
 	in.Number = strings.TrimSpace(in.Number)
