@@ -8,6 +8,34 @@ import (
 )
 
 var (
+	// AccessPointsColumns holds the columns for the "access_points" table.
+	AccessPointsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "branch_id", Type: field.TypeInt},
+	}
+	// AccessPointsTable holds the schema information for the "access_points" table.
+	AccessPointsTable = &schema.Table{
+		Name:       "access_points",
+		Columns:    AccessPointsColumns,
+		PrimaryKey: []*schema.Column{AccessPointsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "access_points_branches_access_points",
+				Columns:    []*schema.Column{AccessPointsColumns[3]},
+				RefColumns: []*schema.Column{BranchesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ux_accesspoint_branch_name",
+				Unique:  true,
+				Columns: []*schema.Column{AccessPointsColumns[3], AccessPointsColumns[1]},
+			},
+		},
+	}
 	// AddressesColumns holds the columns for the "addresses" table.
 	AddressesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -36,6 +64,124 @@ var (
 				Columns:    []*schema.Column{AddressesColumns[7]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// AttendanceDaysColumns holds the columns for the "attendance_days" table.
+	AttendanceDaysColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "work_date", Type: field.TypeTime},
+		{Name: "work_in_at", Type: field.TypeTime, Nullable: true},
+		{Name: "break_out_at", Type: field.TypeTime, Nullable: true},
+		{Name: "break_in_at", Type: field.TypeTime, Nullable: true},
+		{Name: "work_out_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "access_point_attendance_days", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "branch_id", Type: field.TypeInt},
+		{Name: "access_point_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_attendance_days", Type: field.TypeInt, Nullable: true},
+	}
+	// AttendanceDaysTable holds the schema information for the "attendance_days" table.
+	AttendanceDaysTable = &schema.Table{
+		Name:       "attendance_days",
+		Columns:    AttendanceDaysColumns,
+		PrimaryKey: []*schema.Column{AttendanceDaysColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "attendance_days_access_points_attendance_days",
+				Columns:    []*schema.Column{AttendanceDaysColumns[8]},
+				RefColumns: []*schema.Column{AccessPointsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "attendance_days_users_user",
+				Columns:    []*schema.Column{AttendanceDaysColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "attendance_days_branches_branch",
+				Columns:    []*schema.Column{AttendanceDaysColumns[10]},
+				RefColumns: []*schema.Column{BranchesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "attendance_days_access_points_access_point",
+				Columns:    []*schema.Column{AttendanceDaysColumns[11]},
+				RefColumns: []*schema.Column{AccessPointsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "attendance_days_users_attendance_days",
+				Columns:    []*schema.Column{AttendanceDaysColumns[12]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ux_attendance_day",
+				Unique:  true,
+				Columns: []*schema.Column{AttendanceDaysColumns[9], AttendanceDaysColumns[10], AttendanceDaysColumns[1]},
+			},
+		},
+	}
+	// BranchesColumns holds the columns for the "branches" table.
+	BranchesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+	}
+	// BranchesTable holds the schema information for the "branches" table.
+	BranchesTable = &schema.Table{
+		Name:       "branches",
+		Columns:    BranchesColumns,
+		PrimaryKey: []*schema.Column{BranchesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ux_branch_code",
+				Unique:  true,
+				Columns: []*schema.Column{BranchesColumns[2]},
+			},
+		},
+	}
+	// BranchAddressesColumns holds the columns for the "branch_addresses" table.
+	BranchAddressesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "street", Type: field.TypeString},
+		{Name: "number", Type: field.TypeString},
+		{Name: "apartment", Type: field.TypeString, Nullable: true},
+		{Name: "extra", Type: field.TypeString, Nullable: true},
+		{Name: "branch_id", Type: field.TypeInt, Unique: true},
+		{Name: "commune_id", Type: field.TypeInt},
+	}
+	// BranchAddressesTable holds the schema information for the "branch_addresses" table.
+	BranchAddressesTable = &schema.Table{
+		Name:       "branch_addresses",
+		Columns:    BranchAddressesColumns,
+		PrimaryKey: []*schema.Column{BranchAddressesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "branch_addresses_branches_address",
+				Columns:    []*schema.Column{BranchAddressesColumns[5]},
+				RefColumns: []*schema.Column{BranchesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "branch_addresses_communes_commune",
+				Columns:    []*schema.Column{BranchAddressesColumns[6]},
+				RefColumns: []*schema.Column{CommunesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ux_branch_address_branch_id",
+				Unique:  true,
+				Columns: []*schema.Column{BranchAddressesColumns[5]},
 			},
 		},
 	}
@@ -172,21 +318,110 @@ var (
 			},
 		},
 	}
+	// UserAccessPointsColumns holds the columns for the "user_access_points" table.
+	UserAccessPointsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "assigned_at", Type: field.TypeTime},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "access_point_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// UserAccessPointsTable holds the schema information for the "user_access_points" table.
+	UserAccessPointsTable = &schema.Table{
+		Name:       "user_access_points",
+		Columns:    UserAccessPointsColumns,
+		PrimaryKey: []*schema.Column{UserAccessPointsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_access_points_access_points_user_access_points",
+				Columns:    []*schema.Column{UserAccessPointsColumns[4]},
+				RefColumns: []*schema.Column{AccessPointsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "user_access_points_users_user_access_points",
+				Columns:    []*schema.Column{UserAccessPointsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ux_user_access_point",
+				Unique:  true,
+				Columns: []*schema.Column{UserAccessPointsColumns[5], UserAccessPointsColumns[4]},
+			},
+		},
+	}
+	// UserBranchesColumns holds the columns for the "user_branches" table.
+	UserBranchesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "role_in_branch", Type: field.TypeString, Nullable: true},
+		{Name: "branch_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// UserBranchesTable holds the schema information for the "user_branches" table.
+	UserBranchesTable = &schema.Table{
+		Name:       "user_branches",
+		Columns:    UserBranchesColumns,
+		PrimaryKey: []*schema.Column{UserBranchesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_branches_branches_user_branches",
+				Columns:    []*schema.Column{UserBranchesColumns[3]},
+				RefColumns: []*schema.Column{BranchesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "user_branches_users_user_branches",
+				Columns:    []*schema.Column{UserBranchesColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ux_user_branch",
+				Unique:  true,
+				Columns: []*schema.Column{UserBranchesColumns[4], UserBranchesColumns[3]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AccessPointsTable,
 		AddressesTable,
+		AttendanceDaysTable,
+		BranchesTable,
+		BranchAddressesTable,
 		CitiesTable,
 		CommunesTable,
 		RefreshTokensTable,
 		RegionsTable,
 		UsersTable,
+		UserAccessPointsTable,
+		UserBranchesTable,
 	}
 )
 
 func init() {
+	AccessPointsTable.ForeignKeys[0].RefTable = BranchesTable
 	AddressesTable.ForeignKeys[0].RefTable = CommunesTable
 	AddressesTable.ForeignKeys[1].RefTable = UsersTable
+	AttendanceDaysTable.ForeignKeys[0].RefTable = AccessPointsTable
+	AttendanceDaysTable.ForeignKeys[1].RefTable = UsersTable
+	AttendanceDaysTable.ForeignKeys[2].RefTable = BranchesTable
+	AttendanceDaysTable.ForeignKeys[3].RefTable = AccessPointsTable
+	AttendanceDaysTable.ForeignKeys[4].RefTable = UsersTable
+	BranchAddressesTable.ForeignKeys[0].RefTable = BranchesTable
+	BranchAddressesTable.ForeignKeys[1].RefTable = CommunesTable
 	CitiesTable.ForeignKeys[0].RefTable = RegionsTable
 	CommunesTable.ForeignKeys[0].RefTable = CitiesTable
 	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
+	UserAccessPointsTable.ForeignKeys[0].RefTable = AccessPointsTable
+	UserAccessPointsTable.ForeignKeys[1].RefTable = UsersTable
+	UserBranchesTable.ForeignKeys[0].RefTable = BranchesTable
+	UserBranchesTable.ForeignKeys[1].RefTable = UsersTable
 }

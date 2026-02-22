@@ -4,9 +4,12 @@ package ent
 
 import (
 	"back/internal/ent/address"
+	"back/internal/ent/attendanceday"
 	"back/internal/ent/predicate"
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/user"
+	"back/internal/ent/useraccesspoint"
+	"back/internal/ent/userbranch"
 	"context"
 	"database/sql/driver"
 	"fmt"
@@ -21,12 +24,15 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx               *QueryContext
-	order             []user.OrderOption
-	inters            []Interceptor
-	predicates        []predicate.User
-	withRefreshTokens *RefreshTokenQuery
-	withAddresses     *AddressQuery
+	ctx                  *QueryContext
+	order                []user.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.User
+	withRefreshTokens    *RefreshTokenQuery
+	withAddresses        *AddressQuery
+	withUserBranches     *UserBranchQuery
+	withUserAccessPoints *UserAccessPointQuery
+	withAttendanceDays   *AttendanceDayQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -100,6 +106,72 @@ func (_q *UserQuery) QueryAddresses() *AddressQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(address.Table, address.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AddressesTable, user.AddressesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserBranches chains the current query on the "user_branches" edge.
+func (_q *UserQuery) QueryUserBranches() *UserBranchQuery {
+	query := (&UserBranchClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userbranch.Table, userbranch.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserBranchesTable, user.UserBranchesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserAccessPoints chains the current query on the "user_access_points" edge.
+func (_q *UserQuery) QueryUserAccessPoints() *UserAccessPointQuery {
+	query := (&UserAccessPointClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(useraccesspoint.Table, useraccesspoint.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserAccessPointsTable, user.UserAccessPointsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAttendanceDays chains the current query on the "attendance_days" edge.
+func (_q *UserQuery) QueryAttendanceDays() *AttendanceDayQuery {
+	query := (&AttendanceDayClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(attendanceday.Table, attendanceday.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AttendanceDaysTable, user.AttendanceDaysColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -294,13 +366,16 @@ func (_q *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:            _q.config,
-		ctx:               _q.ctx.Clone(),
-		order:             append([]user.OrderOption{}, _q.order...),
-		inters:            append([]Interceptor{}, _q.inters...),
-		predicates:        append([]predicate.User{}, _q.predicates...),
-		withRefreshTokens: _q.withRefreshTokens.Clone(),
-		withAddresses:     _q.withAddresses.Clone(),
+		config:               _q.config,
+		ctx:                  _q.ctx.Clone(),
+		order:                append([]user.OrderOption{}, _q.order...),
+		inters:               append([]Interceptor{}, _q.inters...),
+		predicates:           append([]predicate.User{}, _q.predicates...),
+		withRefreshTokens:    _q.withRefreshTokens.Clone(),
+		withAddresses:        _q.withAddresses.Clone(),
+		withUserBranches:     _q.withUserBranches.Clone(),
+		withUserAccessPoints: _q.withUserAccessPoints.Clone(),
+		withAttendanceDays:   _q.withAttendanceDays.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -326,6 +401,39 @@ func (_q *UserQuery) WithAddresses(opts ...func(*AddressQuery)) *UserQuery {
 		opt(query)
 	}
 	_q.withAddresses = query
+	return _q
+}
+
+// WithUserBranches tells the query-builder to eager-load the nodes that are connected to
+// the "user_branches" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithUserBranches(opts ...func(*UserBranchQuery)) *UserQuery {
+	query := (&UserBranchClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUserBranches = query
+	return _q
+}
+
+// WithUserAccessPoints tells the query-builder to eager-load the nodes that are connected to
+// the "user_access_points" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithUserAccessPoints(opts ...func(*UserAccessPointQuery)) *UserQuery {
+	query := (&UserAccessPointClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUserAccessPoints = query
+	return _q
+}
+
+// WithAttendanceDays tells the query-builder to eager-load the nodes that are connected to
+// the "attendance_days" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithAttendanceDays(opts ...func(*AttendanceDayQuery)) *UserQuery {
+	query := (&AttendanceDayClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAttendanceDays = query
 	return _q
 }
 
@@ -407,9 +515,12 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [5]bool{
 			_q.withRefreshTokens != nil,
 			_q.withAddresses != nil,
+			_q.withUserBranches != nil,
+			_q.withUserAccessPoints != nil,
+			_q.withAttendanceDays != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -441,6 +552,27 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadAddresses(ctx, query, nodes,
 			func(n *User) { n.Edges.Addresses = []*Address{} },
 			func(n *User, e *Address) { n.Edges.Addresses = append(n.Edges.Addresses, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUserBranches; query != nil {
+		if err := _q.loadUserBranches(ctx, query, nodes,
+			func(n *User) { n.Edges.UserBranches = []*UserBranch{} },
+			func(n *User, e *UserBranch) { n.Edges.UserBranches = append(n.Edges.UserBranches, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUserAccessPoints; query != nil {
+		if err := _q.loadUserAccessPoints(ctx, query, nodes,
+			func(n *User) { n.Edges.UserAccessPoints = []*UserAccessPoint{} },
+			func(n *User, e *UserAccessPoint) { n.Edges.UserAccessPoints = append(n.Edges.UserAccessPoints, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAttendanceDays; query != nil {
+		if err := _q.loadAttendanceDays(ctx, query, nodes,
+			func(n *User) { n.Edges.AttendanceDays = []*AttendanceDay{} },
+			func(n *User, e *AttendanceDay) { n.Edges.AttendanceDays = append(n.Edges.AttendanceDays, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -504,6 +636,97 @@ func (_q *UserQuery) loadAddresses(ctx context.Context, query *AddressQuery, nod
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_addresses" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadUserBranches(ctx context.Context, query *UserBranchQuery, nodes []*User, init func(*User), assign func(*User, *UserBranch)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userbranch.FieldUserID)
+	}
+	query.Where(predicate.UserBranch(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UserBranchesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadUserAccessPoints(ctx context.Context, query *UserAccessPointQuery, nodes []*User, init func(*User), assign func(*User, *UserAccessPoint)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(useraccesspoint.FieldUserID)
+	}
+	query.Where(predicate.UserAccessPoint(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UserAccessPointsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadAttendanceDays(ctx context.Context, query *AttendanceDayQuery, nodes []*User, init func(*User), assign func(*User, *AttendanceDay)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.AttendanceDay(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AttendanceDaysColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_attendance_days
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_attendance_days" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_attendance_days" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

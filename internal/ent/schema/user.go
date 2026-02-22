@@ -39,9 +39,20 @@ func (User) Indexes() []ent.Index {
 		index.Fields("username").Unique(),
 	}
 }
+
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
+		// existentes
 		edge.To("refresh_tokens", RefreshToken.Type),
 		edge.To("addresses", Address.Type),
+
+		// NUEVOS: sucursales asignadas al usuario
+		edge.To("user_branches", UserBranch.Type),
+
+		// NUEVOS: entradas (access points) asignadas al usuario
+		edge.To("user_access_points", UserAccessPoint.Type),
+
+		// NUEVOS: marcaciones / asistencia por día
+		edge.To("attendance_days", AttendanceDay.Type),
 	}
 }

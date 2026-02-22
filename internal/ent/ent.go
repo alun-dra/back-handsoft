@@ -3,12 +3,18 @@
 package ent
 
 import (
+	"back/internal/ent/accesspoint"
 	"back/internal/ent/address"
+	"back/internal/ent/attendanceday"
+	"back/internal/ent/branch"
+	"back/internal/ent/branchaddress"
 	"back/internal/ent/city"
 	"back/internal/ent/commune"
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/region"
 	"back/internal/ent/user"
+	"back/internal/ent/useraccesspoint"
+	"back/internal/ent/userbranch"
 	"context"
 	"errors"
 	"fmt"
@@ -78,12 +84,18 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			address.Table:      address.ValidColumn,
-			city.Table:         city.ValidColumn,
-			commune.Table:      commune.ValidColumn,
-			refreshtoken.Table: refreshtoken.ValidColumn,
-			region.Table:       region.ValidColumn,
-			user.Table:         user.ValidColumn,
+			accesspoint.Table:     accesspoint.ValidColumn,
+			address.Table:         address.ValidColumn,
+			attendanceday.Table:   attendanceday.ValidColumn,
+			branch.Table:          branch.ValidColumn,
+			branchaddress.Table:   branchaddress.ValidColumn,
+			city.Table:            city.ValidColumn,
+			commune.Table:         commune.ValidColumn,
+			refreshtoken.Table:    refreshtoken.ValidColumn,
+			region.Table:          region.ValidColumn,
+			user.Table:            user.ValidColumn,
+			useraccesspoint.Table: useraccesspoint.ValidColumn,
+			userbranch.Table:      userbranch.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

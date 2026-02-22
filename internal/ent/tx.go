@@ -12,8 +12,16 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// AccessPoint is the client for interacting with the AccessPoint builders.
+	AccessPoint *AccessPointClient
 	// Address is the client for interacting with the Address builders.
 	Address *AddressClient
+	// AttendanceDay is the client for interacting with the AttendanceDay builders.
+	AttendanceDay *AttendanceDayClient
+	// Branch is the client for interacting with the Branch builders.
+	Branch *BranchClient
+	// BranchAddress is the client for interacting with the BranchAddress builders.
+	BranchAddress *BranchAddressClient
 	// City is the client for interacting with the City builders.
 	City *CityClient
 	// Commune is the client for interacting with the Commune builders.
@@ -24,6 +32,10 @@ type Tx struct {
 	Region *RegionClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserAccessPoint is the client for interacting with the UserAccessPoint builders.
+	UserAccessPoint *UserAccessPointClient
+	// UserBranch is the client for interacting with the UserBranch builders.
+	UserBranch *UserBranchClient
 
 	// lazily loaded.
 	client     *Client
@@ -155,12 +167,18 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.AccessPoint = NewAccessPointClient(tx.config)
 	tx.Address = NewAddressClient(tx.config)
+	tx.AttendanceDay = NewAttendanceDayClient(tx.config)
+	tx.Branch = NewBranchClient(tx.config)
+	tx.BranchAddress = NewBranchAddressClient(tx.config)
 	tx.City = NewCityClient(tx.config)
 	tx.Commune = NewCommuneClient(tx.config)
 	tx.RefreshToken = NewRefreshTokenClient(tx.config)
 	tx.Region = NewRegionClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.UserAccessPoint = NewUserAccessPointClient(tx.config)
+	tx.UserBranch = NewUserBranchClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -170,7 +188,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Address.QueryXXX(), the query will be executed
+// applies a query, for example: AccessPoint.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

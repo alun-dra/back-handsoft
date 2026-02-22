@@ -41,9 +41,15 @@ type UserEdges struct {
 	RefreshTokens []*RefreshToken `json:"refresh_tokens,omitempty"`
 	// Addresses holds the value of the addresses edge.
 	Addresses []*Address `json:"addresses,omitempty"`
+	// UserBranches holds the value of the user_branches edge.
+	UserBranches []*UserBranch `json:"user_branches,omitempty"`
+	// UserAccessPoints holds the value of the user_access_points edge.
+	UserAccessPoints []*UserAccessPoint `json:"user_access_points,omitempty"`
+	// AttendanceDays holds the value of the attendance_days edge.
+	AttendanceDays []*AttendanceDay `json:"attendance_days,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [5]bool
 }
 
 // RefreshTokensOrErr returns the RefreshTokens value or an error if the edge
@@ -62,6 +68,33 @@ func (e UserEdges) AddressesOrErr() ([]*Address, error) {
 		return e.Addresses, nil
 	}
 	return nil, &NotLoadedError{edge: "addresses"}
+}
+
+// UserBranchesOrErr returns the UserBranches value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UserBranchesOrErr() ([]*UserBranch, error) {
+	if e.loadedTypes[2] {
+		return e.UserBranches, nil
+	}
+	return nil, &NotLoadedError{edge: "user_branches"}
+}
+
+// UserAccessPointsOrErr returns the UserAccessPoints value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UserAccessPointsOrErr() ([]*UserAccessPoint, error) {
+	if e.loadedTypes[3] {
+		return e.UserAccessPoints, nil
+	}
+	return nil, &NotLoadedError{edge: "user_access_points"}
+}
+
+// AttendanceDaysOrErr returns the AttendanceDays value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AttendanceDaysOrErr() ([]*AttendanceDay, error) {
+	if e.loadedTypes[4] {
+		return e.AttendanceDays, nil
+	}
+	return nil, &NotLoadedError{edge: "attendance_days"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -155,6 +188,21 @@ func (_m *User) QueryRefreshTokens() *RefreshTokenQuery {
 // QueryAddresses queries the "addresses" edge of the User entity.
 func (_m *User) QueryAddresses() *AddressQuery {
 	return NewUserClient(_m.config).QueryAddresses(_m)
+}
+
+// QueryUserBranches queries the "user_branches" edge of the User entity.
+func (_m *User) QueryUserBranches() *UserBranchQuery {
+	return NewUserClient(_m.config).QueryUserBranches(_m)
+}
+
+// QueryUserAccessPoints queries the "user_access_points" edge of the User entity.
+func (_m *User) QueryUserAccessPoints() *UserAccessPointQuery {
+	return NewUserClient(_m.config).QueryUserAccessPoints(_m)
+}
+
+// QueryAttendanceDays queries the "attendance_days" edge of the User entity.
+func (_m *User) QueryAttendanceDays() *AttendanceDayQuery {
+	return NewUserClient(_m.config).QueryAttendanceDays(_m)
 }
 
 // Update returns a builder for updating this User.

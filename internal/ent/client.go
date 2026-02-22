@@ -11,12 +11,18 @@ import (
 
 	"back/internal/ent/migrate"
 
+	"back/internal/ent/accesspoint"
 	"back/internal/ent/address"
+	"back/internal/ent/attendanceday"
+	"back/internal/ent/branch"
+	"back/internal/ent/branchaddress"
 	"back/internal/ent/city"
 	"back/internal/ent/commune"
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/region"
 	"back/internal/ent/user"
+	"back/internal/ent/useraccesspoint"
+	"back/internal/ent/userbranch"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -29,8 +35,16 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// AccessPoint is the client for interacting with the AccessPoint builders.
+	AccessPoint *AccessPointClient
 	// Address is the client for interacting with the Address builders.
 	Address *AddressClient
+	// AttendanceDay is the client for interacting with the AttendanceDay builders.
+	AttendanceDay *AttendanceDayClient
+	// Branch is the client for interacting with the Branch builders.
+	Branch *BranchClient
+	// BranchAddress is the client for interacting with the BranchAddress builders.
+	BranchAddress *BranchAddressClient
 	// City is the client for interacting with the City builders.
 	City *CityClient
 	// Commune is the client for interacting with the Commune builders.
@@ -41,6 +55,10 @@ type Client struct {
 	Region *RegionClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserAccessPoint is the client for interacting with the UserAccessPoint builders.
+	UserAccessPoint *UserAccessPointClient
+	// UserBranch is the client for interacting with the UserBranch builders.
+	UserBranch *UserBranchClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -52,12 +70,18 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.AccessPoint = NewAccessPointClient(c.config)
 	c.Address = NewAddressClient(c.config)
+	c.AttendanceDay = NewAttendanceDayClient(c.config)
+	c.Branch = NewBranchClient(c.config)
+	c.BranchAddress = NewBranchAddressClient(c.config)
 	c.City = NewCityClient(c.config)
 	c.Commune = NewCommuneClient(c.config)
 	c.RefreshToken = NewRefreshTokenClient(c.config)
 	c.Region = NewRegionClient(c.config)
 	c.User = NewUserClient(c.config)
+	c.UserAccessPoint = NewUserAccessPointClient(c.config)
+	c.UserBranch = NewUserBranchClient(c.config)
 }
 
 type (
@@ -148,14 +172,20 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		Address:      NewAddressClient(cfg),
-		City:         NewCityClient(cfg),
-		Commune:      NewCommuneClient(cfg),
-		RefreshToken: NewRefreshTokenClient(cfg),
-		Region:       NewRegionClient(cfg),
-		User:         NewUserClient(cfg),
+		ctx:             ctx,
+		config:          cfg,
+		AccessPoint:     NewAccessPointClient(cfg),
+		Address:         NewAddressClient(cfg),
+		AttendanceDay:   NewAttendanceDayClient(cfg),
+		Branch:          NewBranchClient(cfg),
+		BranchAddress:   NewBranchAddressClient(cfg),
+		City:            NewCityClient(cfg),
+		Commune:         NewCommuneClient(cfg),
+		RefreshToken:    NewRefreshTokenClient(cfg),
+		Region:          NewRegionClient(cfg),
+		User:            NewUserClient(cfg),
+		UserAccessPoint: NewUserAccessPointClient(cfg),
+		UserBranch:      NewUserBranchClient(cfg),
 	}, nil
 }
 
@@ -173,21 +203,27 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		Address:      NewAddressClient(cfg),
-		City:         NewCityClient(cfg),
-		Commune:      NewCommuneClient(cfg),
-		RefreshToken: NewRefreshTokenClient(cfg),
-		Region:       NewRegionClient(cfg),
-		User:         NewUserClient(cfg),
+		ctx:             ctx,
+		config:          cfg,
+		AccessPoint:     NewAccessPointClient(cfg),
+		Address:         NewAddressClient(cfg),
+		AttendanceDay:   NewAttendanceDayClient(cfg),
+		Branch:          NewBranchClient(cfg),
+		BranchAddress:   NewBranchAddressClient(cfg),
+		City:            NewCityClient(cfg),
+		Commune:         NewCommuneClient(cfg),
+		RefreshToken:    NewRefreshTokenClient(cfg),
+		Region:          NewRegionClient(cfg),
+		User:            NewUserClient(cfg),
+		UserAccessPoint: NewUserAccessPointClient(cfg),
+		UserBranch:      NewUserBranchClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Address.
+//		AccessPoint.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -210,7 +246,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Address, c.City, c.Commune, c.RefreshToken, c.Region, c.User,
+		c.AccessPoint, c.Address, c.AttendanceDay, c.Branch, c.BranchAddress, c.City,
+		c.Commune, c.RefreshToken, c.Region, c.User, c.UserAccessPoint, c.UserBranch,
 	} {
 		n.Use(hooks...)
 	}
@@ -220,7 +257,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Address, c.City, c.Commune, c.RefreshToken, c.Region, c.User,
+		c.AccessPoint, c.Address, c.AttendanceDay, c.Branch, c.BranchAddress, c.City,
+		c.Commune, c.RefreshToken, c.Region, c.User, c.UserAccessPoint, c.UserBranch,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -229,8 +267,16 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AccessPointMutation:
+		return c.AccessPoint.mutate(ctx, m)
 	case *AddressMutation:
 		return c.Address.mutate(ctx, m)
+	case *AttendanceDayMutation:
+		return c.AttendanceDay.mutate(ctx, m)
+	case *BranchMutation:
+		return c.Branch.mutate(ctx, m)
+	case *BranchAddressMutation:
+		return c.BranchAddress.mutate(ctx, m)
 	case *CityMutation:
 		return c.City.mutate(ctx, m)
 	case *CommuneMutation:
@@ -241,8 +287,193 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Region.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
+	case *UserAccessPointMutation:
+		return c.UserAccessPoint.mutate(ctx, m)
+	case *UserBranchMutation:
+		return c.UserBranch.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AccessPointClient is a client for the AccessPoint schema.
+type AccessPointClient struct {
+	config
+}
+
+// NewAccessPointClient returns a client for the AccessPoint from the given config.
+func NewAccessPointClient(c config) *AccessPointClient {
+	return &AccessPointClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `accesspoint.Hooks(f(g(h())))`.
+func (c *AccessPointClient) Use(hooks ...Hook) {
+	c.hooks.AccessPoint = append(c.hooks.AccessPoint, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `accesspoint.Intercept(f(g(h())))`.
+func (c *AccessPointClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AccessPoint = append(c.inters.AccessPoint, interceptors...)
+}
+
+// Create returns a builder for creating a AccessPoint entity.
+func (c *AccessPointClient) Create() *AccessPointCreate {
+	mutation := newAccessPointMutation(c.config, OpCreate)
+	return &AccessPointCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AccessPoint entities.
+func (c *AccessPointClient) CreateBulk(builders ...*AccessPointCreate) *AccessPointCreateBulk {
+	return &AccessPointCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AccessPointClient) MapCreateBulk(slice any, setFunc func(*AccessPointCreate, int)) *AccessPointCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AccessPointCreateBulk{err: fmt.Errorf("calling to AccessPointClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AccessPointCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AccessPointCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AccessPoint.
+func (c *AccessPointClient) Update() *AccessPointUpdate {
+	mutation := newAccessPointMutation(c.config, OpUpdate)
+	return &AccessPointUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AccessPointClient) UpdateOne(_m *AccessPoint) *AccessPointUpdateOne {
+	mutation := newAccessPointMutation(c.config, OpUpdateOne, withAccessPoint(_m))
+	return &AccessPointUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AccessPointClient) UpdateOneID(id int) *AccessPointUpdateOne {
+	mutation := newAccessPointMutation(c.config, OpUpdateOne, withAccessPointID(id))
+	return &AccessPointUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AccessPoint.
+func (c *AccessPointClient) Delete() *AccessPointDelete {
+	mutation := newAccessPointMutation(c.config, OpDelete)
+	return &AccessPointDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AccessPointClient) DeleteOne(_m *AccessPoint) *AccessPointDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AccessPointClient) DeleteOneID(id int) *AccessPointDeleteOne {
+	builder := c.Delete().Where(accesspoint.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AccessPointDeleteOne{builder}
+}
+
+// Query returns a query builder for AccessPoint.
+func (c *AccessPointClient) Query() *AccessPointQuery {
+	return &AccessPointQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAccessPoint},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AccessPoint entity by its id.
+func (c *AccessPointClient) Get(ctx context.Context, id int) (*AccessPoint, error) {
+	return c.Query().Where(accesspoint.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AccessPointClient) GetX(ctx context.Context, id int) *AccessPoint {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBranch queries the branch edge of a AccessPoint.
+func (c *AccessPointClient) QueryBranch(_m *AccessPoint) *BranchQuery {
+	query := (&BranchClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspoint.Table, accesspoint.FieldID, id),
+			sqlgraph.To(branch.Table, branch.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, accesspoint.BranchTable, accesspoint.BranchColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserAccessPoints queries the user_access_points edge of a AccessPoint.
+func (c *AccessPointClient) QueryUserAccessPoints(_m *AccessPoint) *UserAccessPointQuery {
+	query := (&UserAccessPointClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspoint.Table, accesspoint.FieldID, id),
+			sqlgraph.To(useraccesspoint.Table, useraccesspoint.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, accesspoint.UserAccessPointsTable, accesspoint.UserAccessPointsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAttendanceDays queries the attendance_days edge of a AccessPoint.
+func (c *AccessPointClient) QueryAttendanceDays(_m *AccessPoint) *AttendanceDayQuery {
+	query := (&AttendanceDayClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspoint.Table, accesspoint.FieldID, id),
+			sqlgraph.To(attendanceday.Table, attendanceday.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, accesspoint.AttendanceDaysTable, accesspoint.AttendanceDaysColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AccessPointClient) Hooks() []Hook {
+	return c.hooks.AccessPoint
+}
+
+// Interceptors returns the client interceptors.
+func (c *AccessPointClient) Interceptors() []Interceptor {
+	return c.inters.AccessPoint
+}
+
+func (c *AccessPointClient) mutate(ctx context.Context, m *AccessPointMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AccessPointCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AccessPointUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AccessPointUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AccessPointDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AccessPoint mutation op: %q", m.Op())
 	}
 }
 
@@ -408,6 +639,533 @@ func (c *AddressClient) mutate(ctx context.Context, m *AddressMutation) (Value, 
 		return (&AddressDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Address mutation op: %q", m.Op())
+	}
+}
+
+// AttendanceDayClient is a client for the AttendanceDay schema.
+type AttendanceDayClient struct {
+	config
+}
+
+// NewAttendanceDayClient returns a client for the AttendanceDay from the given config.
+func NewAttendanceDayClient(c config) *AttendanceDayClient {
+	return &AttendanceDayClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `attendanceday.Hooks(f(g(h())))`.
+func (c *AttendanceDayClient) Use(hooks ...Hook) {
+	c.hooks.AttendanceDay = append(c.hooks.AttendanceDay, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `attendanceday.Intercept(f(g(h())))`.
+func (c *AttendanceDayClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AttendanceDay = append(c.inters.AttendanceDay, interceptors...)
+}
+
+// Create returns a builder for creating a AttendanceDay entity.
+func (c *AttendanceDayClient) Create() *AttendanceDayCreate {
+	mutation := newAttendanceDayMutation(c.config, OpCreate)
+	return &AttendanceDayCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AttendanceDay entities.
+func (c *AttendanceDayClient) CreateBulk(builders ...*AttendanceDayCreate) *AttendanceDayCreateBulk {
+	return &AttendanceDayCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AttendanceDayClient) MapCreateBulk(slice any, setFunc func(*AttendanceDayCreate, int)) *AttendanceDayCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AttendanceDayCreateBulk{err: fmt.Errorf("calling to AttendanceDayClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AttendanceDayCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AttendanceDayCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AttendanceDay.
+func (c *AttendanceDayClient) Update() *AttendanceDayUpdate {
+	mutation := newAttendanceDayMutation(c.config, OpUpdate)
+	return &AttendanceDayUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AttendanceDayClient) UpdateOne(_m *AttendanceDay) *AttendanceDayUpdateOne {
+	mutation := newAttendanceDayMutation(c.config, OpUpdateOne, withAttendanceDay(_m))
+	return &AttendanceDayUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AttendanceDayClient) UpdateOneID(id int) *AttendanceDayUpdateOne {
+	mutation := newAttendanceDayMutation(c.config, OpUpdateOne, withAttendanceDayID(id))
+	return &AttendanceDayUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AttendanceDay.
+func (c *AttendanceDayClient) Delete() *AttendanceDayDelete {
+	mutation := newAttendanceDayMutation(c.config, OpDelete)
+	return &AttendanceDayDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AttendanceDayClient) DeleteOne(_m *AttendanceDay) *AttendanceDayDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AttendanceDayClient) DeleteOneID(id int) *AttendanceDayDeleteOne {
+	builder := c.Delete().Where(attendanceday.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AttendanceDayDeleteOne{builder}
+}
+
+// Query returns a query builder for AttendanceDay.
+func (c *AttendanceDayClient) Query() *AttendanceDayQuery {
+	return &AttendanceDayQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAttendanceDay},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AttendanceDay entity by its id.
+func (c *AttendanceDayClient) Get(ctx context.Context, id int) (*AttendanceDay, error) {
+	return c.Query().Where(attendanceday.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AttendanceDayClient) GetX(ctx context.Context, id int) *AttendanceDay {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a AttendanceDay.
+func (c *AttendanceDayClient) QueryUser(_m *AttendanceDay) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(attendanceday.Table, attendanceday.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, attendanceday.UserTable, attendanceday.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBranch queries the branch edge of a AttendanceDay.
+func (c *AttendanceDayClient) QueryBranch(_m *AttendanceDay) *BranchQuery {
+	query := (&BranchClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(attendanceday.Table, attendanceday.FieldID, id),
+			sqlgraph.To(branch.Table, branch.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, attendanceday.BranchTable, attendanceday.BranchColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccessPoint queries the access_point edge of a AttendanceDay.
+func (c *AttendanceDayClient) QueryAccessPoint(_m *AttendanceDay) *AccessPointQuery {
+	query := (&AccessPointClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(attendanceday.Table, attendanceday.FieldID, id),
+			sqlgraph.To(accesspoint.Table, accesspoint.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, attendanceday.AccessPointTable, attendanceday.AccessPointColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AttendanceDayClient) Hooks() []Hook {
+	return c.hooks.AttendanceDay
+}
+
+// Interceptors returns the client interceptors.
+func (c *AttendanceDayClient) Interceptors() []Interceptor {
+	return c.inters.AttendanceDay
+}
+
+func (c *AttendanceDayClient) mutate(ctx context.Context, m *AttendanceDayMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AttendanceDayCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AttendanceDayUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AttendanceDayUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AttendanceDayDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AttendanceDay mutation op: %q", m.Op())
+	}
+}
+
+// BranchClient is a client for the Branch schema.
+type BranchClient struct {
+	config
+}
+
+// NewBranchClient returns a client for the Branch from the given config.
+func NewBranchClient(c config) *BranchClient {
+	return &BranchClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `branch.Hooks(f(g(h())))`.
+func (c *BranchClient) Use(hooks ...Hook) {
+	c.hooks.Branch = append(c.hooks.Branch, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `branch.Intercept(f(g(h())))`.
+func (c *BranchClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Branch = append(c.inters.Branch, interceptors...)
+}
+
+// Create returns a builder for creating a Branch entity.
+func (c *BranchClient) Create() *BranchCreate {
+	mutation := newBranchMutation(c.config, OpCreate)
+	return &BranchCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Branch entities.
+func (c *BranchClient) CreateBulk(builders ...*BranchCreate) *BranchCreateBulk {
+	return &BranchCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BranchClient) MapCreateBulk(slice any, setFunc func(*BranchCreate, int)) *BranchCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BranchCreateBulk{err: fmt.Errorf("calling to BranchClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BranchCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BranchCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Branch.
+func (c *BranchClient) Update() *BranchUpdate {
+	mutation := newBranchMutation(c.config, OpUpdate)
+	return &BranchUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BranchClient) UpdateOne(_m *Branch) *BranchUpdateOne {
+	mutation := newBranchMutation(c.config, OpUpdateOne, withBranch(_m))
+	return &BranchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BranchClient) UpdateOneID(id int) *BranchUpdateOne {
+	mutation := newBranchMutation(c.config, OpUpdateOne, withBranchID(id))
+	return &BranchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Branch.
+func (c *BranchClient) Delete() *BranchDelete {
+	mutation := newBranchMutation(c.config, OpDelete)
+	return &BranchDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BranchClient) DeleteOne(_m *Branch) *BranchDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BranchClient) DeleteOneID(id int) *BranchDeleteOne {
+	builder := c.Delete().Where(branch.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BranchDeleteOne{builder}
+}
+
+// Query returns a query builder for Branch.
+func (c *BranchClient) Query() *BranchQuery {
+	return &BranchQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBranch},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Branch entity by its id.
+func (c *BranchClient) Get(ctx context.Context, id int) (*Branch, error) {
+	return c.Query().Where(branch.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BranchClient) GetX(ctx context.Context, id int) *Branch {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAddress queries the address edge of a Branch.
+func (c *BranchClient) QueryAddress(_m *Branch) *BranchAddressQuery {
+	query := (&BranchAddressClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(branch.Table, branch.FieldID, id),
+			sqlgraph.To(branchaddress.Table, branchaddress.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, branch.AddressTable, branch.AddressColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccessPoints queries the access_points edge of a Branch.
+func (c *BranchClient) QueryAccessPoints(_m *Branch) *AccessPointQuery {
+	query := (&AccessPointClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(branch.Table, branch.FieldID, id),
+			sqlgraph.To(accesspoint.Table, accesspoint.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, branch.AccessPointsTable, branch.AccessPointsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserBranches queries the user_branches edge of a Branch.
+func (c *BranchClient) QueryUserBranches(_m *Branch) *UserBranchQuery {
+	query := (&UserBranchClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(branch.Table, branch.FieldID, id),
+			sqlgraph.To(userbranch.Table, userbranch.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, branch.UserBranchesTable, branch.UserBranchesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *BranchClient) Hooks() []Hook {
+	return c.hooks.Branch
+}
+
+// Interceptors returns the client interceptors.
+func (c *BranchClient) Interceptors() []Interceptor {
+	return c.inters.Branch
+}
+
+func (c *BranchClient) mutate(ctx context.Context, m *BranchMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BranchCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BranchUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BranchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BranchDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Branch mutation op: %q", m.Op())
+	}
+}
+
+// BranchAddressClient is a client for the BranchAddress schema.
+type BranchAddressClient struct {
+	config
+}
+
+// NewBranchAddressClient returns a client for the BranchAddress from the given config.
+func NewBranchAddressClient(c config) *BranchAddressClient {
+	return &BranchAddressClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `branchaddress.Hooks(f(g(h())))`.
+func (c *BranchAddressClient) Use(hooks ...Hook) {
+	c.hooks.BranchAddress = append(c.hooks.BranchAddress, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `branchaddress.Intercept(f(g(h())))`.
+func (c *BranchAddressClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BranchAddress = append(c.inters.BranchAddress, interceptors...)
+}
+
+// Create returns a builder for creating a BranchAddress entity.
+func (c *BranchAddressClient) Create() *BranchAddressCreate {
+	mutation := newBranchAddressMutation(c.config, OpCreate)
+	return &BranchAddressCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BranchAddress entities.
+func (c *BranchAddressClient) CreateBulk(builders ...*BranchAddressCreate) *BranchAddressCreateBulk {
+	return &BranchAddressCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BranchAddressClient) MapCreateBulk(slice any, setFunc func(*BranchAddressCreate, int)) *BranchAddressCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BranchAddressCreateBulk{err: fmt.Errorf("calling to BranchAddressClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BranchAddressCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BranchAddressCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BranchAddress.
+func (c *BranchAddressClient) Update() *BranchAddressUpdate {
+	mutation := newBranchAddressMutation(c.config, OpUpdate)
+	return &BranchAddressUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BranchAddressClient) UpdateOne(_m *BranchAddress) *BranchAddressUpdateOne {
+	mutation := newBranchAddressMutation(c.config, OpUpdateOne, withBranchAddress(_m))
+	return &BranchAddressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BranchAddressClient) UpdateOneID(id int) *BranchAddressUpdateOne {
+	mutation := newBranchAddressMutation(c.config, OpUpdateOne, withBranchAddressID(id))
+	return &BranchAddressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BranchAddress.
+func (c *BranchAddressClient) Delete() *BranchAddressDelete {
+	mutation := newBranchAddressMutation(c.config, OpDelete)
+	return &BranchAddressDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BranchAddressClient) DeleteOne(_m *BranchAddress) *BranchAddressDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BranchAddressClient) DeleteOneID(id int) *BranchAddressDeleteOne {
+	builder := c.Delete().Where(branchaddress.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BranchAddressDeleteOne{builder}
+}
+
+// Query returns a query builder for BranchAddress.
+func (c *BranchAddressClient) Query() *BranchAddressQuery {
+	return &BranchAddressQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBranchAddress},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BranchAddress entity by its id.
+func (c *BranchAddressClient) Get(ctx context.Context, id int) (*BranchAddress, error) {
+	return c.Query().Where(branchaddress.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BranchAddressClient) GetX(ctx context.Context, id int) *BranchAddress {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBranch queries the branch edge of a BranchAddress.
+func (c *BranchAddressClient) QueryBranch(_m *BranchAddress) *BranchQuery {
+	query := (&BranchClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(branchaddress.Table, branchaddress.FieldID, id),
+			sqlgraph.To(branch.Table, branch.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, branchaddress.BranchTable, branchaddress.BranchColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCommune queries the commune edge of a BranchAddress.
+func (c *BranchAddressClient) QueryCommune(_m *BranchAddress) *CommuneQuery {
+	query := (&CommuneClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(branchaddress.Table, branchaddress.FieldID, id),
+			sqlgraph.To(commune.Table, commune.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, branchaddress.CommuneTable, branchaddress.CommuneColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *BranchAddressClient) Hooks() []Hook {
+	return c.hooks.BranchAddress
+}
+
+// Interceptors returns the client interceptors.
+func (c *BranchAddressClient) Interceptors() []Interceptor {
+	return c.inters.BranchAddress
+}
+
+func (c *BranchAddressClient) mutate(ctx context.Context, m *BranchAddressMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BranchAddressCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BranchAddressUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BranchAddressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BranchAddressDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BranchAddress mutation op: %q", m.Op())
 	}
 }
 
@@ -1179,6 +1937,54 @@ func (c *UserClient) QueryAddresses(_m *User) *AddressQuery {
 	return query
 }
 
+// QueryUserBranches queries the user_branches edge of a User.
+func (c *UserClient) QueryUserBranches(_m *User) *UserBranchQuery {
+	query := (&UserBranchClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userbranch.Table, userbranch.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserBranchesTable, user.UserBranchesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserAccessPoints queries the user_access_points edge of a User.
+func (c *UserClient) QueryUserAccessPoints(_m *User) *UserAccessPointQuery {
+	query := (&UserAccessPointClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(useraccesspoint.Table, useraccesspoint.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserAccessPointsTable, user.UserAccessPointsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAttendanceDays queries the attendance_days edge of a User.
+func (c *UserClient) QueryAttendanceDays(_m *User) *AttendanceDayQuery {
+	query := (&AttendanceDayClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(attendanceday.Table, attendanceday.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AttendanceDaysTable, user.AttendanceDaysColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -1204,12 +2010,344 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
+// UserAccessPointClient is a client for the UserAccessPoint schema.
+type UserAccessPointClient struct {
+	config
+}
+
+// NewUserAccessPointClient returns a client for the UserAccessPoint from the given config.
+func NewUserAccessPointClient(c config) *UserAccessPointClient {
+	return &UserAccessPointClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `useraccesspoint.Hooks(f(g(h())))`.
+func (c *UserAccessPointClient) Use(hooks ...Hook) {
+	c.hooks.UserAccessPoint = append(c.hooks.UserAccessPoint, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `useraccesspoint.Intercept(f(g(h())))`.
+func (c *UserAccessPointClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserAccessPoint = append(c.inters.UserAccessPoint, interceptors...)
+}
+
+// Create returns a builder for creating a UserAccessPoint entity.
+func (c *UserAccessPointClient) Create() *UserAccessPointCreate {
+	mutation := newUserAccessPointMutation(c.config, OpCreate)
+	return &UserAccessPointCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserAccessPoint entities.
+func (c *UserAccessPointClient) CreateBulk(builders ...*UserAccessPointCreate) *UserAccessPointCreateBulk {
+	return &UserAccessPointCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserAccessPointClient) MapCreateBulk(slice any, setFunc func(*UserAccessPointCreate, int)) *UserAccessPointCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserAccessPointCreateBulk{err: fmt.Errorf("calling to UserAccessPointClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserAccessPointCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserAccessPointCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserAccessPoint.
+func (c *UserAccessPointClient) Update() *UserAccessPointUpdate {
+	mutation := newUserAccessPointMutation(c.config, OpUpdate)
+	return &UserAccessPointUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserAccessPointClient) UpdateOne(_m *UserAccessPoint) *UserAccessPointUpdateOne {
+	mutation := newUserAccessPointMutation(c.config, OpUpdateOne, withUserAccessPoint(_m))
+	return &UserAccessPointUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserAccessPointClient) UpdateOneID(id int) *UserAccessPointUpdateOne {
+	mutation := newUserAccessPointMutation(c.config, OpUpdateOne, withUserAccessPointID(id))
+	return &UserAccessPointUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserAccessPoint.
+func (c *UserAccessPointClient) Delete() *UserAccessPointDelete {
+	mutation := newUserAccessPointMutation(c.config, OpDelete)
+	return &UserAccessPointDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserAccessPointClient) DeleteOne(_m *UserAccessPoint) *UserAccessPointDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserAccessPointClient) DeleteOneID(id int) *UserAccessPointDeleteOne {
+	builder := c.Delete().Where(useraccesspoint.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserAccessPointDeleteOne{builder}
+}
+
+// Query returns a query builder for UserAccessPoint.
+func (c *UserAccessPointClient) Query() *UserAccessPointQuery {
+	return &UserAccessPointQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserAccessPoint},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserAccessPoint entity by its id.
+func (c *UserAccessPointClient) Get(ctx context.Context, id int) (*UserAccessPoint, error) {
+	return c.Query().Where(useraccesspoint.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserAccessPointClient) GetX(ctx context.Context, id int) *UserAccessPoint {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserAccessPoint.
+func (c *UserAccessPointClient) QueryUser(_m *UserAccessPoint) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(useraccesspoint.Table, useraccesspoint.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, useraccesspoint.UserTable, useraccesspoint.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccessPoint queries the access_point edge of a UserAccessPoint.
+func (c *UserAccessPointClient) QueryAccessPoint(_m *UserAccessPoint) *AccessPointQuery {
+	query := (&AccessPointClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(useraccesspoint.Table, useraccesspoint.FieldID, id),
+			sqlgraph.To(accesspoint.Table, accesspoint.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, useraccesspoint.AccessPointTable, useraccesspoint.AccessPointColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserAccessPointClient) Hooks() []Hook {
+	return c.hooks.UserAccessPoint
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserAccessPointClient) Interceptors() []Interceptor {
+	return c.inters.UserAccessPoint
+}
+
+func (c *UserAccessPointClient) mutate(ctx context.Context, m *UserAccessPointMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserAccessPointCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserAccessPointUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserAccessPointUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserAccessPointDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserAccessPoint mutation op: %q", m.Op())
+	}
+}
+
+// UserBranchClient is a client for the UserBranch schema.
+type UserBranchClient struct {
+	config
+}
+
+// NewUserBranchClient returns a client for the UserBranch from the given config.
+func NewUserBranchClient(c config) *UserBranchClient {
+	return &UserBranchClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userbranch.Hooks(f(g(h())))`.
+func (c *UserBranchClient) Use(hooks ...Hook) {
+	c.hooks.UserBranch = append(c.hooks.UserBranch, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userbranch.Intercept(f(g(h())))`.
+func (c *UserBranchClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserBranch = append(c.inters.UserBranch, interceptors...)
+}
+
+// Create returns a builder for creating a UserBranch entity.
+func (c *UserBranchClient) Create() *UserBranchCreate {
+	mutation := newUserBranchMutation(c.config, OpCreate)
+	return &UserBranchCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserBranch entities.
+func (c *UserBranchClient) CreateBulk(builders ...*UserBranchCreate) *UserBranchCreateBulk {
+	return &UserBranchCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserBranchClient) MapCreateBulk(slice any, setFunc func(*UserBranchCreate, int)) *UserBranchCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserBranchCreateBulk{err: fmt.Errorf("calling to UserBranchClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserBranchCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserBranchCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserBranch.
+func (c *UserBranchClient) Update() *UserBranchUpdate {
+	mutation := newUserBranchMutation(c.config, OpUpdate)
+	return &UserBranchUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserBranchClient) UpdateOne(_m *UserBranch) *UserBranchUpdateOne {
+	mutation := newUserBranchMutation(c.config, OpUpdateOne, withUserBranch(_m))
+	return &UserBranchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserBranchClient) UpdateOneID(id int) *UserBranchUpdateOne {
+	mutation := newUserBranchMutation(c.config, OpUpdateOne, withUserBranchID(id))
+	return &UserBranchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserBranch.
+func (c *UserBranchClient) Delete() *UserBranchDelete {
+	mutation := newUserBranchMutation(c.config, OpDelete)
+	return &UserBranchDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserBranchClient) DeleteOne(_m *UserBranch) *UserBranchDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserBranchClient) DeleteOneID(id int) *UserBranchDeleteOne {
+	builder := c.Delete().Where(userbranch.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserBranchDeleteOne{builder}
+}
+
+// Query returns a query builder for UserBranch.
+func (c *UserBranchClient) Query() *UserBranchQuery {
+	return &UserBranchQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserBranch},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserBranch entity by its id.
+func (c *UserBranchClient) Get(ctx context.Context, id int) (*UserBranch, error) {
+	return c.Query().Where(userbranch.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserBranchClient) GetX(ctx context.Context, id int) *UserBranch {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserBranch.
+func (c *UserBranchClient) QueryUser(_m *UserBranch) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userbranch.Table, userbranch.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userbranch.UserTable, userbranch.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBranch queries the branch edge of a UserBranch.
+func (c *UserBranchClient) QueryBranch(_m *UserBranch) *BranchQuery {
+	query := (&BranchClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userbranch.Table, userbranch.FieldID, id),
+			sqlgraph.To(branch.Table, branch.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userbranch.BranchTable, userbranch.BranchColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserBranchClient) Hooks() []Hook {
+	return c.hooks.UserBranch
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserBranchClient) Interceptors() []Interceptor {
+	return c.inters.UserBranch
+}
+
+func (c *UserBranchClient) mutate(ctx context.Context, m *UserBranchMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserBranchCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserBranchUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserBranchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserBranchDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserBranch mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Address, City, Commune, RefreshToken, Region, User []ent.Hook
+		AccessPoint, Address, AttendanceDay, Branch, BranchAddress, City, Commune,
+		RefreshToken, Region, User, UserAccessPoint, UserBranch []ent.Hook
 	}
 	inters struct {
-		Address, City, Commune, RefreshToken, Region, User []ent.Interceptor
+		AccessPoint, Address, AttendanceDay, Branch, BranchAddress, City, Commune,
+		RefreshToken, Region, User, UserAccessPoint, UserBranch []ent.Interceptor
 	}
 )
