@@ -3,6 +3,8 @@
 package accesspoint
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 )
@@ -18,12 +20,18 @@ const (
 	FieldName = "name"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// EdgeBranch holds the string denoting the branch edge name in mutations.
 	EdgeBranch = "branch"
 	// EdgeUserAccessPoints holds the string denoting the user_access_points edge name in mutations.
 	EdgeUserAccessPoints = "user_access_points"
 	// EdgeAttendanceDays holds the string denoting the attendance_days edge name in mutations.
 	EdgeAttendanceDays = "attendance_days"
+	// EdgeDevices holds the string denoting the devices edge name in mutations.
+	EdgeDevices = "devices"
 	// Table holds the table name of the accesspoint in the database.
 	Table = "access_points"
 	// BranchTable is the table that holds the branch relation/edge.
@@ -47,6 +55,13 @@ const (
 	AttendanceDaysInverseTable = "attendance_days"
 	// AttendanceDaysColumn is the table column denoting the attendance_days relation/edge.
 	AttendanceDaysColumn = "access_point_attendance_days"
+	// DevicesTable is the table that holds the devices relation/edge.
+	DevicesTable = "devices"
+	// DevicesInverseTable is the table name for the Device entity.
+	// It exists in this package in order to avoid circular dependency with the "device" package.
+	DevicesInverseTable = "devices"
+	// DevicesColumn is the table column denoting the devices relation/edge.
+	DevicesColumn = "access_point_id"
 )
 
 // Columns holds all SQL columns for accesspoint fields.
@@ -55,6 +70,8 @@ var Columns = []string{
 	FieldBranchID,
 	FieldName,
 	FieldIsActive,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -72,6 +89,12 @@ var (
 	NameValidator func(string) error
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 )
 
 // OrderOption defines the ordering options for the AccessPoint queries.
@@ -95,6 +118,16 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByIsActive orders the results by the is_active field.
 func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
 // ByBranchField orders the results by branch field.
@@ -131,6 +164,20 @@ func ByAttendanceDays(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAttendanceDaysStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByDevicesCount orders the results by devices count.
+func ByDevicesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDevicesStep(), opts...)
+	}
+}
+
+// ByDevices orders the results by devices terms.
+func ByDevices(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDevicesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBranchStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -150,5 +197,12 @@ func newAttendanceDaysStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AttendanceDaysInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AttendanceDaysTable, AttendanceDaysColumn),
+	)
+}
+func newDevicesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DevicesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DevicesTable, DevicesColumn),
 	)
 }

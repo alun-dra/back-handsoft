@@ -13,6 +13,8 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "branch_id", Type: field.TypeInt},
 	}
 	// AccessPointsTable holds the schema information for the "access_points" table.
@@ -23,7 +25,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "access_points_branches_access_points",
-				Columns:    []*schema.Column{AccessPointsColumns[3]},
+				Columns:    []*schema.Column{AccessPointsColumns[5]},
 				RefColumns: []*schema.Column{BranchesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -32,7 +34,12 @@ var (
 			{
 				Name:    "ux_accesspoint_branch_name",
 				Unique:  true,
-				Columns: []*schema.Column{AccessPointsColumns[3], AccessPointsColumns[1]},
+				Columns: []*schema.Column{AccessPointsColumns[5], AccessPointsColumns[1]},
+			},
+			{
+				Name:    "ix_accesspoint_branch",
+				Unique:  false,
+				Columns: []*schema.Column{AccessPointsColumns[5]},
 			},
 		},
 	}
@@ -243,6 +250,48 @@ var (
 			},
 		},
 	}
+	// DevicesColumns holds the columns for the "devices" table.
+	DevicesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "serial", Type: field.TypeString},
+		{Name: "direction", Type: field.TypeString},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "access_point_id", Type: field.TypeInt},
+	}
+	// DevicesTable holds the schema information for the "devices" table.
+	DevicesTable = &schema.Table{
+		Name:       "devices",
+		Columns:    DevicesColumns,
+		PrimaryKey: []*schema.Column{DevicesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "devices_access_points_devices",
+				Columns:    []*schema.Column{DevicesColumns[7]},
+				RefColumns: []*schema.Column{AccessPointsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ux_device_serial",
+				Unique:  true,
+				Columns: []*schema.Column{DevicesColumns[2]},
+			},
+			{
+				Name:    "ux_device_access_direction",
+				Unique:  true,
+				Columns: []*schema.Column{DevicesColumns[7], DevicesColumns[3]},
+			},
+			{
+				Name:    "ix_device_access_point",
+				Unique:  false,
+				Columns: []*schema.Column{DevicesColumns[7]},
+			},
+		},
+	}
 	// RefreshTokensColumns holds the columns for the "refresh_tokens" table.
 	RefreshTokensColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -398,6 +447,7 @@ var (
 		BranchAddressesTable,
 		CitiesTable,
 		CommunesTable,
+		DevicesTable,
 		RefreshTokensTable,
 		RegionsTable,
 		UsersTable,
@@ -419,6 +469,7 @@ func init() {
 	BranchAddressesTable.ForeignKeys[1].RefTable = CommunesTable
 	CitiesTable.ForeignKeys[0].RefTable = RegionsTable
 	CommunesTable.ForeignKeys[0].RefTable = CitiesTable
+	DevicesTable.ForeignKeys[0].RefTable = AccessPointsTable
 	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
 	UserAccessPointsTable.ForeignKeys[0].RefTable = AccessPointsTable
 	UserAccessPointsTable.ForeignKeys[1].RefTable = UsersTable

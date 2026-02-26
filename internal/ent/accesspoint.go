@@ -7,6 +7,7 @@ import (
 	"back/internal/ent/branch"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -23,6 +24,10 @@ type AccessPoint struct {
 	Name string `json:"name,omitempty"`
 	// IsActive holds the value of the "is_active" field.
 	IsActive bool `json:"is_active,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccessPointQuery when eager-loading is set.
 	Edges        AccessPointEdges `json:"edges"`
@@ -37,9 +42,11 @@ type AccessPointEdges struct {
 	UserAccessPoints []*UserAccessPoint `json:"user_access_points,omitempty"`
 	// AttendanceDays holds the value of the attendance_days edge.
 	AttendanceDays []*AttendanceDay `json:"attendance_days,omitempty"`
+	// Devices holds the value of the devices edge.
+	Devices []*Device `json:"devices,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // BranchOrErr returns the Branch value or an error if the edge
@@ -71,6 +78,15 @@ func (e AccessPointEdges) AttendanceDaysOrErr() ([]*AttendanceDay, error) {
 	return nil, &NotLoadedError{edge: "attendance_days"}
 }
 
+// DevicesOrErr returns the Devices value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccessPointEdges) DevicesOrErr() ([]*Device, error) {
+	if e.loadedTypes[3] {
+		return e.Devices, nil
+	}
+	return nil, &NotLoadedError{edge: "devices"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*AccessPoint) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -82,6 +98,8 @@ func (*AccessPoint) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case accesspoint.FieldName:
 			values[i] = new(sql.NullString)
+		case accesspoint.FieldCreatedAt, accesspoint.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -121,6 +139,18 @@ func (_m *AccessPoint) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.IsActive = value.Bool
 			}
+		case accesspoint.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				_m.CreatedAt = value.Time
+			}
+		case accesspoint.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				_m.UpdatedAt = value.Time
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -147,6 +177,11 @@ func (_m *AccessPoint) QueryUserAccessPoints() *UserAccessPointQuery {
 // QueryAttendanceDays queries the "attendance_days" edge of the AccessPoint entity.
 func (_m *AccessPoint) QueryAttendanceDays() *AttendanceDayQuery {
 	return NewAccessPointClient(_m.config).QueryAttendanceDays(_m)
+}
+
+// QueryDevices queries the "devices" edge of the AccessPoint entity.
+func (_m *AccessPoint) QueryDevices() *DeviceQuery {
+	return NewAccessPointClient(_m.config).QueryDevices(_m)
 }
 
 // Update returns a builder for updating this AccessPoint.
@@ -180,6 +215,12 @@ func (_m *AccessPoint) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

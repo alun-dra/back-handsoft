@@ -12,6 +12,7 @@ import (
 	"back/internal/ent/branch"
 	"back/internal/ent/branchaddress"
 	"back/internal/ent/commune"
+	"back/internal/ent/device"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
 )
@@ -85,7 +86,7 @@ func (s *BranchService) ListSummary(ctx context.Context) ([]*ent.Branch, error) 
 		All(ctx)
 }
 
-// GetDetail: detalle completo (branch + address + access_points)
+// GetDetail: detalle completo (branch + address + access_points + devices)
 func (s *BranchService) GetDetail(ctx context.Context, branchID int) (*ent.Branch, error) {
 	return s.Client.Branch.
 		Query().
@@ -97,7 +98,10 @@ func (s *BranchService) GetDetail(ctx context.Context, branchID int) (*ent.Branc
 				})
 			})
 		}).
-		WithAccessPoints().
+		WithAccessPoints(func(apq *ent.AccessPointQuery) {
+			apq.WithDevices()
+			apq.Order(ent.Asc(accesspoint.FieldName))
+		}).
 		Only(ctx)
 }
 
@@ -122,12 +126,9 @@ func (s *BranchService) Create(ctx context.Context, in CreateBranchInput) (*ent.
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
+	defer func() { _ = tx.Rollback() }()
 
-	bCreate := tx.Branch.Create().
-		SetName(name)
+	bCreate := tx.Branch.Create().SetName(name)
 
 	if in.Code != nil && strings.TrimSpace(*in.Code) != "" {
 		bCreate.SetCode(strings.TrimSpace(*in.Code))
@@ -178,12 +179,10 @@ func (s *BranchService) Create(ctx context.Context, in CreateBranchInput) (*ent.
 		return nil, err
 	}
 
-	// devolver detalle completo
 	return s.GetDetail(ctx, b.ID)
 }
 
 func (s *BranchService) Patch(ctx context.Context, branchID int, in PatchBranchInput) (*ent.Branch, error) {
-	// Evitar patch vacío
 	if in.Name == nil && in.Code == nil && in.IsActive == nil && in.Address == nil {
 		return nil, ErrBranchInvalidInput
 	}
@@ -192,11 +191,8 @@ func (s *BranchService) Patch(ctx context.Context, branchID int, in PatchBranchI
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
+	defer func() { _ = tx.Rollback() }()
 
-	// cargar branch (para update)
 	b, err := tx.Branch.Get(ctx, branchID)
 	if err != nil {
 		return nil, err
@@ -227,10 +223,8 @@ func (s *BranchService) Patch(ctx context.Context, branchID int, in PatchBranchI
 		return nil, err
 	}
 
-	// patch address (si viene)
 	if in.Address != nil {
-		addr, err := tx.BranchAddress.
-			Query().
+		addr, err := tx.BranchAddress.Query().
 			Where(branchaddress.BranchIDEQ(branchID)).
 			Only(ctx)
 		if err != nil {
@@ -243,7 +237,6 @@ func (s *BranchService) Patch(ctx context.Context, branchID int, in PatchBranchI
 			if *in.Address.CommuneID <= 0 {
 				return nil, ErrBranchInvalidInput
 			}
-			// valida que exista la comuna (opcional pero útil)
 			if _, err := tx.Commune.Query().Where(commune.IDEQ(*in.Address.CommuneID)).Only(ctx); err != nil {
 				return nil, ErrBranchInvalidInput
 			}
@@ -293,6 +286,7 @@ func (s *BranchService) Patch(ctx context.Context, branchID int, in PatchBranchI
 }
 
 // DeleteCascade: borra sucursal + todo lo dependiente (manual, en tx)
+// Ahora incluye devices (porque AccessPoint -> Devices)
 func (s *BranchService) DeleteCascade(ctx context.Context, branchID int) error {
 	tx, err := s.Client.Tx(ctx)
 	if err != nil {
@@ -300,12 +294,11 @@ func (s *BranchService) DeleteCascade(ctx context.Context, branchID int) error {
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	// existe?
 	if _, err := tx.Branch.Get(ctx, branchID); err != nil {
 		return err
 	}
 
-	// 1) obtener access points de la sucursal
+	// 1) access points de la sucursal
 	aps, err := tx.AccessPoint.Query().
 		Where(accesspoint.BranchIDEQ(branchID)).
 		All(ctx)
@@ -317,7 +310,16 @@ func (s *BranchService) DeleteCascade(ctx context.Context, branchID int) error {
 		apIDs = append(apIDs, ap.ID)
 	}
 
-	// 2) borrar user_access_points asociados a esos accesos
+	// 2) borrar devices asociados a esos access_points
+	if len(apIDs) > 0 {
+		if _, err := tx.Device.Delete().
+			Where(device.AccessPointIDIn(apIDs...)).
+			Exec(ctx); err != nil {
+			return err
+		}
+	}
+
+	// 3) borrar user_access_points asociados a esos accesos
 	if len(apIDs) > 0 {
 		if _, err := tx.UserAccessPoint.Delete().
 			Where(useraccesspoint.AccessPointIDIn(apIDs...)).
@@ -326,35 +328,35 @@ func (s *BranchService) DeleteCascade(ctx context.Context, branchID int) error {
 		}
 	}
 
-	// 3) borrar access_points
+	// 4) borrar access_points
 	if _, err := tx.AccessPoint.Delete().
 		Where(accesspoint.BranchIDEQ(branchID)).
 		Exec(ctx); err != nil {
 		return err
 	}
 
-	// 4) borrar branch_address (1:1)
+	// 5) borrar branch_address (1:1)
 	if _, err := tx.BranchAddress.Delete().
 		Where(branchaddress.BranchIDEQ(branchID)).
 		Exec(ctx); err != nil {
 		return err
 	}
 
-	// 5) borrar asignaciones user_branches
+	// 6) borrar user_branches
 	if _, err := tx.UserBranch.Delete().
 		Where(userbranch.BranchIDEQ(branchID)).
 		Exec(ctx); err != nil {
 		return err
 	}
 
-	// 6) borrar attendance_days (si ya existe uso)
+	// 7) borrar attendance_days (si ya existe uso)
 	if _, err := tx.AttendanceDay.Delete().
 		Where(attendanceday.BranchIDEQ(branchID)).
 		Exec(ctx); err != nil {
 		return err
 	}
 
-	// 7) borrar branch
+	// 8) borrar branch
 	if err := tx.Branch.DeleteOneID(branchID).Exec(ctx); err != nil {
 		return err
 	}

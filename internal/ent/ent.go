@@ -10,6 +10,7 @@ import (
 	"back/internal/ent/branchaddress"
 	"back/internal/ent/city"
 	"back/internal/ent/commune"
+	"back/internal/ent/device"
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/region"
 	"back/internal/ent/user"
@@ -91,6 +92,7 @@ func checkColumn(t, c string) error {
 			branchaddress.Table:   branchaddress.ValidColumn,
 			city.Table:            city.ValidColumn,
 			commune.Table:         commune.ValidColumn,
+			device.Table:          device.ValidColumn,
 			refreshtoken.Table:    refreshtoken.ValidColumn,
 			region.Table:          region.ValidColumn,
 			user.Table:            user.ValidColumn,

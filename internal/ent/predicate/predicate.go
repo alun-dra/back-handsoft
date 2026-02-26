@@ -27,6 +27,9 @@ type City func(*sql.Selector)
 // Commune is the predicate function for commune builders.
 type Commune func(*sql.Selector)
 
+// Device is the predicate function for device builders.
+type Device func(*sql.Selector)
+
 // RefreshToken is the predicate function for refreshtoken builders.
 type RefreshToken func(*sql.Selector)
 

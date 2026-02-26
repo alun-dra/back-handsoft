@@ -10,6 +10,7 @@ import (
 	"back/internal/ent/branchaddress"
 	"back/internal/ent/city"
 	"back/internal/ent/commune"
+	"back/internal/ent/device"
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/region"
 	"back/internal/ent/schema"
@@ -33,6 +34,16 @@ func init() {
 	accesspointDescIsActive := accesspointFields[2].Descriptor()
 	// accesspoint.DefaultIsActive holds the default value on creation for the is_active field.
 	accesspoint.DefaultIsActive = accesspointDescIsActive.Default.(bool)
+	// accesspointDescCreatedAt is the schema descriptor for created_at field.
+	accesspointDescCreatedAt := accesspointFields[3].Descriptor()
+	// accesspoint.DefaultCreatedAt holds the default value on creation for the created_at field.
+	accesspoint.DefaultCreatedAt = accesspointDescCreatedAt.Default.(func() time.Time)
+	// accesspointDescUpdatedAt is the schema descriptor for updated_at field.
+	accesspointDescUpdatedAt := accesspointFields[4].Descriptor()
+	// accesspoint.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	accesspoint.DefaultUpdatedAt = accesspointDescUpdatedAt.Default.(func() time.Time)
+	// accesspoint.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	accesspoint.UpdateDefaultUpdatedAt = accesspointDescUpdatedAt.UpdateDefault.(func() time.Time)
 	addressFields := schema.Address{}.Fields()
 	_ = addressFields
 	// addressDescStreet is the schema descriptor for street field.
@@ -117,6 +128,48 @@ func init() {
 	commune.DefaultUpdatedAt = communeDescUpdatedAt.Default.(func() time.Time)
 	// commune.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	commune.UpdateDefaultUpdatedAt = communeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	deviceFields := schema.Device{}.Fields()
+	_ = deviceFields
+	// deviceDescName is the schema descriptor for name field.
+	deviceDescName := deviceFields[1].Descriptor()
+	// device.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	device.NameValidator = deviceDescName.Validators[0].(func(string) error)
+	// deviceDescSerial is the schema descriptor for serial field.
+	deviceDescSerial := deviceFields[2].Descriptor()
+	// device.SerialValidator is a validator for the "serial" field. It is called by the builders before save.
+	device.SerialValidator = deviceDescSerial.Validators[0].(func(string) error)
+	// deviceDescDirection is the schema descriptor for direction field.
+	deviceDescDirection := deviceFields[3].Descriptor()
+	// device.DirectionValidator is a validator for the "direction" field. It is called by the builders before save.
+	device.DirectionValidator = func() func(string) error {
+		validators := deviceDescDirection.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(direction string) error {
+			for _, fn := range fns {
+				if err := fn(direction); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// deviceDescIsActive is the schema descriptor for is_active field.
+	deviceDescIsActive := deviceFields[4].Descriptor()
+	// device.DefaultIsActive holds the default value on creation for the is_active field.
+	device.DefaultIsActive = deviceDescIsActive.Default.(bool)
+	// deviceDescCreatedAt is the schema descriptor for created_at field.
+	deviceDescCreatedAt := deviceFields[5].Descriptor()
+	// device.DefaultCreatedAt holds the default value on creation for the created_at field.
+	device.DefaultCreatedAt = deviceDescCreatedAt.Default.(func() time.Time)
+	// deviceDescUpdatedAt is the schema descriptor for updated_at field.
+	deviceDescUpdatedAt := deviceFields[6].Descriptor()
+	// device.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	device.DefaultUpdatedAt = deviceDescUpdatedAt.Default.(func() time.Time)
+	// device.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	device.UpdateDefaultUpdatedAt = deviceDescUpdatedAt.UpdateDefault.(func() time.Time)
 	refreshtokenFields := schema.RefreshToken{}.Fields()
 	_ = refreshtokenFields
 	// refreshtokenDescTokenHash is the schema descriptor for token_hash field.

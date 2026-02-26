@@ -36,7 +36,6 @@ type createBranchRequest struct {
 		Extra     *string `json:"extra,omitempty" example:"Portón lateral"`
 	} `json:"address"`
 
-	// Ejemplo JSON: ["Puerta principal","Portón carga"]
 	AccessPoints []string `json:"access_points,omitempty"`
 }
 
@@ -68,10 +67,19 @@ type BranchAddressDTO struct {
 	Extra     *string `json:"extra,omitempty"`
 }
 
+type DeviceDTO struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Serial    string `json:"serial"`
+	Direction string `json:"direction"` // "in" | "out"
+	IsActive  bool   `json:"is_active"`
+}
+
 type AccessPointDTO struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	IsActive bool   `json:"is_active"`
+	ID       int         `json:"id"`
+	Name     string      `json:"name"`
+	IsActive bool        `json:"is_active"`
+	Devices  []DeviceDTO `json:"devices,omitempty"`
 }
 
 type BranchListItemDTO struct {
@@ -122,7 +130,7 @@ func (h *BranchHandler) Branches(w http.ResponseWriter, r *http.Request) {
 
 // BranchByID godoc
 // @Summary      Detalle sucursal
-// @Description  GET detalle con accesos. PATCH edita parcial (solo admin). DELETE elimina (solo admin) con cascada.
+// @Description  GET detalle con accesos y dispositivos. PATCH edita parcial (solo admin). DELETE elimina (solo admin) con cascada.
 // @Tags         Branches
 // @Accept       json
 // @Produce      json
@@ -193,21 +201,7 @@ func (h *BranchHandler) Detail(w http.ResponseWriter, r *http.Request, branchID 
 		return
 	}
 
-	resp := BranchDetailDTO{
-		ID:       b.ID,
-		Name:     b.Name,
-		Code:     b.Code,
-		IsActive: b.IsActive,
-		Address:  mapBranchAddress(b.Edges.Address),
-	}
-
-	for _, ap := range b.Edges.AccessPoints {
-		resp.AccessPoints = append(resp.AccessPoints, AccessPointDTO{
-			ID:       ap.ID,
-			Name:     ap.Name,
-			IsActive: ap.IsActive,
-		})
-	}
+	resp := mapBranchDetail(b)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
@@ -247,20 +241,7 @@ func (h *BranchHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := BranchDetailDTO{
-		ID:       b.ID,
-		Name:     b.Name,
-		Code:     b.Code,
-		IsActive: b.IsActive,
-		Address:  mapBranchAddress(b.Edges.Address),
-	}
-	for _, ap := range b.Edges.AccessPoints {
-		resp.AccessPoints = append(resp.AccessPoints, AccessPointDTO{
-			ID:       ap.ID,
-			Name:     ap.Name,
-			IsActive: ap.IsActive,
-		})
-	}
+	resp := mapBranchDetail(b)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -309,20 +290,7 @@ func (h *BranchHandler) Patch(w http.ResponseWriter, r *http.Request, branchID i
 		return
 	}
 
-	resp := BranchDetailDTO{
-		ID:       b.ID,
-		Name:     b.Name,
-		Code:     b.Code,
-		IsActive: b.IsActive,
-		Address:  mapBranchAddress(b.Edges.Address),
-	}
-	for _, ap := range b.Edges.AccessPoints {
-		resp.AccessPoints = append(resp.AccessPoints, AccessPointDTO{
-			ID:       ap.ID,
-			Name:     ap.Name,
-			IsActive: ap.IsActive,
-		})
-	}
+	resp := mapBranchDetail(b)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
@@ -350,7 +318,6 @@ func (h *BranchHandler) Delete(w http.ResponseWriter, r *http.Request, branchID 
    HELPERS
    ========================= */
 
-// Espera rutas tipo: /api/v1/branches/{id}
 func parseBranchIDFromPath(path string) (int, bool) {
 	trimmed := strings.Trim(path, "/")
 	parts := strings.Split(trimmed, "/")
@@ -407,4 +374,36 @@ func mapBranchAddress(a *ent.BranchAddress) *BranchAddressDTO {
 	}
 
 	return dto
+}
+
+func mapBranchDetail(b *ent.Branch) BranchDetailDTO {
+	resp := BranchDetailDTO{
+		ID:       b.ID,
+		Name:     b.Name,
+		Code:     b.Code,
+		IsActive: b.IsActive,
+		Address:  mapBranchAddress(b.Edges.Address),
+	}
+
+	for _, ap := range b.Edges.AccessPoints {
+		apDTO := AccessPointDTO{
+			ID:       ap.ID,
+			Name:     ap.Name,
+			IsActive: ap.IsActive,
+		}
+
+		for _, d := range ap.Edges.Devices {
+			apDTO.Devices = append(apDTO.Devices, DeviceDTO{
+				ID:        d.ID,
+				Name:      d.Name,
+				Serial:    d.Serial,
+				Direction: d.Direction,
+				IsActive:  d.IsActive,
+			})
+		}
+
+		resp.AccessPoints = append(resp.AccessPoints, apDTO)
+	}
+
+	return resp
 }

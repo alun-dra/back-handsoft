@@ -6,10 +6,12 @@ import (
 	"back/internal/ent/accesspoint"
 	"back/internal/ent/attendanceday"
 	"back/internal/ent/branch"
+	"back/internal/ent/device"
 	"back/internal/ent/useraccesspoint"
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -48,6 +50,34 @@ func (_c *AccessPointCreate) SetNillableIsActive(v *bool) *AccessPointCreate {
 	return _c
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (_c *AccessPointCreate) SetCreatedAt(v time.Time) *AccessPointCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_c *AccessPointCreate) SetNillableCreatedAt(v *time.Time) *AccessPointCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
+	}
+	return _c
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_c *AccessPointCreate) SetUpdatedAt(v time.Time) *AccessPointCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (_c *AccessPointCreate) SetNillableUpdatedAt(v *time.Time) *AccessPointCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
+	}
+	return _c
+}
+
 // SetBranch sets the "branch" edge to the Branch entity.
 func (_c *AccessPointCreate) SetBranch(v *Branch) *AccessPointCreate {
 	return _c.SetBranchID(v.ID)
@@ -81,6 +111,21 @@ func (_c *AccessPointCreate) AddAttendanceDays(v ...*AttendanceDay) *AccessPoint
 		ids[i] = v[i].ID
 	}
 	return _c.AddAttendanceDayIDs(ids...)
+}
+
+// AddDeviceIDs adds the "devices" edge to the Device entity by IDs.
+func (_c *AccessPointCreate) AddDeviceIDs(ids ...int) *AccessPointCreate {
+	_c.mutation.AddDeviceIDs(ids...)
+	return _c
+}
+
+// AddDevices adds the "devices" edges to the Device entity.
+func (_c *AccessPointCreate) AddDevices(v ...*Device) *AccessPointCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddDeviceIDs(ids...)
 }
 
 // Mutation returns the AccessPointMutation object of the builder.
@@ -122,6 +167,14 @@ func (_c *AccessPointCreate) defaults() {
 		v := accesspoint.DefaultIsActive
 		_c.mutation.SetIsActive(v)
 	}
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		v := accesspoint.DefaultCreatedAt()
+		_c.mutation.SetCreatedAt(v)
+	}
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		v := accesspoint.DefaultUpdatedAt()
+		_c.mutation.SetUpdatedAt(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -139,6 +192,12 @@ func (_c *AccessPointCreate) check() error {
 	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "AccessPoint.is_active"`)}
+	}
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "AccessPoint.created_at"`)}
+	}
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "AccessPoint.updated_at"`)}
 	}
 	if len(_c.mutation.BranchIDs()) == 0 {
 		return &ValidationError{Name: "branch", err: errors.New(`ent: missing required edge "AccessPoint.branch"`)}
@@ -176,6 +235,14 @@ func (_c *AccessPointCreate) createSpec() (*AccessPoint, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(accesspoint.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
+	}
+	if value, ok := _c.mutation.CreatedAt(); ok {
+		_spec.SetField(accesspoint.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := _c.mutation.UpdatedAt(); ok {
+		_spec.SetField(accesspoint.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
 	}
 	if nodes := _c.mutation.BranchIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -219,6 +286,22 @@ func (_c *AccessPointCreate) createSpec() (*AccessPoint, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(attendanceday.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.DevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspoint.DevicesTable,
+			Columns: []string{accesspoint.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(device.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
