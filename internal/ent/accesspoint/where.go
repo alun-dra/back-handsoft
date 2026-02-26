@@ -4,6 +4,7 @@ package accesspoint
 
 import (
 	"back/internal/ent/predicate"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -67,6 +68,16 @@ func Name(v string) predicate.AccessPoint {
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
 func IsActive(v bool) predicate.AccessPoint {
 	return predicate.AccessPoint(sql.FieldEQ(FieldIsActive, v))
+}
+
+// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
+func CreatedAt(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
+func UpdatedAt(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
 // BranchIDEQ applies the EQ predicate on the "branch_id" field.
@@ -164,6 +175,86 @@ func IsActiveNEQ(v bool) predicate.AccessPoint {
 	return predicate.AccessPoint(sql.FieldNEQ(FieldIsActive, v))
 }
 
+// CreatedAtEQ applies the EQ predicate on the "created_at" field.
+func CreatedAtEQ(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
+func CreatedAtNEQ(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldNEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtIn applies the In predicate on the "created_at" field.
+func CreatedAtIn(vs ...time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
+func CreatedAtNotIn(vs ...time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldNotIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtGT applies the GT predicate on the "created_at" field.
+func CreatedAtGT(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldGT(FieldCreatedAt, v))
+}
+
+// CreatedAtGTE applies the GTE predicate on the "created_at" field.
+func CreatedAtGTE(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldGTE(FieldCreatedAt, v))
+}
+
+// CreatedAtLT applies the LT predicate on the "created_at" field.
+func CreatedAtLT(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldLT(FieldCreatedAt, v))
+}
+
+// CreatedAtLTE applies the LTE predicate on the "created_at" field.
+func CreatedAtLTE(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldLTE(FieldCreatedAt, v))
+}
+
+// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
+func UpdatedAtEQ(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
+func UpdatedAtNEQ(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldNEQ(FieldUpdatedAt, v))
+}
+
+// UpdatedAtIn applies the In predicate on the "updated_at" field.
+func UpdatedAtIn(vs ...time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldIn(FieldUpdatedAt, vs...))
+}
+
+// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
+func UpdatedAtNotIn(vs ...time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldNotIn(FieldUpdatedAt, vs...))
+}
+
+// UpdatedAtGT applies the GT predicate on the "updated_at" field.
+func UpdatedAtGT(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldGT(FieldUpdatedAt, v))
+}
+
+// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
+func UpdatedAtGTE(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldGTE(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLT applies the LT predicate on the "updated_at" field.
+func UpdatedAtLT(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldLT(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
+func UpdatedAtLTE(v time.Time) predicate.AccessPoint {
+	return predicate.AccessPoint(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
 // HasBranch applies the HasEdge predicate on the "branch" edge.
 func HasBranch() predicate.AccessPoint {
 	return predicate.AccessPoint(func(s *sql.Selector) {
@@ -225,6 +316,29 @@ func HasAttendanceDays() predicate.AccessPoint {
 func HasAttendanceDaysWith(preds ...predicate.AttendanceDay) predicate.AccessPoint {
 	return predicate.AccessPoint(func(s *sql.Selector) {
 		step := newAttendanceDaysStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasDevices applies the HasEdge predicate on the "devices" edge.
+func HasDevices() predicate.AccessPoint {
+	return predicate.AccessPoint(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, DevicesTable, DevicesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDevicesWith applies the HasEdge predicate on the "devices" edge with a given conditions (other predicates).
+func HasDevicesWith(preds ...predicate.Device) predicate.AccessPoint {
+	return predicate.AccessPoint(func(s *sql.Selector) {
+		step := newDevicesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

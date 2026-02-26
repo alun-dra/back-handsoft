@@ -26,6 +26,8 @@ type Tx struct {
 	City *CityClient
 	// Commune is the client for interacting with the Commune builders.
 	Commune *CommuneClient
+	// Device is the client for interacting with the Device builders.
+	Device *DeviceClient
 	// RefreshToken is the client for interacting with the RefreshToken builders.
 	RefreshToken *RefreshTokenClient
 	// Region is the client for interacting with the Region builders.
@@ -174,6 +176,7 @@ func (tx *Tx) init() {
 	tx.BranchAddress = NewBranchAddressClient(tx.config)
 	tx.City = NewCityClient(tx.config)
 	tx.Commune = NewCommuneClient(tx.config)
+	tx.Device = NewDeviceClient(tx.config)
 	tx.RefreshToken = NewRefreshTokenClient(tx.config)
 	tx.Region = NewRegionClient(tx.config)
 	tx.User = NewUserClient(tx.config)

@@ -6,11 +6,13 @@ import (
 	"back/internal/ent/accesspoint"
 	"back/internal/ent/attendanceday"
 	"back/internal/ent/branch"
+	"back/internal/ent/device"
 	"back/internal/ent/predicate"
 	"back/internal/ent/useraccesspoint"
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -72,6 +74,12 @@ func (_u *AccessPointUpdate) SetNillableIsActive(v *bool) *AccessPointUpdate {
 	return _u
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *AccessPointUpdate) SetUpdatedAt(v time.Time) *AccessPointUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
 // SetBranch sets the "branch" edge to the Branch entity.
 func (_u *AccessPointUpdate) SetBranch(v *Branch) *AccessPointUpdate {
 	return _u.SetBranchID(v.ID)
@@ -105,6 +113,21 @@ func (_u *AccessPointUpdate) AddAttendanceDays(v ...*AttendanceDay) *AccessPoint
 		ids[i] = v[i].ID
 	}
 	return _u.AddAttendanceDayIDs(ids...)
+}
+
+// AddDeviceIDs adds the "devices" edge to the Device entity by IDs.
+func (_u *AccessPointUpdate) AddDeviceIDs(ids ...int) *AccessPointUpdate {
+	_u.mutation.AddDeviceIDs(ids...)
+	return _u
+}
+
+// AddDevices adds the "devices" edges to the Device entity.
+func (_u *AccessPointUpdate) AddDevices(v ...*Device) *AccessPointUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDeviceIDs(ids...)
 }
 
 // Mutation returns the AccessPointMutation object of the builder.
@@ -160,8 +183,30 @@ func (_u *AccessPointUpdate) RemoveAttendanceDays(v ...*AttendanceDay) *AccessPo
 	return _u.RemoveAttendanceDayIDs(ids...)
 }
 
+// ClearDevices clears all "devices" edges to the Device entity.
+func (_u *AccessPointUpdate) ClearDevices() *AccessPointUpdate {
+	_u.mutation.ClearDevices()
+	return _u
+}
+
+// RemoveDeviceIDs removes the "devices" edge to Device entities by IDs.
+func (_u *AccessPointUpdate) RemoveDeviceIDs(ids ...int) *AccessPointUpdate {
+	_u.mutation.RemoveDeviceIDs(ids...)
+	return _u
+}
+
+// RemoveDevices removes "devices" edges to Device entities.
+func (_u *AccessPointUpdate) RemoveDevices(v ...*Device) *AccessPointUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDeviceIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *AccessPointUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -184,6 +229,14 @@ func (_u *AccessPointUpdate) Exec(ctx context.Context) error {
 func (_u *AccessPointUpdate) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *AccessPointUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := accesspoint.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -217,6 +270,9 @@ func (_u *AccessPointUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(accesspoint.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(accesspoint.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if _u.mutation.BranchCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -330,6 +386,51 @@ func (_u *AccessPointUpdate) sqlSave(ctx context.Context) (_node int, err error)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(attendanceday.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.DevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspoint.DevicesTable,
+			Columns: []string{accesspoint.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(device.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDevicesIDs(); len(nodes) > 0 && !_u.mutation.DevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspoint.DevicesTable,
+			Columns: []string{accesspoint.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(device.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspoint.DevicesTable,
+			Columns: []string{accesspoint.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(device.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -399,6 +500,12 @@ func (_u *AccessPointUpdateOne) SetNillableIsActive(v *bool) *AccessPointUpdateO
 	return _u
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *AccessPointUpdateOne) SetUpdatedAt(v time.Time) *AccessPointUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
 // SetBranch sets the "branch" edge to the Branch entity.
 func (_u *AccessPointUpdateOne) SetBranch(v *Branch) *AccessPointUpdateOne {
 	return _u.SetBranchID(v.ID)
@@ -432,6 +539,21 @@ func (_u *AccessPointUpdateOne) AddAttendanceDays(v ...*AttendanceDay) *AccessPo
 		ids[i] = v[i].ID
 	}
 	return _u.AddAttendanceDayIDs(ids...)
+}
+
+// AddDeviceIDs adds the "devices" edge to the Device entity by IDs.
+func (_u *AccessPointUpdateOne) AddDeviceIDs(ids ...int) *AccessPointUpdateOne {
+	_u.mutation.AddDeviceIDs(ids...)
+	return _u
+}
+
+// AddDevices adds the "devices" edges to the Device entity.
+func (_u *AccessPointUpdateOne) AddDevices(v ...*Device) *AccessPointUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDeviceIDs(ids...)
 }
 
 // Mutation returns the AccessPointMutation object of the builder.
@@ -487,6 +609,27 @@ func (_u *AccessPointUpdateOne) RemoveAttendanceDays(v ...*AttendanceDay) *Acces
 	return _u.RemoveAttendanceDayIDs(ids...)
 }
 
+// ClearDevices clears all "devices" edges to the Device entity.
+func (_u *AccessPointUpdateOne) ClearDevices() *AccessPointUpdateOne {
+	_u.mutation.ClearDevices()
+	return _u
+}
+
+// RemoveDeviceIDs removes the "devices" edge to Device entities by IDs.
+func (_u *AccessPointUpdateOne) RemoveDeviceIDs(ids ...int) *AccessPointUpdateOne {
+	_u.mutation.RemoveDeviceIDs(ids...)
+	return _u
+}
+
+// RemoveDevices removes "devices" edges to Device entities.
+func (_u *AccessPointUpdateOne) RemoveDevices(v ...*Device) *AccessPointUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDeviceIDs(ids...)
+}
+
 // Where appends a list predicates to the AccessPointUpdate builder.
 func (_u *AccessPointUpdateOne) Where(ps ...predicate.AccessPoint) *AccessPointUpdateOne {
 	_u.mutation.Where(ps...)
@@ -502,6 +645,7 @@ func (_u *AccessPointUpdateOne) Select(field string, fields ...string) *AccessPo
 
 // Save executes the query and returns the updated AccessPoint entity.
 func (_u *AccessPointUpdateOne) Save(ctx context.Context) (*AccessPoint, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -524,6 +668,14 @@ func (_u *AccessPointUpdateOne) Exec(ctx context.Context) error {
 func (_u *AccessPointUpdateOne) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *AccessPointUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := accesspoint.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -574,6 +726,9 @@ func (_u *AccessPointUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoint
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(accesspoint.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(accesspoint.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if _u.mutation.BranchCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -687,6 +842,51 @@ func (_u *AccessPointUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoint
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(attendanceday.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.DevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspoint.DevicesTable,
+			Columns: []string{accesspoint.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(device.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDevicesIDs(); len(nodes) > 0 && !_u.mutation.DevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspoint.DevicesTable,
+			Columns: []string{accesspoint.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(device.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspoint.DevicesTable,
+			Columns: []string{accesspoint.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(device.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

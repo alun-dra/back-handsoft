@@ -6,6 +6,7 @@ import (
 	"back/internal/ent/accesspoint"
 	"back/internal/ent/attendanceday"
 	"back/internal/ent/branch"
+	"back/internal/ent/device"
 	"back/internal/ent/predicate"
 	"back/internal/ent/useraccesspoint"
 	"context"
@@ -29,6 +30,7 @@ type AccessPointQuery struct {
 	withBranch           *BranchQuery
 	withUserAccessPoints *UserAccessPointQuery
 	withAttendanceDays   *AttendanceDayQuery
+	withDevices          *DeviceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -124,6 +126,28 @@ func (_q *AccessPointQuery) QueryAttendanceDays() *AttendanceDayQuery {
 			sqlgraph.From(accesspoint.Table, accesspoint.FieldID, selector),
 			sqlgraph.To(attendanceday.Table, attendanceday.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, accesspoint.AttendanceDaysTable, accesspoint.AttendanceDaysColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDevices chains the current query on the "devices" edge.
+func (_q *AccessPointQuery) QueryDevices() *DeviceQuery {
+	query := (&DeviceClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspoint.Table, accesspoint.FieldID, selector),
+			sqlgraph.To(device.Table, device.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, accesspoint.DevicesTable, accesspoint.DevicesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -326,6 +350,7 @@ func (_q *AccessPointQuery) Clone() *AccessPointQuery {
 		withBranch:           _q.withBranch.Clone(),
 		withUserAccessPoints: _q.withUserAccessPoints.Clone(),
 		withAttendanceDays:   _q.withAttendanceDays.Clone(),
+		withDevices:          _q.withDevices.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -362,6 +387,17 @@ func (_q *AccessPointQuery) WithAttendanceDays(opts ...func(*AttendanceDayQuery)
 		opt(query)
 	}
 	_q.withAttendanceDays = query
+	return _q
+}
+
+// WithDevices tells the query-builder to eager-load the nodes that are connected to
+// the "devices" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccessPointQuery) WithDevices(opts ...func(*DeviceQuery)) *AccessPointQuery {
+	query := (&DeviceClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withDevices = query
 	return _q
 }
 
@@ -443,10 +479,11 @@ func (_q *AccessPointQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	var (
 		nodes       = []*AccessPoint{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withBranch != nil,
 			_q.withUserAccessPoints != nil,
 			_q.withAttendanceDays != nil,
+			_q.withDevices != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -486,6 +523,13 @@ func (_q *AccessPointQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 		if err := _q.loadAttendanceDays(ctx, query, nodes,
 			func(n *AccessPoint) { n.Edges.AttendanceDays = []*AttendanceDay{} },
 			func(n *AccessPoint, e *AttendanceDay) { n.Edges.AttendanceDays = append(n.Edges.AttendanceDays, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withDevices; query != nil {
+		if err := _q.loadDevices(ctx, query, nodes,
+			func(n *AccessPoint) { n.Edges.Devices = []*Device{} },
+			func(n *AccessPoint, e *Device) { n.Edges.Devices = append(n.Edges.Devices, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -577,6 +621,36 @@ func (_q *AccessPointQuery) loadAttendanceDays(ctx context.Context, query *Atten
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "access_point_attendance_days" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *AccessPointQuery) loadDevices(ctx context.Context, query *DeviceQuery, nodes []*AccessPoint, init func(*AccessPoint), assign func(*AccessPoint, *Device)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*AccessPoint)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(device.FieldAccessPointID)
+	}
+	query.Where(predicate.Device(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(accesspoint.DevicesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AccessPointID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "access_point_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
