@@ -1,13 +1,25 @@
 basePath: /
 definitions:
+  handlers.AccessPointDTO:
+    properties:
+      devices:
+        items:
+          $ref: '#/definitions/handlers.DeviceDTO'
+        type: array
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
   handlers.AddressResponse:
     properties:
       apartment:
         example: 12B
         type: string
       city: {}
-      commune:
-        description: 'opcional: depende de tu service'
+      commune: {}
       created_at:
         type: string
       id:
@@ -21,6 +33,46 @@ definitions:
         example: Av. Siempre Viva
         type: string
       updated_at:
+        type: string
+    type: object
+  handlers.BranchAddressDTO:
+    properties:
+      apartment:
+        type: string
+      city: {}
+      commune: {}
+      extra:
+        type: string
+      number:
+        type: string
+      region: {}
+      street:
+        type: string
+    type: object
+  handlers.BranchDetailDTO:
+    properties:
+      access_points:
+        items:
+          $ref: '#/definitions/handlers.AccessPointDTO'
+        type: array
+      address:
+        $ref: '#/definitions/handlers.BranchAddressDTO'
+      code:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  handlers.BranchListItemDTO:
+    properties:
+      address:
+        $ref: '#/definitions/handlers.BranchAddressDTO'
+      id:
+        type: integer
+      name:
         type: string
     type: object
   handlers.CityResponse:
@@ -45,6 +97,22 @@ definitions:
         type: integer
       name:
         example: Santiago
+        type: string
+    type: object
+  handlers.DeviceDTO:
+    properties:
+      access_point_id:
+        type: integer
+      direction:
+        description: '"in" | "out"'
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      serial:
         type: string
     type: object
   handlers.ErrorResponse:
@@ -219,6 +287,56 @@ definitions:
         example: Av. Siempre Viva
         type: string
     type: object
+  handlers.createBranchRequest:
+    properties:
+      access_points:
+        items:
+          type: string
+        type: array
+      address:
+        properties:
+          apartment:
+            example: 12B
+            type: string
+          commune_id:
+            example: 10
+            type: integer
+          extra:
+            example: Portón lateral
+            type: string
+          number:
+            example: "742"
+            type: string
+          street:
+            example: Av. Siempre Viva
+            type: string
+        type: object
+      code:
+        example: BOG-001
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Bodega Central
+        type: string
+    type: object
+  handlers.createDeviceRequest:
+    properties:
+      direction:
+        description: '"in" | "out"'
+        example: in
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Lector Puerta Principal
+        type: string
+      serial:
+        example: SN-ABC-123
+        type: string
+    type: object
   handlers.loginRequest:
     properties:
       password:
@@ -232,6 +350,54 @@ definitions:
     properties:
       refresh_token:
         example: 441c5a...
+        type: string
+    type: object
+  handlers.patchBranchRequest:
+    properties:
+      address:
+        properties:
+          apartment:
+            description: '"" limpia'
+            example: 12B
+            type: string
+          commune_id:
+            example: 10
+            type: integer
+          extra:
+            description: '"" limpia'
+            example: Portón lateral
+            type: string
+          number:
+            example: "742"
+            type: string
+          street:
+            example: Av. Siempre Viva
+            type: string
+        type: object
+      code:
+        example: BOG-001
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Bodega Central
+        type: string
+    type: object
+  handlers.patchDeviceRequest:
+    properties:
+      direction:
+        description: '"in" | "out"'
+        example: out
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Lector Puerta Principal
+        type: string
+      serial:
+        example: SN-ABC-123
         type: string
     type: object
   handlers.refreshRequest:
@@ -252,12 +418,137 @@ definitions:
         example: admin
         type: string
     type: object
+  handlers.updateAddressRequest:
+    properties:
+      apartment:
+        description: '"" limpia'
+        example: 12B
+        type: string
+      commune_id:
+        example: 10
+        type: integer
+      number:
+        example: "742"
+        type: string
+      street:
+        example: Av. Siempre Viva
+        type: string
+    type: object
 info:
   contact: {}
   description: API REST del sistema
   title: Backend GO API
   version: "1.0"
 paths:
+  /api/v1/access-points/{id}/devices:
+    get:
+      consumes:
+      - application/json
+      description: GET lista dispositivos de un access point. POST crea dispositivo
+        para un access point (solo admin).
+      parameters:
+      - description: ID del access point
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Crear device (solo POST, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createDeviceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.DeviceDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.DeviceDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Dispositivos por entrada
+      tags:
+      - Devices
+    post:
+      consumes:
+      - application/json
+      description: GET lista dispositivos de un access point. POST crea dispositivo
+        para un access point (solo admin).
+      parameters:
+      - description: ID del access point
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Crear device (solo POST, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createDeviceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.DeviceDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.DeviceDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Dispositivos por entrada
+      tags:
+      - Devices
   /api/v1/addresses:
     get:
       produces:
@@ -267,8 +558,7 @@ paths:
           description: OK
           schema:
             items:
-              additionalProperties: true
-              type: object
+              $ref: '#/definitions/handlers.AddressResponse'
             type: array
         "401":
           description: Unauthorized
@@ -299,8 +589,7 @@ paths:
         "201":
           description: Created
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.AddressResponse'
         "400":
           description: Bad Request
           schema:
@@ -316,6 +605,99 @@ paths:
       security:
       - BearerAuth: []
       summary: Crear dirección para el usuario autenticado
+      tags:
+      - Addresses
+  /api/v1/addresses/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: PATCH actualiza campos. DELETE elimina la dirección. Solo si pertenece
+        al usuario autenticado.
+      parameters:
+      - description: ID de la dirección
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Actualizar dirección (solo PATCH)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.updateAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AddressResponse'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar o eliminar dirección del usuario
+      tags:
+      - Addresses
+    patch:
+      consumes:
+      - application/json
+      description: PATCH actualiza campos. DELETE elimina la dirección. Solo si pertenece
+        al usuario autenticado.
+      parameters:
+      - description: ID de la dirección
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Actualizar dirección (solo PATCH)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.updateAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AddressResponse'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar o eliminar dirección del usuario
       tags:
       - Addresses
   /api/v1/auth/login:
@@ -498,6 +880,250 @@ paths:
       summary: Sesiones activas
       tags:
       - Auth
+  /api/v1/branches:
+    get:
+      consumes:
+      - application/json
+      description: GET lista sucursales (nombre + dirección) para usuario autenticado.
+        POST crea sucursal (solo admin).
+      parameters:
+      - description: Crear sucursal (solo POST, admin)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createBranchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.BranchListItemDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.BranchDetailDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Sucursales
+      tags:
+      - Branches
+    post:
+      consumes:
+      - application/json
+      description: GET lista sucursales (nombre + dirección) para usuario autenticado.
+        POST crea sucursal (solo admin).
+      parameters:
+      - description: Crear sucursal (solo POST, admin)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createBranchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.BranchListItemDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.BranchDetailDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Sucursales
+      tags:
+      - Branches
+  /api/v1/branches/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: GET detalle con accesos y dispositivos. PATCH edita parcial (solo
+        admin). DELETE elimina (solo admin) con cascada.
+      parameters:
+      - description: ID sucursal
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch sucursal (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchBranchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.BranchDetailDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detalle sucursal
+      tags:
+      - Branches
+    get:
+      consumes:
+      - application/json
+      description: GET detalle con accesos y dispositivos. PATCH edita parcial (solo
+        admin). DELETE elimina (solo admin) con cascada.
+      parameters:
+      - description: ID sucursal
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch sucursal (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchBranchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.BranchDetailDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detalle sucursal
+      tags:
+      - Branches
+    patch:
+      consumes:
+      - application/json
+      description: GET detalle con accesos y dispositivos. PATCH edita parcial (solo
+        admin). DELETE elimina (solo admin) con cascada.
+      parameters:
+      - description: ID sucursal
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch sucursal (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchBranchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.BranchDetailDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detalle sucursal
+      tags:
+      - Branches
   /api/v1/cities/{id}/communes:
     get:
       parameters:
@@ -530,6 +1156,105 @@ paths:
       summary: Listar comunas por ciudad
       tags:
       - Location
+  /api/v1/devices/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: PATCH edita parcialmente. DELETE elimina. (solo admin)
+      parameters:
+      - description: ID del device
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch device (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchDeviceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DeviceDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Editar o eliminar dispositivo
+      tags:
+      - Devices
+    patch:
+      consumes:
+      - application/json
+      description: PATCH edita parcialmente. DELETE elimina. (solo admin)
+      parameters:
+      - description: ID del device
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch device (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchDeviceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DeviceDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Editar o eliminar dispositivo
+      tags:
+      - Devices
   /api/v1/me:
     get:
       produces:

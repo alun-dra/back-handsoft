@@ -29,9 +29,8 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// =========================
 	// Swagger UI
 	// =========================
-	// Esto expone:
-	//   UI:  /docs/index.html
-	//   JSON: /docs/doc.json
+	// UI:   /docs/index.html
+	// JSON: /docs/doc.json
 	mux.Handle("/docs/", httpSwagger.WrapHandler)
 
 	// (Opcional) Redirigir /docs a /docs/index.html
@@ -48,12 +47,18 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	locationService := services.NewLocationService(client)
 	addressService := services.NewAddressService(client)
 
+	branchService := services.NewBranchService(client)
+	deviceService := services.NewDeviceService(client)
+
 	// =========================
 	// Handlers
 	// =========================
 	authHandler := handlers.NewAuthHandler(cfg, usersService, tokenService)
 	locationHandler := handlers.NewLocationHandler(locationService)
 	addressHandler := handlers.NewAddressHandler(addressService)
+
+	branchHandler := handlers.NewBranchHandler(branchService)
+	deviceHandler := handlers.NewDeviceHandler(deviceService)
 
 	// =========================
 	// Public routes (AUTH)
@@ -106,20 +111,55 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// Protected routes (ADDRESSES)
 	// =========================
 
-	// /api/v1/addresses  (GET, POST)
+	// /api/v1/addresses (GET, POST)
 	protectedAddresses := middleware.Chain(
 		http.HandlerFunc(addressHandler.Addresses),
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/addresses", protectedAddresses)
 
-	// /api/v1/addresses/{id}  (PATCH, DELETE)
-	// IMPORTANTE: debe llevar slash final
+	// /api/v1/addresses/{id} (PATCH, DELETE) -> necesita slash final
 	protectedAddressByID := middleware.Chain(
 		http.HandlerFunc(addressHandler.AddressByID),
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/addresses/", protectedAddressByID)
+
+	// =========================
+	// Protected routes (BRANCHES)
+	// =========================
+
+	// /api/v1/branches (GET, POST)
+	protectedBranches := middleware.Chain(
+		http.HandlerFunc(branchHandler.Branches),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/branches", protectedBranches)
+
+	// /api/v1/branches/{id} (GET, PATCH, DELETE) -> necesita slash final
+	protectedBranchByID := middleware.Chain(
+		http.HandlerFunc(branchHandler.BranchByID),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/branches/", protectedBranchByID)
+
+	// =========================
+	// Protected routes (DEVICES)
+	// =========================
+
+	// /api/v1/access-points/{id}/devices (GET, POST) -> se registra como prefijo /api/v1/access-points/
+	protectedAccessPointDevices := middleware.Chain(
+		http.HandlerFunc(deviceHandler.AccessPointDevices),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/access-points/", protectedAccessPointDevices)
+
+	// /api/v1/devices/{id} (PATCH, DELETE) -> necesita slash final
+	protectedDeviceByID := middleware.Chain(
+		http.HandlerFunc(deviceHandler.DeviceByID),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/devices/", protectedDeviceByID)
 
 	// =========================
 	// Global middlewares

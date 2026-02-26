@@ -68,11 +68,12 @@ type BranchAddressDTO struct {
 }
 
 type DeviceDTO struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Serial    string `json:"serial"`
-	Direction string `json:"direction"` // "in" | "out"
-	IsActive  bool   `json:"is_active"`
+	ID            int    `json:"id"`
+	AccessPointID int    `json:"access_point_id"`
+	Name          string `json:"name"`
+	Serial        string `json:"serial"`
+	Direction     string `json:"direction"` // "in" | "out"
+	IsActive      bool   `json:"is_active"`
 }
 
 type AccessPointDTO struct {

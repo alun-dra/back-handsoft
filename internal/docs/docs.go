@@ -15,6 +15,172 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/access-points/{id}/devices": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET lista dispositivos de un access point. POST crea dispositivo para un access point (solo admin).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devices"
+                ],
+                "summary": "Dispositivos por entrada",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del access point",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Crear device (solo POST, admin)",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.createDeviceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.DeviceDTO"
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DeviceDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET lista dispositivos de un access point. POST crea dispositivo para un access point (solo admin).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devices"
+                ],
+                "summary": "Dispositivos por entrada",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del access point",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Crear device (solo POST, admin)",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.createDeviceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.DeviceDTO"
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DeviceDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/addresses": {
             "get": {
                 "security": [
@@ -35,8 +201,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "object",
-                                "additionalProperties": true
+                                "$ref": "#/definitions/handlers.AddressResponse"
                             }
                         }
                     },
@@ -85,8 +250,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/handlers.AddressResponse"
                         }
                     },
                     "400": {
@@ -97,6 +261,148 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/addresses/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "PATCH actualiza campos. DELETE elimina la dirección. Solo si pertenece al usuario autenticado.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Addresses"
+                ],
+                "summary": "Actualizar o eliminar dirección del usuario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la dirección",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Actualizar dirección (solo PATCH)",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.updateAddressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AddressResponse"
+                        }
+                    },
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "PATCH actualiza campos. DELETE elimina la dirección. Solo si pertenece al usuario autenticado.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Addresses"
+                ],
+                "summary": "Actualizar o eliminar dirección del usuario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la dirección",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Actualizar dirección (solo PATCH)",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.updateAddressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AddressResponse"
+                        }
+                    },
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -391,6 +697,378 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/branches": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET lista sucursales (nombre + dirección) para usuario autenticado. POST crea sucursal (solo admin).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Sucursales",
+                "parameters": [
+                    {
+                        "description": "Crear sucursal (solo POST, admin)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.createBranchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.BranchListItemDTO"
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BranchDetailDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET lista sucursales (nombre + dirección) para usuario autenticado. POST crea sucursal (solo admin).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Sucursales",
+                "parameters": [
+                    {
+                        "description": "Crear sucursal (solo POST, admin)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.createBranchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.BranchListItemDTO"
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BranchDetailDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/branches/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET detalle con accesos y dispositivos. PATCH edita parcial (solo admin). DELETE elimina (solo admin) con cascada.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Detalle sucursal",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID sucursal",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patch sucursal (solo PATCH, admin)",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.patchBranchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BranchDetailDTO"
+                        }
+                    },
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET detalle con accesos y dispositivos. PATCH edita parcial (solo admin). DELETE elimina (solo admin) con cascada.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Detalle sucursal",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID sucursal",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patch sucursal (solo PATCH, admin)",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.patchBranchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BranchDetailDTO"
+                        }
+                    },
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET detalle con accesos y dispositivos. PATCH edita parcial (solo admin). DELETE elimina (solo admin) con cascada.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Detalle sucursal",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID sucursal",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patch sucursal (solo PATCH, admin)",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.patchBranchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BranchDetailDTO"
+                        }
+                    },
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cities/{id}/communes": {
             "get": {
                 "produces": [
@@ -421,6 +1099,160 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/devices/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "PATCH edita parcialmente. DELETE elimina. (solo admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devices"
+                ],
+                "summary": "Editar o eliminar dispositivo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del device",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patch device (solo PATCH, admin)",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.patchDeviceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DeviceDTO"
+                        }
+                    },
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "PATCH edita parcialmente. DELETE elimina. (solo admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devices"
+                ],
+                "summary": "Editar o eliminar dispositivo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del device",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patch device (solo PATCH, admin)",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.patchDeviceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DeviceDTO"
+                        }
+                    },
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -555,6 +1387,26 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.AccessPointDTO": {
+            "type": "object",
+            "properties": {
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.DeviceDTO"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.AddressResponse": {
             "type": "object",
             "properties": {
@@ -563,9 +1415,7 @@ const docTemplate = `{
                     "example": "12B"
                 },
                 "city": {},
-                "commune": {
-                    "description": "opcional: depende de tu service"
-                },
+                "commune": {},
                 "created_at": {
                     "type": "string"
                 },
@@ -583,6 +1433,66 @@ const docTemplate = `{
                     "example": "Av. Siempre Viva"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BranchAddressDTO": {
+            "type": "object",
+            "properties": {
+                "apartment": {
+                    "type": "string"
+                },
+                "city": {},
+                "commune": {},
+                "extra": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "region": {},
+                "street": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BranchDetailDTO": {
+            "type": "object",
+            "properties": {
+                "access_points": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AccessPointDTO"
+                    }
+                },
+                "address": {
+                    "$ref": "#/definitions/handlers.BranchAddressDTO"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BranchListItemDTO": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/handlers.BranchAddressDTO"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -618,6 +1528,30 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "Santiago"
+                }
+            }
+        },
+        "handlers.DeviceDTO": {
+            "type": "object",
+            "properties": {
+                "access_point_id": {
+                    "type": "integer"
+                },
+                "direction": {
+                    "description": "\"in\" | \"out\"",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "serial": {
+                    "type": "string"
                 }
             }
         },
@@ -865,6 +1799,76 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.createBranchRequest": {
+            "type": "object",
+            "properties": {
+                "access_points": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "address": {
+                    "type": "object",
+                    "properties": {
+                        "apartment": {
+                            "type": "string",
+                            "example": "12B"
+                        },
+                        "commune_id": {
+                            "type": "integer",
+                            "example": 10
+                        },
+                        "extra": {
+                            "type": "string",
+                            "example": "Portón lateral"
+                        },
+                        "number": {
+                            "type": "string",
+                            "example": "742"
+                        },
+                        "street": {
+                            "type": "string",
+                            "example": "Av. Siempre Viva"
+                        }
+                    }
+                },
+                "code": {
+                    "type": "string",
+                    "example": "BOG-001"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Bodega Central"
+                }
+            }
+        },
+        "handlers.createDeviceRequest": {
+            "type": "object",
+            "properties": {
+                "direction": {
+                    "description": "\"in\" | \"out\"",
+                    "type": "string",
+                    "example": "in"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Lector Puerta Principal"
+                },
+                "serial": {
+                    "type": "string",
+                    "example": "SN-ABC-123"
+                }
+            }
+        },
         "handlers.loginRequest": {
             "type": "object",
             "properties": {
@@ -884,6 +1888,72 @@ const docTemplate = `{
                 "refresh_token": {
                     "type": "string",
                     "example": "441c5a..."
+                }
+            }
+        },
+        "handlers.patchBranchRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "object",
+                    "properties": {
+                        "apartment": {
+                            "description": "\"\" limpia",
+                            "type": "string",
+                            "example": "12B"
+                        },
+                        "commune_id": {
+                            "type": "integer",
+                            "example": 10
+                        },
+                        "extra": {
+                            "description": "\"\" limpia",
+                            "type": "string",
+                            "example": "Portón lateral"
+                        },
+                        "number": {
+                            "type": "string",
+                            "example": "742"
+                        },
+                        "street": {
+                            "type": "string",
+                            "example": "Av. Siempre Viva"
+                        }
+                    }
+                },
+                "code": {
+                    "type": "string",
+                    "example": "BOG-001"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Bodega Central"
+                }
+            }
+        },
+        "handlers.patchDeviceRequest": {
+            "type": "object",
+            "properties": {
+                "direction": {
+                    "description": "\"in\" | \"out\"",
+                    "type": "string",
+                    "example": "out"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Lector Puerta Principal"
+                },
+                "serial": {
+                    "type": "string",
+                    "example": "SN-ABC-123"
                 }
             }
         },
@@ -910,6 +1980,28 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "admin"
+                }
+            }
+        },
+        "handlers.updateAddressRequest": {
+            "type": "object",
+            "properties": {
+                "apartment": {
+                    "description": "\"\" limpia",
+                    "type": "string",
+                    "example": "12B"
+                },
+                "commune_id": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "number": {
+                    "type": "string",
+                    "example": "742"
+                },
+                "street": {
+                    "type": "string",
+                    "example": "Av. Siempre Viva"
                 }
             }
         }
