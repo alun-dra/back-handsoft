@@ -5262,7 +5262,11 @@ type DeviceMutation struct {
 	name                *string
 	serial              *string
 	direction           *string
+	username            *string
+	password_hash       *string
+	role                *string
 	is_active           *bool
+	last_login_at       *time.Time
 	created_at          *time.Time
 	updated_at          *time.Time
 	clearedFields       map[string]struct{}
@@ -5515,6 +5519,114 @@ func (m *DeviceMutation) ResetDirection() {
 	m.direction = nil
 }
 
+// SetUsername sets the "username" field.
+func (m *DeviceMutation) SetUsername(s string) {
+	m.username = &s
+}
+
+// Username returns the value of the "username" field in the mutation.
+func (m *DeviceMutation) Username() (r string, exists bool) {
+	v := m.username
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUsername returns the old "username" field's value of the Device entity.
+// If the Device object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeviceMutation) OldUsername(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUsername is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUsername requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUsername: %w", err)
+	}
+	return oldValue.Username, nil
+}
+
+// ResetUsername resets all changes to the "username" field.
+func (m *DeviceMutation) ResetUsername() {
+	m.username = nil
+}
+
+// SetPasswordHash sets the "password_hash" field.
+func (m *DeviceMutation) SetPasswordHash(s string) {
+	m.password_hash = &s
+}
+
+// PasswordHash returns the value of the "password_hash" field in the mutation.
+func (m *DeviceMutation) PasswordHash() (r string, exists bool) {
+	v := m.password_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPasswordHash returns the old "password_hash" field's value of the Device entity.
+// If the Device object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeviceMutation) OldPasswordHash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPasswordHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPasswordHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPasswordHash: %w", err)
+	}
+	return oldValue.PasswordHash, nil
+}
+
+// ResetPasswordHash resets all changes to the "password_hash" field.
+func (m *DeviceMutation) ResetPasswordHash() {
+	m.password_hash = nil
+}
+
+// SetRole sets the "role" field.
+func (m *DeviceMutation) SetRole(s string) {
+	m.role = &s
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *DeviceMutation) Role() (r string, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRole returns the old "role" field's value of the Device entity.
+// If the Device object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeviceMutation) OldRole(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *DeviceMutation) ResetRole() {
+	m.role = nil
+}
+
 // SetIsActive sets the "is_active" field.
 func (m *DeviceMutation) SetIsActive(b bool) {
 	m.is_active = &b
@@ -5549,6 +5661,55 @@ func (m *DeviceMutation) OldIsActive(ctx context.Context) (v bool, err error) {
 // ResetIsActive resets all changes to the "is_active" field.
 func (m *DeviceMutation) ResetIsActive() {
 	m.is_active = nil
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (m *DeviceMutation) SetLastLoginAt(t time.Time) {
+	m.last_login_at = &t
+}
+
+// LastLoginAt returns the value of the "last_login_at" field in the mutation.
+func (m *DeviceMutation) LastLoginAt() (r time.Time, exists bool) {
+	v := m.last_login_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastLoginAt returns the old "last_login_at" field's value of the Device entity.
+// If the Device object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeviceMutation) OldLastLoginAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastLoginAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastLoginAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastLoginAt: %w", err)
+	}
+	return oldValue.LastLoginAt, nil
+}
+
+// ClearLastLoginAt clears the value of the "last_login_at" field.
+func (m *DeviceMutation) ClearLastLoginAt() {
+	m.last_login_at = nil
+	m.clearedFields[device.FieldLastLoginAt] = struct{}{}
+}
+
+// LastLoginAtCleared returns if the "last_login_at" field was cleared in this mutation.
+func (m *DeviceMutation) LastLoginAtCleared() bool {
+	_, ok := m.clearedFields[device.FieldLastLoginAt]
+	return ok
+}
+
+// ResetLastLoginAt resets all changes to the "last_login_at" field.
+func (m *DeviceMutation) ResetLastLoginAt() {
+	m.last_login_at = nil
+	delete(m.clearedFields, device.FieldLastLoginAt)
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -5684,7 +5845,7 @@ func (m *DeviceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DeviceMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 11)
 	if m.access_point != nil {
 		fields = append(fields, device.FieldAccessPointID)
 	}
@@ -5697,8 +5858,20 @@ func (m *DeviceMutation) Fields() []string {
 	if m.direction != nil {
 		fields = append(fields, device.FieldDirection)
 	}
+	if m.username != nil {
+		fields = append(fields, device.FieldUsername)
+	}
+	if m.password_hash != nil {
+		fields = append(fields, device.FieldPasswordHash)
+	}
+	if m.role != nil {
+		fields = append(fields, device.FieldRole)
+	}
 	if m.is_active != nil {
 		fields = append(fields, device.FieldIsActive)
+	}
+	if m.last_login_at != nil {
+		fields = append(fields, device.FieldLastLoginAt)
 	}
 	if m.created_at != nil {
 		fields = append(fields, device.FieldCreatedAt)
@@ -5722,8 +5895,16 @@ func (m *DeviceMutation) Field(name string) (ent.Value, bool) {
 		return m.Serial()
 	case device.FieldDirection:
 		return m.Direction()
+	case device.FieldUsername:
+		return m.Username()
+	case device.FieldPasswordHash:
+		return m.PasswordHash()
+	case device.FieldRole:
+		return m.Role()
 	case device.FieldIsActive:
 		return m.IsActive()
+	case device.FieldLastLoginAt:
+		return m.LastLoginAt()
 	case device.FieldCreatedAt:
 		return m.CreatedAt()
 	case device.FieldUpdatedAt:
@@ -5745,8 +5926,16 @@ func (m *DeviceMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldSerial(ctx)
 	case device.FieldDirection:
 		return m.OldDirection(ctx)
+	case device.FieldUsername:
+		return m.OldUsername(ctx)
+	case device.FieldPasswordHash:
+		return m.OldPasswordHash(ctx)
+	case device.FieldRole:
+		return m.OldRole(ctx)
 	case device.FieldIsActive:
 		return m.OldIsActive(ctx)
+	case device.FieldLastLoginAt:
+		return m.OldLastLoginAt(ctx)
 	case device.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case device.FieldUpdatedAt:
@@ -5788,12 +5977,40 @@ func (m *DeviceMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDirection(v)
 		return nil
+	case device.FieldUsername:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUsername(v)
+		return nil
+	case device.FieldPasswordHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPasswordHash(v)
+		return nil
+	case device.FieldRole:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
 	case device.FieldIsActive:
 		v, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsActive(v)
+		return nil
+	case device.FieldLastLoginAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastLoginAt(v)
 		return nil
 	case device.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -5841,7 +6058,11 @@ func (m *DeviceMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *DeviceMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(device.FieldLastLoginAt) {
+		fields = append(fields, device.FieldLastLoginAt)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -5854,6 +6075,11 @@ func (m *DeviceMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *DeviceMutation) ClearField(name string) error {
+	switch name {
+	case device.FieldLastLoginAt:
+		m.ClearLastLoginAt()
+		return nil
+	}
 	return fmt.Errorf("unknown Device nullable field %s", name)
 }
 
@@ -5873,8 +6099,20 @@ func (m *DeviceMutation) ResetField(name string) error {
 	case device.FieldDirection:
 		m.ResetDirection()
 		return nil
+	case device.FieldUsername:
+		m.ResetUsername()
+		return nil
+	case device.FieldPasswordHash:
+		m.ResetPasswordHash()
+		return nil
+	case device.FieldRole:
+		m.ResetRole()
+		return nil
 	case device.FieldIsActive:
 		m.ResetIsActive()
+		return nil
+	case device.FieldLastLoginAt:
+		m.ResetLastLoginAt()
 		return nil
 	case device.FieldCreatedAt:
 		m.ResetCreatedAt()

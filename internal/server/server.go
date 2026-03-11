@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"strings"
 
 	"back/internal/config"
 	"back/internal/ent"
@@ -29,11 +30,8 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// =========================
 	// Swagger UI
 	// =========================
-	// UI:   /docs/index.html
-	// JSON: /docs/doc.json
 	mux.Handle("/docs/", httpSwagger.WrapHandler)
 
-	// (Opcional) Redirigir /docs a /docs/index.html
 	mux.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/docs/index.html", http.StatusMovedPermanently)
 	})
@@ -48,16 +46,21 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	addressService := services.NewAddressService(client)
 
 	branchService := services.NewBranchService(client)
+	accessPointService := services.NewAccessPointService(client)
 	deviceService := services.NewDeviceService(client)
+	deviceAuthService := services.NewDeviceAuthService(client, tokenService)
 
 	// =========================
 	// Handlers
 	// =========================
 	authHandler := handlers.NewAuthHandler(cfg, usersService, tokenService)
+	deviceAuthHandler := handlers.NewDeviceAuthHandler(deviceAuthService)
+
 	locationHandler := handlers.NewLocationHandler(locationService)
 	addressHandler := handlers.NewAddressHandler(addressService)
 
 	branchHandler := handlers.NewBranchHandler(branchService)
+	accessPointHandler := handlers.NewAccessPointHandler(accessPointService)
 	deviceHandler := handlers.NewDeviceHandler(deviceService)
 
 	// =========================
@@ -66,6 +69,9 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	mux.HandleFunc("/api/v1/auth/login", authHandler.Login)
 	mux.HandleFunc("/api/v1/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("/api/v1/auth/logout", authHandler.Logout)
+
+	// Login público de dispositivos
+	mux.HandleFunc("/api/v1/device-auth/login", deviceAuthHandler.Login)
 
 	// =========================
 	// Public routes (CATÁLOGO)
@@ -78,7 +84,6 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// Protected routes (AUTH)
 	// =========================
 
-	// Register (admin-only)
 	protectedRegister := middleware.Chain(
 		http.HandlerFunc(authHandler.Register),
 		middleware.JWT(cfg),
@@ -86,21 +91,18 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	)
 	mux.Handle("/api/v1/auth/register", protectedRegister)
 
-	// /me (JWT)
 	protectedMe := middleware.Chain(
 		http.HandlerFunc(authHandler.Me),
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/me", protectedMe)
 
-	// Logout-all (JWT)
 	protectedLogoutAll := middleware.Chain(
 		http.HandlerFunc(authHandler.LogoutAll),
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/auth/logout-all", protectedLogoutAll)
 
-	// Sessions (JWT)
 	protectedSessions := middleware.Chain(
 		http.HandlerFunc(authHandler.Sessions),
 		middleware.JWT(cfg),
@@ -111,14 +113,12 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// Protected routes (ADDRESSES)
 	// =========================
 
-	// /api/v1/addresses (GET, POST)
 	protectedAddresses := middleware.Chain(
 		http.HandlerFunc(addressHandler.Addresses),
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/addresses", protectedAddresses)
 
-	// /api/v1/addresses/{id} (PATCH, DELETE) -> necesita slash final
 	protectedAddressByID := middleware.Chain(
 		http.HandlerFunc(addressHandler.AddressByID),
 		middleware.JWT(cfg),
@@ -126,35 +126,73 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	mux.Handle("/api/v1/addresses/", protectedAddressByID)
 
 	// =========================
-	// Protected routes (BRANCHES)
+	// Protected routes (BRANCHES + ACCESS POINTS by Branch)
 	// =========================
 
-	// /api/v1/branches (GET, POST)
 	protectedBranches := middleware.Chain(
 		http.HandlerFunc(branchHandler.Branches),
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/branches", protectedBranches)
 
-	// /api/v1/branches/{id} (GET, PATCH, DELETE) -> necesita slash final
-	protectedBranchByID := middleware.Chain(
-		http.HandlerFunc(branchHandler.BranchByID),
+	// Un solo prefijo para:
+	// - /api/v1/branches/{id}
+	// - /api/v1/branches/{id}/access-points
+	protectedBranchSubroutes := middleware.Chain(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			path := strings.Trim(r.URL.Path, "/")
+			parts := strings.Split(path, "/")
+
+			// /api/v1/branches/{id}/access-points
+			if len(parts) == 5 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "branches" &&
+				parts[4] == "access-points" {
+				accessPointHandler.BranchAccessPoints(w, r)
+				return
+			}
+
+			// /api/v1/branches/{id}
+			branchHandler.BranchByID(w, r)
+		}),
 		middleware.JWT(cfg),
 	)
-	mux.Handle("/api/v1/branches/", protectedBranchByID)
+	mux.Handle("/api/v1/branches/", protectedBranchSubroutes)
+
+	// =========================
+	// Protected routes (ACCESS POINTS + DEVICES by Access Point)
+	// =========================
+
+	// Un solo prefijo para:
+	// - /api/v1/access-points/{id}
+	// - /api/v1/access-points/{id}/devices
+	protectedAccessPointSubroutes := middleware.Chain(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			path := strings.Trim(r.URL.Path, "/")
+			parts := strings.Split(path, "/")
+
+			// /api/v1/access-points/{id}/devices
+			if len(parts) == 5 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "access-points" &&
+				parts[4] == "devices" {
+				deviceHandler.AccessPointDevices(w, r)
+				return
+			}
+
+			// /api/v1/access-points/{id}
+			accessPointHandler.AccessPointByID(w, r)
+		}),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/access-points/", protectedAccessPointSubroutes)
 
 	// =========================
 	// Protected routes (DEVICES)
 	// =========================
 
-	// /api/v1/access-points/{id}/devices (GET, POST) -> se registra como prefijo /api/v1/access-points/
-	protectedAccessPointDevices := middleware.Chain(
-		http.HandlerFunc(deviceHandler.AccessPointDevices),
-		middleware.JWT(cfg),
-	)
-	mux.Handle("/api/v1/access-points/", protectedAccessPointDevices)
-
-	// /api/v1/devices/{id} (PATCH, DELETE) -> necesita slash final
 	protectedDeviceByID := middleware.Chain(
 		http.HandlerFunc(deviceHandler.DeviceByID),
 		middleware.JWT(cfg),

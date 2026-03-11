@@ -256,7 +256,11 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "serial", Type: field.TypeString},
 		{Name: "direction", Type: field.TypeString},
+		{Name: "username", Type: field.TypeString},
+		{Name: "password_hash", Type: field.TypeString},
+		{Name: "role", Type: field.TypeString, Default: "device"},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "last_login_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "access_point_id", Type: field.TypeInt},
@@ -269,7 +273,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "devices_access_points_devices",
-				Columns:    []*schema.Column{DevicesColumns[7]},
+				Columns:    []*schema.Column{DevicesColumns[11]},
 				RefColumns: []*schema.Column{AccessPointsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -281,14 +285,14 @@ var (
 				Columns: []*schema.Column{DevicesColumns[2]},
 			},
 			{
-				Name:    "ux_device_access_direction",
+				Name:    "ux_device_username",
 				Unique:  true,
-				Columns: []*schema.Column{DevicesColumns[7], DevicesColumns[3]},
+				Columns: []*schema.Column{DevicesColumns[4]},
 			},
 			{
 				Name:    "ix_device_access_point",
 				Unique:  false,
-				Columns: []*schema.Column{DevicesColumns[7]},
+				Columns: []*schema.Column{DevicesColumns[11]},
 			},
 		},
 	}

@@ -72,7 +72,9 @@ type DeviceDTO struct {
 	AccessPointID int    `json:"access_point_id"`
 	Name          string `json:"name"`
 	Serial        string `json:"serial"`
-	Direction     string `json:"direction"` // "in" | "out"
+	Direction     string `json:"direction"`
+	Username      string `json:"username"`
+	Role          string `json:"role"`
 	IsActive      bool   `json:"is_active"`
 }
 
@@ -395,11 +397,14 @@ func mapBranchDetail(b *ent.Branch) BranchDetailDTO {
 
 		for _, d := range ap.Edges.Devices {
 			apDTO.Devices = append(apDTO.Devices, DeviceDTO{
-				ID:        d.ID,
-				Name:      d.Name,
-				Serial:    d.Serial,
-				Direction: d.Direction,
-				IsActive:  d.IsActive,
+				ID:            d.ID,
+				AccessPointID: d.AccessPointID,
+				Name:          d.Name,
+				Serial:        d.Serial,
+				Direction:     d.Direction,
+				Username:      d.Username,
+				Role:          d.Role,
+				IsActive:      d.IsActive,
 			})
 		}
 

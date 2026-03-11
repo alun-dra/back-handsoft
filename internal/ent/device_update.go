@@ -85,6 +85,48 @@ func (_u *DeviceUpdate) SetNillableDirection(v *string) *DeviceUpdate {
 	return _u
 }
 
+// SetUsername sets the "username" field.
+func (_u *DeviceUpdate) SetUsername(v string) *DeviceUpdate {
+	_u.mutation.SetUsername(v)
+	return _u
+}
+
+// SetNillableUsername sets the "username" field if the given value is not nil.
+func (_u *DeviceUpdate) SetNillableUsername(v *string) *DeviceUpdate {
+	if v != nil {
+		_u.SetUsername(*v)
+	}
+	return _u
+}
+
+// SetPasswordHash sets the "password_hash" field.
+func (_u *DeviceUpdate) SetPasswordHash(v string) *DeviceUpdate {
+	_u.mutation.SetPasswordHash(v)
+	return _u
+}
+
+// SetNillablePasswordHash sets the "password_hash" field if the given value is not nil.
+func (_u *DeviceUpdate) SetNillablePasswordHash(v *string) *DeviceUpdate {
+	if v != nil {
+		_u.SetPasswordHash(*v)
+	}
+	return _u
+}
+
+// SetRole sets the "role" field.
+func (_u *DeviceUpdate) SetRole(v string) *DeviceUpdate {
+	_u.mutation.SetRole(v)
+	return _u
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_u *DeviceUpdate) SetNillableRole(v *string) *DeviceUpdate {
+	if v != nil {
+		_u.SetRole(*v)
+	}
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *DeviceUpdate) SetIsActive(v bool) *DeviceUpdate {
 	_u.mutation.SetIsActive(v)
@@ -96,6 +138,26 @@ func (_u *DeviceUpdate) SetNillableIsActive(v *bool) *DeviceUpdate {
 	if v != nil {
 		_u.SetIsActive(*v)
 	}
+	return _u
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (_u *DeviceUpdate) SetLastLoginAt(v time.Time) *DeviceUpdate {
+	_u.mutation.SetLastLoginAt(v)
+	return _u
+}
+
+// SetNillableLastLoginAt sets the "last_login_at" field if the given value is not nil.
+func (_u *DeviceUpdate) SetNillableLastLoginAt(v *time.Time) *DeviceUpdate {
+	if v != nil {
+		_u.SetLastLoginAt(*v)
+	}
+	return _u
+}
+
+// ClearLastLoginAt clears the value of the "last_login_at" field.
+func (_u *DeviceUpdate) ClearLastLoginAt() *DeviceUpdate {
+	_u.mutation.ClearLastLoginAt()
 	return _u
 }
 
@@ -174,6 +236,11 @@ func (_u *DeviceUpdate) check() error {
 			return &ValidationError{Name: "direction", err: fmt.Errorf(`ent: validator failed for field "Device.direction": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Username(); ok {
+		if err := device.UsernameValidator(v); err != nil {
+			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "Device.username": %w`, err)}
+		}
+	}
 	if _u.mutation.AccessPointCleared() && len(_u.mutation.AccessPointIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Device.access_point"`)
 	}
@@ -201,8 +268,23 @@ func (_u *DeviceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Direction(); ok {
 		_spec.SetField(device.FieldDirection, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Username(); ok {
+		_spec.SetField(device.FieldUsername, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.PasswordHash(); ok {
+		_spec.SetField(device.FieldPasswordHash, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Role(); ok {
+		_spec.SetField(device.FieldRole, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(device.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.LastLoginAt(); ok {
+		_spec.SetField(device.FieldLastLoginAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastLoginAtCleared() {
+		_spec.ClearField(device.FieldLastLoginAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(device.FieldUpdatedAt, field.TypeTime, value)
@@ -312,6 +394,48 @@ func (_u *DeviceUpdateOne) SetNillableDirection(v *string) *DeviceUpdateOne {
 	return _u
 }
 
+// SetUsername sets the "username" field.
+func (_u *DeviceUpdateOne) SetUsername(v string) *DeviceUpdateOne {
+	_u.mutation.SetUsername(v)
+	return _u
+}
+
+// SetNillableUsername sets the "username" field if the given value is not nil.
+func (_u *DeviceUpdateOne) SetNillableUsername(v *string) *DeviceUpdateOne {
+	if v != nil {
+		_u.SetUsername(*v)
+	}
+	return _u
+}
+
+// SetPasswordHash sets the "password_hash" field.
+func (_u *DeviceUpdateOne) SetPasswordHash(v string) *DeviceUpdateOne {
+	_u.mutation.SetPasswordHash(v)
+	return _u
+}
+
+// SetNillablePasswordHash sets the "password_hash" field if the given value is not nil.
+func (_u *DeviceUpdateOne) SetNillablePasswordHash(v *string) *DeviceUpdateOne {
+	if v != nil {
+		_u.SetPasswordHash(*v)
+	}
+	return _u
+}
+
+// SetRole sets the "role" field.
+func (_u *DeviceUpdateOne) SetRole(v string) *DeviceUpdateOne {
+	_u.mutation.SetRole(v)
+	return _u
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_u *DeviceUpdateOne) SetNillableRole(v *string) *DeviceUpdateOne {
+	if v != nil {
+		_u.SetRole(*v)
+	}
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *DeviceUpdateOne) SetIsActive(v bool) *DeviceUpdateOne {
 	_u.mutation.SetIsActive(v)
@@ -323,6 +447,26 @@ func (_u *DeviceUpdateOne) SetNillableIsActive(v *bool) *DeviceUpdateOne {
 	if v != nil {
 		_u.SetIsActive(*v)
 	}
+	return _u
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (_u *DeviceUpdateOne) SetLastLoginAt(v time.Time) *DeviceUpdateOne {
+	_u.mutation.SetLastLoginAt(v)
+	return _u
+}
+
+// SetNillableLastLoginAt sets the "last_login_at" field if the given value is not nil.
+func (_u *DeviceUpdateOne) SetNillableLastLoginAt(v *time.Time) *DeviceUpdateOne {
+	if v != nil {
+		_u.SetLastLoginAt(*v)
+	}
+	return _u
+}
+
+// ClearLastLoginAt clears the value of the "last_login_at" field.
+func (_u *DeviceUpdateOne) ClearLastLoginAt() *DeviceUpdateOne {
+	_u.mutation.ClearLastLoginAt()
 	return _u
 }
 
@@ -414,6 +558,11 @@ func (_u *DeviceUpdateOne) check() error {
 			return &ValidationError{Name: "direction", err: fmt.Errorf(`ent: validator failed for field "Device.direction": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Username(); ok {
+		if err := device.UsernameValidator(v); err != nil {
+			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "Device.username": %w`, err)}
+		}
+	}
 	if _u.mutation.AccessPointCleared() && len(_u.mutation.AccessPointIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Device.access_point"`)
 	}
@@ -458,8 +607,23 @@ func (_u *DeviceUpdateOne) sqlSave(ctx context.Context) (_node *Device, err erro
 	if value, ok := _u.mutation.Direction(); ok {
 		_spec.SetField(device.FieldDirection, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Username(); ok {
+		_spec.SetField(device.FieldUsername, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.PasswordHash(); ok {
+		_spec.SetField(device.FieldPasswordHash, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Role(); ok {
+		_spec.SetField(device.FieldRole, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(device.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.LastLoginAt(); ok {
+		_spec.SetField(device.FieldLastLoginAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastLoginAtCleared() {
+		_spec.ClearField(device.FieldLastLoginAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(device.FieldUpdatedAt, field.TypeTime, value)

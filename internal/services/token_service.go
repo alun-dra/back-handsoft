@@ -251,3 +251,15 @@ func (s *TokenService) ListActiveSessions(ctx context.Context, userID int) ([]Se
 	}
 	return out, nil
 }
+
+func (s *TokenService) IssueForDevice(ctx context.Context, d *ent.Device) (*TokenPair, error) {
+	access, accessExp, err := auth.GenerateAccessToken(s.Cfg, d.ID, d.Username, d.Role)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TokenPair{
+		AccessToken: access,
+		AccessExp:   accessExp,
+	}, nil
+}

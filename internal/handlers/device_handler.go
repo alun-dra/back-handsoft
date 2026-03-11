@@ -25,14 +25,18 @@ func NewDeviceHandler(svc *services.DeviceService) *DeviceHandler {
 type createDeviceRequest struct {
 	Name      string `json:"name" example:"Lector Puerta Principal"`
 	Serial    string `json:"serial" example:"SN-ABC-123"`
-	Direction string `json:"direction" example:"in"` // "in" | "out"
+	Direction string `json:"direction" example:"in"` // "in" | "out" | "both"
+	Username  string `json:"username" example:"device_puerta_1"`
+	Password  string `json:"password" example:"123456"`
 	IsActive  *bool  `json:"is_active,omitempty" example:"true"`
 }
 
 type patchDeviceRequest struct {
 	Name      *string `json:"name,omitempty" example:"Lector Puerta Principal"`
 	Serial    *string `json:"serial,omitempty" example:"SN-ABC-123"`
-	Direction *string `json:"direction,omitempty" example:"out"` // "in" | "out"
+	Direction *string `json:"direction,omitempty" example:"out"` // "in" | "out" | "both"
+	Username  *string `json:"username,omitempty" example:"device_puerta_1"`
+	Password  *string `json:"password,omitempty" example:"123456"`
 	IsActive  *bool   `json:"is_active,omitempty" example:"true"`
 }
 
@@ -47,7 +51,7 @@ type patchDeviceRequest struct {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id    path     int                 true  "ID del access point"
+// @Param        id    path     int                  true  "ID del access point"
 // @Param        body  body     createDeviceRequest  false "Crear device (solo POST, admin)"
 // @Success      200   {array}  DeviceDTO
 // @Success      201   {object} DeviceDTO
@@ -55,6 +59,7 @@ type patchDeviceRequest struct {
 // @Failure      401   {object} ErrorResponse
 // @Failure      403   {object} ErrorResponse
 // @Failure      404   {object} ErrorResponse
+// @Failure      409   {object} ErrorResponse
 // @Failure      500   {object} ErrorResponse
 // @Router       /api/v1/access-points/{id}/devices [get]
 // @Router       /api/v1/access-points/{id}/devices [post]
@@ -82,14 +87,15 @@ func (h *DeviceHandler) AccessPointDevices(w http.ResponseWriter, r *http.Reques
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id    path     int               true  "ID del device"
-// @Param        body  body     patchDeviceRequest false "Patch device (solo PATCH, admin)"
+// @Param        id    path     int                 true  "ID del device"
+// @Param        body  body     patchDeviceRequest  false "Patch device (solo PATCH, admin)"
 // @Success      200   {object} DeviceDTO
 // @Success      204   "No Content"
 // @Failure      400   {object} ErrorResponse
 // @Failure      401   {object} ErrorResponse
 // @Failure      403   {object} ErrorResponse
 // @Failure      404   {object} ErrorResponse
+// @Failure      409   {object} ErrorResponse
 // @Failure      500   {object} ErrorResponse
 // @Router       /api/v1/devices/{id} [patch]
 // @Router       /api/v1/devices/{id} [delete]
@@ -133,6 +139,8 @@ func (h *DeviceHandler) listForAccessPoint(w http.ResponseWriter, r *http.Reques
 			Name:          d.Name,
 			Serial:        d.Serial,
 			Direction:     d.Direction,
+			Username:      d.Username,
+			Role:          d.Role,
 			IsActive:      d.IsActive,
 		})
 	}
@@ -157,19 +165,28 @@ func (h *DeviceHandler) createForAccessPoint(w http.ResponseWriter, r *http.Requ
 		Name:      req.Name,
 		Serial:    req.Serial,
 		Direction: req.Direction,
+		Username:  req.Username,
+		Password:  req.Password,
 		IsActive:  req.IsActive,
 	})
 	if err != nil {
-		if err == services.ErrDeviceInvalidInput {
+		switch {
+		case err == services.ErrDeviceInvalidInput:
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
-		}
-		if ent.IsNotFound(err) {
+		case err == services.ErrDeviceDirectionConflict:
+			http.Error(w, "Device direction conflict", http.StatusBadRequest)
+			return
+		case err == services.ErrDeviceUsernameTaken:
+			http.Error(w, "Device username already exists", http.StatusConflict)
+			return
+		case ent.IsNotFound(err):
 			http.Error(w, "Not Found", http.StatusNotFound)
 			return
+		default:
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
 		}
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
 	}
 
 	resp := DeviceDTO{
@@ -178,6 +195,8 @@ func (h *DeviceHandler) createForAccessPoint(w http.ResponseWriter, r *http.Requ
 		Name:          d.Name,
 		Serial:        d.Serial,
 		Direction:     d.Direction,
+		Username:      d.Username,
+		Role:          d.Role,
 		IsActive:      d.IsActive,
 	}
 
@@ -202,19 +221,28 @@ func (h *DeviceHandler) patch(w http.ResponseWriter, r *http.Request, devID int)
 		Name:      req.Name,
 		Serial:    req.Serial,
 		Direction: req.Direction,
+		Username:  req.Username,
+		Password:  req.Password,
 		IsActive:  req.IsActive,
 	})
 	if err != nil {
-		if err == services.ErrDeviceInvalidInput {
+		switch {
+		case err == services.ErrDeviceInvalidInput:
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
-		}
-		if ent.IsNotFound(err) {
+		case err == services.ErrDeviceDirectionConflict:
+			http.Error(w, "Device direction conflict", http.StatusBadRequest)
+			return
+		case err == services.ErrDeviceUsernameTaken:
+			http.Error(w, "Device username already exists", http.StatusConflict)
+			return
+		case ent.IsNotFound(err):
 			http.Error(w, "Not Found", http.StatusNotFound)
 			return
+		default:
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
 		}
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
 	}
 
 	resp := DeviceDTO{
@@ -223,6 +251,8 @@ func (h *DeviceHandler) patch(w http.ResponseWriter, r *http.Request, devID int)
 		Name:          d.Name,
 		Serial:        d.Serial,
 		Direction:     d.Direction,
+		Username:      d.Username,
+		Role:          d.Role,
 		IsActive:      d.IsActive,
 	}
 

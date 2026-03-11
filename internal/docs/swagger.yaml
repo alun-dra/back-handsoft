@@ -13,6 +13,21 @@ definitions:
       name:
         type: string
     type: object
+  handlers.AccessPointDetailDTO:
+    properties:
+      branch_id:
+        type: integer
+      devices:
+        items:
+          $ref: '#/definitions/handlers.DeviceDTO'
+        type: array
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
   handlers.AddressResponse:
     properties:
       apartment:
@@ -104,7 +119,6 @@ definitions:
       access_point_id:
         type: integer
       direction:
-        description: '"in" | "out"'
         type: string
       id:
         type: integer
@@ -112,7 +126,43 @@ definitions:
         type: boolean
       name:
         type: string
+      role:
+        type: string
       serial:
+        type: string
+      username:
+        type: string
+    type: object
+  handlers.DeviceTokenResponse:
+    properties:
+      access_point_id:
+        example: 1
+        type: integer
+      access_token:
+        example: eyJhbGciOi...
+        type: string
+      device_id:
+        example: 1
+        type: integer
+      direction:
+        example: in
+        type: string
+      expires_at:
+        type: string
+      expires_in:
+        example: 3600
+        type: integer
+      name:
+        example: Lector Entrada Principal
+        type: string
+      role:
+        example: device
+        type: string
+      token_type:
+        example: Bearer
+        type: string
+      username:
+        example: device_entrada_1
         type: string
     type: object
   handlers.ErrorResponse:
@@ -272,6 +322,15 @@ definitions:
         example: admin
         type: string
     type: object
+  handlers.createAccessPointRequest:
+    properties:
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Puerta Principal
+        type: string
+    type: object
   handlers.createAddressRequest:
     properties:
       apartment:
@@ -324,7 +383,7 @@ definitions:
   handlers.createDeviceRequest:
     properties:
       direction:
-        description: '"in" | "out"'
+        description: '"in" | "out" | "both"'
         example: in
         type: string
       is_active:
@@ -333,8 +392,23 @@ definitions:
       name:
         example: Lector Puerta Principal
         type: string
+      password:
+        example: "123456"
+        type: string
       serial:
         example: SN-ABC-123
+        type: string
+      username:
+        example: device_puerta_1
+        type: string
+    type: object
+  handlers.deviceLoginRequest:
+    properties:
+      password:
+        example: "123456"
+        type: string
+      username:
+        example: device_entrada_1
         type: string
     type: object
   handlers.loginRequest:
@@ -350,6 +424,15 @@ definitions:
     properties:
       refresh_token:
         example: 441c5a...
+        type: string
+    type: object
+  handlers.patchAccessPointRequest:
+    properties:
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Puerta Principal
         type: string
     type: object
   handlers.patchBranchRequest:
@@ -387,7 +470,7 @@ definitions:
   handlers.patchDeviceRequest:
     properties:
       direction:
-        description: '"in" | "out"'
+        description: '"in" | "out" | "both"'
         example: out
         type: string
       is_active:
@@ -396,8 +479,14 @@ definitions:
       name:
         example: Lector Puerta Principal
         type: string
+      password:
+        example: "123456"
+        type: string
       serial:
         example: SN-ABC-123
+        type: string
+      username:
+        example: device_puerta_1
         type: string
     type: object
   handlers.refreshRequest:
@@ -440,6 +529,113 @@ info:
   title: Backend GO API
   version: "1.0"
 paths:
+  /api/v1/access-points/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: PATCH edita parcialmente. DELETE elimina. (solo admin)
+      parameters:
+      - description: ID del access point
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch access point (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchAccessPointRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AccessPointDetailDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Editar o eliminar acceso
+      tags:
+      - Access Points
+    patch:
+      consumes:
+      - application/json
+      description: PATCH edita parcialmente. DELETE elimina. (solo admin)
+      parameters:
+      - description: ID del access point
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch access point (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchAccessPointRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AccessPointDetailDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Editar o eliminar acceso
+      tags:
+      - Access Points
   /api/v1/access-points/{id}/devices:
     get:
       consumes:
@@ -484,6 +680,10 @@ paths:
             $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -538,6 +738,10 @@ paths:
             $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -1124,6 +1328,123 @@ paths:
       summary: Detalle sucursal
       tags:
       - Branches
+  /api/v1/branches/{id}/access-points:
+    get:
+      consumes:
+      - application/json
+      description: GET lista accesos de una sucursal. POST crea un acceso para una
+        sucursal (solo admin).
+      parameters:
+      - description: ID de la sucursal
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Crear access point (solo POST, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createAccessPointRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.AccessPointDetailDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.AccessPointDetailDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Accesos por sucursal
+      tags:
+      - Access Points
+    post:
+      consumes:
+      - application/json
+      description: GET lista accesos de una sucursal. POST crea un acceso para una
+        sucursal (solo admin).
+      parameters:
+      - description: ID de la sucursal
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Crear access point (solo POST, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createAccessPointRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.AccessPointDetailDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.AccessPointDetailDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Accesos por sucursal
+      tags:
+      - Access Points
   /api/v1/cities/{id}/communes:
     get:
       parameters:
@@ -1156,6 +1477,40 @@ paths:
       summary: Listar comunas por ciudad
       tags:
       - Location
+  /api/v1/device-auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login para dispositivos (reloj / lector QR)
+      parameters:
+      - description: Credenciales del dispositivo
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.deviceLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DeviceTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Login dispositivo
+      tags:
+      - Device Auth
   /api/v1/devices/{id}:
     delete:
       consumes:
@@ -1195,6 +1550,10 @@ paths:
             $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -1244,6 +1603,10 @@ paths:
             $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":

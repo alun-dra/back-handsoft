@@ -45,6 +45,32 @@ func (_c *DeviceCreate) SetDirection(v string) *DeviceCreate {
 	return _c
 }
 
+// SetUsername sets the "username" field.
+func (_c *DeviceCreate) SetUsername(v string) *DeviceCreate {
+	_c.mutation.SetUsername(v)
+	return _c
+}
+
+// SetPasswordHash sets the "password_hash" field.
+func (_c *DeviceCreate) SetPasswordHash(v string) *DeviceCreate {
+	_c.mutation.SetPasswordHash(v)
+	return _c
+}
+
+// SetRole sets the "role" field.
+func (_c *DeviceCreate) SetRole(v string) *DeviceCreate {
+	_c.mutation.SetRole(v)
+	return _c
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_c *DeviceCreate) SetNillableRole(v *string) *DeviceCreate {
+	if v != nil {
+		_c.SetRole(*v)
+	}
+	return _c
+}
+
 // SetIsActive sets the "is_active" field.
 func (_c *DeviceCreate) SetIsActive(v bool) *DeviceCreate {
 	_c.mutation.SetIsActive(v)
@@ -55,6 +81,20 @@ func (_c *DeviceCreate) SetIsActive(v bool) *DeviceCreate {
 func (_c *DeviceCreate) SetNillableIsActive(v *bool) *DeviceCreate {
 	if v != nil {
 		_c.SetIsActive(*v)
+	}
+	return _c
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (_c *DeviceCreate) SetLastLoginAt(v time.Time) *DeviceCreate {
+	_c.mutation.SetLastLoginAt(v)
+	return _c
+}
+
+// SetNillableLastLoginAt sets the "last_login_at" field if the given value is not nil.
+func (_c *DeviceCreate) SetNillableLastLoginAt(v *time.Time) *DeviceCreate {
+	if v != nil {
+		_c.SetLastLoginAt(*v)
 	}
 	return _c
 }
@@ -127,6 +167,10 @@ func (_c *DeviceCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *DeviceCreate) defaults() {
+	if _, ok := _c.mutation.Role(); !ok {
+		v := device.DefaultRole
+		_c.mutation.SetRole(v)
+	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		v := device.DefaultIsActive
 		_c.mutation.SetIsActive(v)
@@ -169,6 +213,20 @@ func (_c *DeviceCreate) check() error {
 		if err := device.DirectionValidator(v); err != nil {
 			return &ValidationError{Name: "direction", err: fmt.Errorf(`ent: validator failed for field "Device.direction": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.Username(); !ok {
+		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "Device.username"`)}
+	}
+	if v, ok := _c.mutation.Username(); ok {
+		if err := device.UsernameValidator(v); err != nil {
+			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "Device.username": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.PasswordHash(); !ok {
+		return &ValidationError{Name: "password_hash", err: errors.New(`ent: missing required field "Device.password_hash"`)}
+	}
+	if _, ok := _c.mutation.Role(); !ok {
+		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "Device.role"`)}
 	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Device.is_active"`)}
@@ -220,9 +278,25 @@ func (_c *DeviceCreate) createSpec() (*Device, *sqlgraph.CreateSpec) {
 		_spec.SetField(device.FieldDirection, field.TypeString, value)
 		_node.Direction = value
 	}
+	if value, ok := _c.mutation.Username(); ok {
+		_spec.SetField(device.FieldUsername, field.TypeString, value)
+		_node.Username = value
+	}
+	if value, ok := _c.mutation.PasswordHash(); ok {
+		_spec.SetField(device.FieldPasswordHash, field.TypeString, value)
+		_node.PasswordHash = value
+	}
+	if value, ok := _c.mutation.Role(); ok {
+		_spec.SetField(device.FieldRole, field.TypeString, value)
+		_node.Role = value
+	}
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(device.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
+	}
+	if value, ok := _c.mutation.LastLoginAt(); ok {
+		_spec.SetField(device.FieldLastLoginAt, field.TypeTime, value)
+		_node.LastLoginAt = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(device.FieldCreatedAt, field.TypeTime, value)
