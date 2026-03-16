@@ -13,9 +13,14 @@ import (
 	"back/internal/ent/device"
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/region"
+	"back/internal/ent/shift"
+	"back/internal/ent/shiftday"
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
+	"back/internal/ent/userdayoverride"
+	"back/internal/ent/userqrsession"
+	"back/internal/ent/usershiftassignment"
 	"context"
 	"errors"
 	"fmt"
@@ -85,19 +90,24 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			accesspoint.Table:     accesspoint.ValidColumn,
-			address.Table:         address.ValidColumn,
-			attendanceday.Table:   attendanceday.ValidColumn,
-			branch.Table:          branch.ValidColumn,
-			branchaddress.Table:   branchaddress.ValidColumn,
-			city.Table:            city.ValidColumn,
-			commune.Table:         commune.ValidColumn,
-			device.Table:          device.ValidColumn,
-			refreshtoken.Table:    refreshtoken.ValidColumn,
-			region.Table:          region.ValidColumn,
-			user.Table:            user.ValidColumn,
-			useraccesspoint.Table: useraccesspoint.ValidColumn,
-			userbranch.Table:      userbranch.ValidColumn,
+			accesspoint.Table:         accesspoint.ValidColumn,
+			address.Table:             address.ValidColumn,
+			attendanceday.Table:       attendanceday.ValidColumn,
+			branch.Table:              branch.ValidColumn,
+			branchaddress.Table:       branchaddress.ValidColumn,
+			city.Table:                city.ValidColumn,
+			commune.Table:             commune.ValidColumn,
+			device.Table:              device.ValidColumn,
+			refreshtoken.Table:        refreshtoken.ValidColumn,
+			region.Table:              region.ValidColumn,
+			shift.Table:               shift.ValidColumn,
+			shiftday.Table:            shiftday.ValidColumn,
+			user.Table:                user.ValidColumn,
+			useraccesspoint.Table:     useraccesspoint.ValidColumn,
+			userbranch.Table:          userbranch.ValidColumn,
+			userdayoverride.Table:     userdayoverride.ValidColumn,
+			userqrsession.Table:       userqrsession.ValidColumn,
+			usershiftassignment.Table: usershiftassignment.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

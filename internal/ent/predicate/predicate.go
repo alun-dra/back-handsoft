@@ -36,6 +36,12 @@ type RefreshToken func(*sql.Selector)
 // Region is the predicate function for region builders.
 type Region func(*sql.Selector)
 
+// Shift is the predicate function for shift builders.
+type Shift func(*sql.Selector)
+
+// ShiftDay is the predicate function for shiftday builders.
+type ShiftDay func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 
@@ -44,3 +50,12 @@ type UserAccessPoint func(*sql.Selector)
 
 // UserBranch is the predicate function for userbranch builders.
 type UserBranch func(*sql.Selector)
+
+// UserDayOverride is the predicate function for userdayoverride builders.
+type UserDayOverride func(*sql.Selector)
+
+// UserQRSession is the predicate function for userqrsession builders.
+type UserQRSession func(*sql.Selector)
+
+// UserShiftAssignment is the predicate function for usershiftassignment builders.
+type UserShiftAssignment func(*sql.Selector)

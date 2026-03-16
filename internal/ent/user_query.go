@@ -10,6 +10,9 @@ import (
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
+	"back/internal/ent/userdayoverride"
+	"back/internal/ent/userqrsession"
+	"back/internal/ent/usershiftassignment"
 	"context"
 	"database/sql/driver"
 	"fmt"
@@ -33,6 +36,9 @@ type UserQuery struct {
 	withUserBranches     *UserBranchQuery
 	withUserAccessPoints *UserAccessPointQuery
 	withAttendanceDays   *AttendanceDayQuery
+	withShiftAssignments *UserShiftAssignmentQuery
+	withDayOverrides     *UserDayOverrideQuery
+	withQrSessions       *UserQRSessionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -172,6 +178,72 @@ func (_q *UserQuery) QueryAttendanceDays() *AttendanceDayQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(attendanceday.Table, attendanceday.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AttendanceDaysTable, user.AttendanceDaysColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryShiftAssignments chains the current query on the "shift_assignments" edge.
+func (_q *UserQuery) QueryShiftAssignments() *UserShiftAssignmentQuery {
+	query := (&UserShiftAssignmentClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(usershiftassignment.Table, usershiftassignment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ShiftAssignmentsTable, user.ShiftAssignmentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDayOverrides chains the current query on the "day_overrides" edge.
+func (_q *UserQuery) QueryDayOverrides() *UserDayOverrideQuery {
+	query := (&UserDayOverrideClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userdayoverride.Table, userdayoverride.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.DayOverridesTable, user.DayOverridesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryQrSessions chains the current query on the "qr_sessions" edge.
+func (_q *UserQuery) QueryQrSessions() *UserQRSessionQuery {
+	query := (&UserQRSessionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userqrsession.Table, userqrsession.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.QrSessionsTable, user.QrSessionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -376,6 +448,9 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withUserBranches:     _q.withUserBranches.Clone(),
 		withUserAccessPoints: _q.withUserAccessPoints.Clone(),
 		withAttendanceDays:   _q.withAttendanceDays.Clone(),
+		withShiftAssignments: _q.withShiftAssignments.Clone(),
+		withDayOverrides:     _q.withDayOverrides.Clone(),
+		withQrSessions:       _q.withQrSessions.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -434,6 +509,39 @@ func (_q *UserQuery) WithAttendanceDays(opts ...func(*AttendanceDayQuery)) *User
 		opt(query)
 	}
 	_q.withAttendanceDays = query
+	return _q
+}
+
+// WithShiftAssignments tells the query-builder to eager-load the nodes that are connected to
+// the "shift_assignments" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithShiftAssignments(opts ...func(*UserShiftAssignmentQuery)) *UserQuery {
+	query := (&UserShiftAssignmentClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withShiftAssignments = query
+	return _q
+}
+
+// WithDayOverrides tells the query-builder to eager-load the nodes that are connected to
+// the "day_overrides" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithDayOverrides(opts ...func(*UserDayOverrideQuery)) *UserQuery {
+	query := (&UserDayOverrideClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withDayOverrides = query
+	return _q
+}
+
+// WithQrSessions tells the query-builder to eager-load the nodes that are connected to
+// the "qr_sessions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithQrSessions(opts ...func(*UserQRSessionQuery)) *UserQuery {
+	query := (&UserQRSessionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withQrSessions = query
 	return _q
 }
 
@@ -515,12 +623,15 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [8]bool{
 			_q.withRefreshTokens != nil,
 			_q.withAddresses != nil,
 			_q.withUserBranches != nil,
 			_q.withUserAccessPoints != nil,
 			_q.withAttendanceDays != nil,
+			_q.withShiftAssignments != nil,
+			_q.withDayOverrides != nil,
+			_q.withQrSessions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -573,6 +684,27 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadAttendanceDays(ctx, query, nodes,
 			func(n *User) { n.Edges.AttendanceDays = []*AttendanceDay{} },
 			func(n *User, e *AttendanceDay) { n.Edges.AttendanceDays = append(n.Edges.AttendanceDays, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withShiftAssignments; query != nil {
+		if err := _q.loadShiftAssignments(ctx, query, nodes,
+			func(n *User) { n.Edges.ShiftAssignments = []*UserShiftAssignment{} },
+			func(n *User, e *UserShiftAssignment) { n.Edges.ShiftAssignments = append(n.Edges.ShiftAssignments, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withDayOverrides; query != nil {
+		if err := _q.loadDayOverrides(ctx, query, nodes,
+			func(n *User) { n.Edges.DayOverrides = []*UserDayOverride{} },
+			func(n *User, e *UserDayOverride) { n.Edges.DayOverrides = append(n.Edges.DayOverrides, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withQrSessions; query != nil {
+		if err := _q.loadQrSessions(ctx, query, nodes,
+			func(n *User) { n.Edges.QrSessions = []*UserQRSession{} },
+			func(n *User, e *UserQRSession) { n.Edges.QrSessions = append(n.Edges.QrSessions, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -727,6 +859,96 @@ func (_q *UserQuery) loadAttendanceDays(ctx context.Context, query *AttendanceDa
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_attendance_days" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadShiftAssignments(ctx context.Context, query *UserShiftAssignmentQuery, nodes []*User, init func(*User), assign func(*User, *UserShiftAssignment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usershiftassignment.FieldUserID)
+	}
+	query.Where(predicate.UserShiftAssignment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ShiftAssignmentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadDayOverrides(ctx context.Context, query *UserDayOverrideQuery, nodes []*User, init func(*User), assign func(*User, *UserDayOverride)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userdayoverride.FieldUserID)
+	}
+	query.Where(predicate.UserDayOverride(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.DayOverridesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadQrSessions(ctx context.Context, query *UserQRSessionQuery, nodes []*User, init func(*User), assign func(*User, *UserQRSession)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userqrsession.FieldUserID)
+	}
+	query.Where(predicate.UserQRSession(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.QrSessionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

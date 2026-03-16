@@ -32,12 +32,22 @@ type Tx struct {
 	RefreshToken *RefreshTokenClient
 	// Region is the client for interacting with the Region builders.
 	Region *RegionClient
+	// Shift is the client for interacting with the Shift builders.
+	Shift *ShiftClient
+	// ShiftDay is the client for interacting with the ShiftDay builders.
+	ShiftDay *ShiftDayClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserAccessPoint is the client for interacting with the UserAccessPoint builders.
 	UserAccessPoint *UserAccessPointClient
 	// UserBranch is the client for interacting with the UserBranch builders.
 	UserBranch *UserBranchClient
+	// UserDayOverride is the client for interacting with the UserDayOverride builders.
+	UserDayOverride *UserDayOverrideClient
+	// UserQRSession is the client for interacting with the UserQRSession builders.
+	UserQRSession *UserQRSessionClient
+	// UserShiftAssignment is the client for interacting with the UserShiftAssignment builders.
+	UserShiftAssignment *UserShiftAssignmentClient
 
 	// lazily loaded.
 	client     *Client
@@ -179,9 +189,14 @@ func (tx *Tx) init() {
 	tx.Device = NewDeviceClient(tx.config)
 	tx.RefreshToken = NewRefreshTokenClient(tx.config)
 	tx.Region = NewRegionClient(tx.config)
+	tx.Shift = NewShiftClient(tx.config)
+	tx.ShiftDay = NewShiftDayClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserAccessPoint = NewUserAccessPointClient(tx.config)
 	tx.UserBranch = NewUserBranchClient(tx.config)
+	tx.UserDayOverride = NewUserDayOverrideClient(tx.config)
+	tx.UserQRSession = NewUserQRSessionClient(tx.config)
+	tx.UserShiftAssignment = NewUserShiftAssignmentClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

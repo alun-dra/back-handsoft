@@ -10,6 +10,9 @@ import (
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
+	"back/internal/ent/userdayoverride"
+	"back/internal/ent/userqrsession"
+	"back/internal/ent/usershiftassignment"
 	"context"
 	"errors"
 	"fmt"
@@ -86,6 +89,126 @@ func (_u *UserUpdate) SetNillableIsActive(v *bool) *UserUpdate {
 	if v != nil {
 		_u.SetIsActive(*v)
 	}
+	return _u
+}
+
+// SetFirstName sets the "first_name" field.
+func (_u *UserUpdate) SetFirstName(v string) *UserUpdate {
+	_u.mutation.SetFirstName(v)
+	return _u
+}
+
+// SetNillableFirstName sets the "first_name" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableFirstName(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetFirstName(*v)
+	}
+	return _u
+}
+
+// ClearFirstName clears the value of the "first_name" field.
+func (_u *UserUpdate) ClearFirstName() *UserUpdate {
+	_u.mutation.ClearFirstName()
+	return _u
+}
+
+// SetLastName sets the "last_name" field.
+func (_u *UserUpdate) SetLastName(v string) *UserUpdate {
+	_u.mutation.SetLastName(v)
+	return _u
+}
+
+// SetNillableLastName sets the "last_name" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableLastName(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetLastName(*v)
+	}
+	return _u
+}
+
+// ClearLastName clears the value of the "last_name" field.
+func (_u *UserUpdate) ClearLastName() *UserUpdate {
+	_u.mutation.ClearLastName()
+	return _u
+}
+
+// SetMiddleName sets the "middle_name" field.
+func (_u *UserUpdate) SetMiddleName(v string) *UserUpdate {
+	_u.mutation.SetMiddleName(v)
+	return _u
+}
+
+// SetNillableMiddleName sets the "middle_name" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableMiddleName(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetMiddleName(*v)
+	}
+	return _u
+}
+
+// ClearMiddleName clears the value of the "middle_name" field.
+func (_u *UserUpdate) ClearMiddleName() *UserUpdate {
+	_u.mutation.ClearMiddleName()
+	return _u
+}
+
+// SetEmail sets the "email" field.
+func (_u *UserUpdate) SetEmail(v string) *UserUpdate {
+	_u.mutation.SetEmail(v)
+	return _u
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableEmail(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetEmail(*v)
+	}
+	return _u
+}
+
+// ClearEmail clears the value of the "email" field.
+func (_u *UserUpdate) ClearEmail() *UserUpdate {
+	_u.mutation.ClearEmail()
+	return _u
+}
+
+// SetEmployeeCode sets the "employee_code" field.
+func (_u *UserUpdate) SetEmployeeCode(v string) *UserUpdate {
+	_u.mutation.SetEmployeeCode(v)
+	return _u
+}
+
+// SetNillableEmployeeCode sets the "employee_code" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableEmployeeCode(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetEmployeeCode(*v)
+	}
+	return _u
+}
+
+// ClearEmployeeCode clears the value of the "employee_code" field.
+func (_u *UserUpdate) ClearEmployeeCode() *UserUpdate {
+	_u.mutation.ClearEmployeeCode()
+	return _u
+}
+
+// SetAccessCode sets the "access_code" field.
+func (_u *UserUpdate) SetAccessCode(v string) *UserUpdate {
+	_u.mutation.SetAccessCode(v)
+	return _u
+}
+
+// SetNillableAccessCode sets the "access_code" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableAccessCode(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetAccessCode(*v)
+	}
+	return _u
+}
+
+// ClearAccessCode clears the value of the "access_code" field.
+func (_u *UserUpdate) ClearAccessCode() *UserUpdate {
+	_u.mutation.ClearAccessCode()
 	return _u
 }
 
@@ -168,6 +291,51 @@ func (_u *UserUpdate) AddAttendanceDays(v ...*AttendanceDay) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddAttendanceDayIDs(ids...)
+}
+
+// AddShiftAssignmentIDs adds the "shift_assignments" edge to the UserShiftAssignment entity by IDs.
+func (_u *UserUpdate) AddShiftAssignmentIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddShiftAssignmentIDs(ids...)
+	return _u
+}
+
+// AddShiftAssignments adds the "shift_assignments" edges to the UserShiftAssignment entity.
+func (_u *UserUpdate) AddShiftAssignments(v ...*UserShiftAssignment) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddShiftAssignmentIDs(ids...)
+}
+
+// AddDayOverrideIDs adds the "day_overrides" edge to the UserDayOverride entity by IDs.
+func (_u *UserUpdate) AddDayOverrideIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddDayOverrideIDs(ids...)
+	return _u
+}
+
+// AddDayOverrides adds the "day_overrides" edges to the UserDayOverride entity.
+func (_u *UserUpdate) AddDayOverrides(v ...*UserDayOverride) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDayOverrideIDs(ids...)
+}
+
+// AddQrSessionIDs adds the "qr_sessions" edge to the UserQRSession entity by IDs.
+func (_u *UserUpdate) AddQrSessionIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddQrSessionIDs(ids...)
+	return _u
+}
+
+// AddQrSessions adds the "qr_sessions" edges to the UserQRSession entity.
+func (_u *UserUpdate) AddQrSessions(v ...*UserQRSession) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddQrSessionIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -280,6 +448,69 @@ func (_u *UserUpdate) RemoveAttendanceDays(v ...*AttendanceDay) *UserUpdate {
 	return _u.RemoveAttendanceDayIDs(ids...)
 }
 
+// ClearShiftAssignments clears all "shift_assignments" edges to the UserShiftAssignment entity.
+func (_u *UserUpdate) ClearShiftAssignments() *UserUpdate {
+	_u.mutation.ClearShiftAssignments()
+	return _u
+}
+
+// RemoveShiftAssignmentIDs removes the "shift_assignments" edge to UserShiftAssignment entities by IDs.
+func (_u *UserUpdate) RemoveShiftAssignmentIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveShiftAssignmentIDs(ids...)
+	return _u
+}
+
+// RemoveShiftAssignments removes "shift_assignments" edges to UserShiftAssignment entities.
+func (_u *UserUpdate) RemoveShiftAssignments(v ...*UserShiftAssignment) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveShiftAssignmentIDs(ids...)
+}
+
+// ClearDayOverrides clears all "day_overrides" edges to the UserDayOverride entity.
+func (_u *UserUpdate) ClearDayOverrides() *UserUpdate {
+	_u.mutation.ClearDayOverrides()
+	return _u
+}
+
+// RemoveDayOverrideIDs removes the "day_overrides" edge to UserDayOverride entities by IDs.
+func (_u *UserUpdate) RemoveDayOverrideIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveDayOverrideIDs(ids...)
+	return _u
+}
+
+// RemoveDayOverrides removes "day_overrides" edges to UserDayOverride entities.
+func (_u *UserUpdate) RemoveDayOverrides(v ...*UserDayOverride) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDayOverrideIDs(ids...)
+}
+
+// ClearQrSessions clears all "qr_sessions" edges to the UserQRSession entity.
+func (_u *UserUpdate) ClearQrSessions() *UserUpdate {
+	_u.mutation.ClearQrSessions()
+	return _u
+}
+
+// RemoveQrSessionIDs removes the "qr_sessions" edge to UserQRSession entities by IDs.
+func (_u *UserUpdate) RemoveQrSessionIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveQrSessionIDs(ids...)
+	return _u
+}
+
+// RemoveQrSessions removes "qr_sessions" edges to UserQRSession entities.
+func (_u *UserUpdate) RemoveQrSessions(v ...*UserQRSession) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveQrSessionIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *UserUpdate) Save(ctx context.Context) (int, error) {
 	_u.defaults()
@@ -359,6 +590,42 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(user.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.FirstName(); ok {
+		_spec.SetField(user.FieldFirstName, field.TypeString, value)
+	}
+	if _u.mutation.FirstNameCleared() {
+		_spec.ClearField(user.FieldFirstName, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastName(); ok {
+		_spec.SetField(user.FieldLastName, field.TypeString, value)
+	}
+	if _u.mutation.LastNameCleared() {
+		_spec.ClearField(user.FieldLastName, field.TypeString)
+	}
+	if value, ok := _u.mutation.MiddleName(); ok {
+		_spec.SetField(user.FieldMiddleName, field.TypeString, value)
+	}
+	if _u.mutation.MiddleNameCleared() {
+		_spec.ClearField(user.FieldMiddleName, field.TypeString)
+	}
+	if value, ok := _u.mutation.Email(); ok {
+		_spec.SetField(user.FieldEmail, field.TypeString, value)
+	}
+	if _u.mutation.EmailCleared() {
+		_spec.ClearField(user.FieldEmail, field.TypeString)
+	}
+	if value, ok := _u.mutation.EmployeeCode(); ok {
+		_spec.SetField(user.FieldEmployeeCode, field.TypeString, value)
+	}
+	if _u.mutation.EmployeeCodeCleared() {
+		_spec.ClearField(user.FieldEmployeeCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.AccessCode(); ok {
+		_spec.SetField(user.FieldAccessCode, field.TypeString, value)
+	}
+	if _u.mutation.AccessCodeCleared() {
+		_spec.ClearField(user.FieldAccessCode, field.TypeString)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
@@ -588,6 +855,141 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.ShiftAssignmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ShiftAssignmentsTable,
+			Columns: []string{user.ShiftAssignmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usershiftassignment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedShiftAssignmentsIDs(); len(nodes) > 0 && !_u.mutation.ShiftAssignmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ShiftAssignmentsTable,
+			Columns: []string{user.ShiftAssignmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usershiftassignment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ShiftAssignmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ShiftAssignmentsTable,
+			Columns: []string{user.ShiftAssignmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usershiftassignment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.DayOverridesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DayOverridesTable,
+			Columns: []string{user.DayOverridesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdayoverride.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDayOverridesIDs(); len(nodes) > 0 && !_u.mutation.DayOverridesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DayOverridesTable,
+			Columns: []string{user.DayOverridesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdayoverride.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DayOverridesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DayOverridesTable,
+			Columns: []string{user.DayOverridesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdayoverride.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.QrSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.QrSessionsTable,
+			Columns: []string{user.QrSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userqrsession.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedQrSessionsIDs(); len(nodes) > 0 && !_u.mutation.QrSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.QrSessionsTable,
+			Columns: []string{user.QrSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userqrsession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.QrSessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.QrSessionsTable,
+			Columns: []string{user.QrSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userqrsession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -661,6 +1063,126 @@ func (_u *UserUpdateOne) SetNillableIsActive(v *bool) *UserUpdateOne {
 	if v != nil {
 		_u.SetIsActive(*v)
 	}
+	return _u
+}
+
+// SetFirstName sets the "first_name" field.
+func (_u *UserUpdateOne) SetFirstName(v string) *UserUpdateOne {
+	_u.mutation.SetFirstName(v)
+	return _u
+}
+
+// SetNillableFirstName sets the "first_name" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableFirstName(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetFirstName(*v)
+	}
+	return _u
+}
+
+// ClearFirstName clears the value of the "first_name" field.
+func (_u *UserUpdateOne) ClearFirstName() *UserUpdateOne {
+	_u.mutation.ClearFirstName()
+	return _u
+}
+
+// SetLastName sets the "last_name" field.
+func (_u *UserUpdateOne) SetLastName(v string) *UserUpdateOne {
+	_u.mutation.SetLastName(v)
+	return _u
+}
+
+// SetNillableLastName sets the "last_name" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableLastName(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetLastName(*v)
+	}
+	return _u
+}
+
+// ClearLastName clears the value of the "last_name" field.
+func (_u *UserUpdateOne) ClearLastName() *UserUpdateOne {
+	_u.mutation.ClearLastName()
+	return _u
+}
+
+// SetMiddleName sets the "middle_name" field.
+func (_u *UserUpdateOne) SetMiddleName(v string) *UserUpdateOne {
+	_u.mutation.SetMiddleName(v)
+	return _u
+}
+
+// SetNillableMiddleName sets the "middle_name" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableMiddleName(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetMiddleName(*v)
+	}
+	return _u
+}
+
+// ClearMiddleName clears the value of the "middle_name" field.
+func (_u *UserUpdateOne) ClearMiddleName() *UserUpdateOne {
+	_u.mutation.ClearMiddleName()
+	return _u
+}
+
+// SetEmail sets the "email" field.
+func (_u *UserUpdateOne) SetEmail(v string) *UserUpdateOne {
+	_u.mutation.SetEmail(v)
+	return _u
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableEmail(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetEmail(*v)
+	}
+	return _u
+}
+
+// ClearEmail clears the value of the "email" field.
+func (_u *UserUpdateOne) ClearEmail() *UserUpdateOne {
+	_u.mutation.ClearEmail()
+	return _u
+}
+
+// SetEmployeeCode sets the "employee_code" field.
+func (_u *UserUpdateOne) SetEmployeeCode(v string) *UserUpdateOne {
+	_u.mutation.SetEmployeeCode(v)
+	return _u
+}
+
+// SetNillableEmployeeCode sets the "employee_code" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableEmployeeCode(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetEmployeeCode(*v)
+	}
+	return _u
+}
+
+// ClearEmployeeCode clears the value of the "employee_code" field.
+func (_u *UserUpdateOne) ClearEmployeeCode() *UserUpdateOne {
+	_u.mutation.ClearEmployeeCode()
+	return _u
+}
+
+// SetAccessCode sets the "access_code" field.
+func (_u *UserUpdateOne) SetAccessCode(v string) *UserUpdateOne {
+	_u.mutation.SetAccessCode(v)
+	return _u
+}
+
+// SetNillableAccessCode sets the "access_code" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableAccessCode(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetAccessCode(*v)
+	}
+	return _u
+}
+
+// ClearAccessCode clears the value of the "access_code" field.
+func (_u *UserUpdateOne) ClearAccessCode() *UserUpdateOne {
+	_u.mutation.ClearAccessCode()
 	return _u
 }
 
@@ -743,6 +1265,51 @@ func (_u *UserUpdateOne) AddAttendanceDays(v ...*AttendanceDay) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.AddAttendanceDayIDs(ids...)
+}
+
+// AddShiftAssignmentIDs adds the "shift_assignments" edge to the UserShiftAssignment entity by IDs.
+func (_u *UserUpdateOne) AddShiftAssignmentIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddShiftAssignmentIDs(ids...)
+	return _u
+}
+
+// AddShiftAssignments adds the "shift_assignments" edges to the UserShiftAssignment entity.
+func (_u *UserUpdateOne) AddShiftAssignments(v ...*UserShiftAssignment) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddShiftAssignmentIDs(ids...)
+}
+
+// AddDayOverrideIDs adds the "day_overrides" edge to the UserDayOverride entity by IDs.
+func (_u *UserUpdateOne) AddDayOverrideIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddDayOverrideIDs(ids...)
+	return _u
+}
+
+// AddDayOverrides adds the "day_overrides" edges to the UserDayOverride entity.
+func (_u *UserUpdateOne) AddDayOverrides(v ...*UserDayOverride) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDayOverrideIDs(ids...)
+}
+
+// AddQrSessionIDs adds the "qr_sessions" edge to the UserQRSession entity by IDs.
+func (_u *UserUpdateOne) AddQrSessionIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddQrSessionIDs(ids...)
+	return _u
+}
+
+// AddQrSessions adds the "qr_sessions" edges to the UserQRSession entity.
+func (_u *UserUpdateOne) AddQrSessions(v ...*UserQRSession) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddQrSessionIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -855,6 +1422,69 @@ func (_u *UserUpdateOne) RemoveAttendanceDays(v ...*AttendanceDay) *UserUpdateOn
 	return _u.RemoveAttendanceDayIDs(ids...)
 }
 
+// ClearShiftAssignments clears all "shift_assignments" edges to the UserShiftAssignment entity.
+func (_u *UserUpdateOne) ClearShiftAssignments() *UserUpdateOne {
+	_u.mutation.ClearShiftAssignments()
+	return _u
+}
+
+// RemoveShiftAssignmentIDs removes the "shift_assignments" edge to UserShiftAssignment entities by IDs.
+func (_u *UserUpdateOne) RemoveShiftAssignmentIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveShiftAssignmentIDs(ids...)
+	return _u
+}
+
+// RemoveShiftAssignments removes "shift_assignments" edges to UserShiftAssignment entities.
+func (_u *UserUpdateOne) RemoveShiftAssignments(v ...*UserShiftAssignment) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveShiftAssignmentIDs(ids...)
+}
+
+// ClearDayOverrides clears all "day_overrides" edges to the UserDayOverride entity.
+func (_u *UserUpdateOne) ClearDayOverrides() *UserUpdateOne {
+	_u.mutation.ClearDayOverrides()
+	return _u
+}
+
+// RemoveDayOverrideIDs removes the "day_overrides" edge to UserDayOverride entities by IDs.
+func (_u *UserUpdateOne) RemoveDayOverrideIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveDayOverrideIDs(ids...)
+	return _u
+}
+
+// RemoveDayOverrides removes "day_overrides" edges to UserDayOverride entities.
+func (_u *UserUpdateOne) RemoveDayOverrides(v ...*UserDayOverride) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDayOverrideIDs(ids...)
+}
+
+// ClearQrSessions clears all "qr_sessions" edges to the UserQRSession entity.
+func (_u *UserUpdateOne) ClearQrSessions() *UserUpdateOne {
+	_u.mutation.ClearQrSessions()
+	return _u
+}
+
+// RemoveQrSessionIDs removes the "qr_sessions" edge to UserQRSession entities by IDs.
+func (_u *UserUpdateOne) RemoveQrSessionIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveQrSessionIDs(ids...)
+	return _u
+}
+
+// RemoveQrSessions removes "qr_sessions" edges to UserQRSession entities.
+func (_u *UserUpdateOne) RemoveQrSessions(v ...*UserQRSession) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveQrSessionIDs(ids...)
+}
+
 // Where appends a list predicates to the UserUpdate builder.
 func (_u *UserUpdateOne) Where(ps ...predicate.User) *UserUpdateOne {
 	_u.mutation.Where(ps...)
@@ -964,6 +1594,42 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(user.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.FirstName(); ok {
+		_spec.SetField(user.FieldFirstName, field.TypeString, value)
+	}
+	if _u.mutation.FirstNameCleared() {
+		_spec.ClearField(user.FieldFirstName, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastName(); ok {
+		_spec.SetField(user.FieldLastName, field.TypeString, value)
+	}
+	if _u.mutation.LastNameCleared() {
+		_spec.ClearField(user.FieldLastName, field.TypeString)
+	}
+	if value, ok := _u.mutation.MiddleName(); ok {
+		_spec.SetField(user.FieldMiddleName, field.TypeString, value)
+	}
+	if _u.mutation.MiddleNameCleared() {
+		_spec.ClearField(user.FieldMiddleName, field.TypeString)
+	}
+	if value, ok := _u.mutation.Email(); ok {
+		_spec.SetField(user.FieldEmail, field.TypeString, value)
+	}
+	if _u.mutation.EmailCleared() {
+		_spec.ClearField(user.FieldEmail, field.TypeString)
+	}
+	if value, ok := _u.mutation.EmployeeCode(); ok {
+		_spec.SetField(user.FieldEmployeeCode, field.TypeString, value)
+	}
+	if _u.mutation.EmployeeCodeCleared() {
+		_spec.ClearField(user.FieldEmployeeCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.AccessCode(); ok {
+		_spec.SetField(user.FieldAccessCode, field.TypeString, value)
+	}
+	if _u.mutation.AccessCodeCleared() {
+		_spec.ClearField(user.FieldAccessCode, field.TypeString)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
@@ -1186,6 +1852,141 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(attendanceday.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ShiftAssignmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ShiftAssignmentsTable,
+			Columns: []string{user.ShiftAssignmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usershiftassignment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedShiftAssignmentsIDs(); len(nodes) > 0 && !_u.mutation.ShiftAssignmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ShiftAssignmentsTable,
+			Columns: []string{user.ShiftAssignmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usershiftassignment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ShiftAssignmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ShiftAssignmentsTable,
+			Columns: []string{user.ShiftAssignmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usershiftassignment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.DayOverridesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DayOverridesTable,
+			Columns: []string{user.DayOverridesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdayoverride.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDayOverridesIDs(); len(nodes) > 0 && !_u.mutation.DayOverridesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DayOverridesTable,
+			Columns: []string{user.DayOverridesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdayoverride.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DayOverridesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DayOverridesTable,
+			Columns: []string{user.DayOverridesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdayoverride.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.QrSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.QrSessionsTable,
+			Columns: []string{user.QrSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userqrsession.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedQrSessionsIDs(); len(nodes) > 0 && !_u.mutation.QrSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.QrSessionsTable,
+			Columns: []string{user.QrSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userqrsession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.QrSessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.QrSessionsTable,
+			Columns: []string{user.QrSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userqrsession.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

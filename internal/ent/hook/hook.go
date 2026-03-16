@@ -128,6 +128,30 @@ func (f RegionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RegionMutation", m)
 }
 
+// The ShiftFunc type is an adapter to allow the use of ordinary
+// function as Shift mutator.
+type ShiftFunc func(context.Context, *ent.ShiftMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ShiftFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ShiftMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ShiftMutation", m)
+}
+
+// The ShiftDayFunc type is an adapter to allow the use of ordinary
+// function as ShiftDay mutator.
+type ShiftDayFunc func(context.Context, *ent.ShiftDayMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ShiftDayFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ShiftDayMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ShiftDayMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
@@ -162,6 +186,42 @@ func (f UserBranchFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserBranchMutation", m)
+}
+
+// The UserDayOverrideFunc type is an adapter to allow the use of ordinary
+// function as UserDayOverride mutator.
+type UserDayOverrideFunc func(context.Context, *ent.UserDayOverrideMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserDayOverrideFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserDayOverrideMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserDayOverrideMutation", m)
+}
+
+// The UserQRSessionFunc type is an adapter to allow the use of ordinary
+// function as UserQRSession mutator.
+type UserQRSessionFunc func(context.Context, *ent.UserQRSessionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserQRSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserQRSessionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserQRSessionMutation", m)
+}
+
+// The UserShiftAssignmentFunc type is an adapter to allow the use of ordinary
+// function as UserShiftAssignment mutator.
+type UserShiftAssignmentFunc func(context.Context, *ent.UserShiftAssignmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserShiftAssignmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserShiftAssignmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserShiftAssignmentMutation", m)
 }
 
 // Condition is a hook condition function.

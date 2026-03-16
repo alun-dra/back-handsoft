@@ -21,9 +21,14 @@ import (
 	"back/internal/ent/device"
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/region"
+	"back/internal/ent/shift"
+	"back/internal/ent/shiftday"
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
+	"back/internal/ent/userdayoverride"
+	"back/internal/ent/userqrsession"
+	"back/internal/ent/usershiftassignment"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -56,12 +61,22 @@ type Client struct {
 	RefreshToken *RefreshTokenClient
 	// Region is the client for interacting with the Region builders.
 	Region *RegionClient
+	// Shift is the client for interacting with the Shift builders.
+	Shift *ShiftClient
+	// ShiftDay is the client for interacting with the ShiftDay builders.
+	ShiftDay *ShiftDayClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserAccessPoint is the client for interacting with the UserAccessPoint builders.
 	UserAccessPoint *UserAccessPointClient
 	// UserBranch is the client for interacting with the UserBranch builders.
 	UserBranch *UserBranchClient
+	// UserDayOverride is the client for interacting with the UserDayOverride builders.
+	UserDayOverride *UserDayOverrideClient
+	// UserQRSession is the client for interacting with the UserQRSession builders.
+	UserQRSession *UserQRSessionClient
+	// UserShiftAssignment is the client for interacting with the UserShiftAssignment builders.
+	UserShiftAssignment *UserShiftAssignmentClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -83,9 +98,14 @@ func (c *Client) init() {
 	c.Device = NewDeviceClient(c.config)
 	c.RefreshToken = NewRefreshTokenClient(c.config)
 	c.Region = NewRegionClient(c.config)
+	c.Shift = NewShiftClient(c.config)
+	c.ShiftDay = NewShiftDayClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserAccessPoint = NewUserAccessPointClient(c.config)
 	c.UserBranch = NewUserBranchClient(c.config)
+	c.UserDayOverride = NewUserDayOverrideClient(c.config)
+	c.UserQRSession = NewUserQRSessionClient(c.config)
+	c.UserShiftAssignment = NewUserShiftAssignmentClient(c.config)
 }
 
 type (
@@ -176,21 +196,26 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:             ctx,
-		config:          cfg,
-		AccessPoint:     NewAccessPointClient(cfg),
-		Address:         NewAddressClient(cfg),
-		AttendanceDay:   NewAttendanceDayClient(cfg),
-		Branch:          NewBranchClient(cfg),
-		BranchAddress:   NewBranchAddressClient(cfg),
-		City:            NewCityClient(cfg),
-		Commune:         NewCommuneClient(cfg),
-		Device:          NewDeviceClient(cfg),
-		RefreshToken:    NewRefreshTokenClient(cfg),
-		Region:          NewRegionClient(cfg),
-		User:            NewUserClient(cfg),
-		UserAccessPoint: NewUserAccessPointClient(cfg),
-		UserBranch:      NewUserBranchClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		AccessPoint:         NewAccessPointClient(cfg),
+		Address:             NewAddressClient(cfg),
+		AttendanceDay:       NewAttendanceDayClient(cfg),
+		Branch:              NewBranchClient(cfg),
+		BranchAddress:       NewBranchAddressClient(cfg),
+		City:                NewCityClient(cfg),
+		Commune:             NewCommuneClient(cfg),
+		Device:              NewDeviceClient(cfg),
+		RefreshToken:        NewRefreshTokenClient(cfg),
+		Region:              NewRegionClient(cfg),
+		Shift:               NewShiftClient(cfg),
+		ShiftDay:            NewShiftDayClient(cfg),
+		User:                NewUserClient(cfg),
+		UserAccessPoint:     NewUserAccessPointClient(cfg),
+		UserBranch:          NewUserBranchClient(cfg),
+		UserDayOverride:     NewUserDayOverrideClient(cfg),
+		UserQRSession:       NewUserQRSessionClient(cfg),
+		UserShiftAssignment: NewUserShiftAssignmentClient(cfg),
 	}, nil
 }
 
@@ -208,21 +233,26 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:             ctx,
-		config:          cfg,
-		AccessPoint:     NewAccessPointClient(cfg),
-		Address:         NewAddressClient(cfg),
-		AttendanceDay:   NewAttendanceDayClient(cfg),
-		Branch:          NewBranchClient(cfg),
-		BranchAddress:   NewBranchAddressClient(cfg),
-		City:            NewCityClient(cfg),
-		Commune:         NewCommuneClient(cfg),
-		Device:          NewDeviceClient(cfg),
-		RefreshToken:    NewRefreshTokenClient(cfg),
-		Region:          NewRegionClient(cfg),
-		User:            NewUserClient(cfg),
-		UserAccessPoint: NewUserAccessPointClient(cfg),
-		UserBranch:      NewUserBranchClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		AccessPoint:         NewAccessPointClient(cfg),
+		Address:             NewAddressClient(cfg),
+		AttendanceDay:       NewAttendanceDayClient(cfg),
+		Branch:              NewBranchClient(cfg),
+		BranchAddress:       NewBranchAddressClient(cfg),
+		City:                NewCityClient(cfg),
+		Commune:             NewCommuneClient(cfg),
+		Device:              NewDeviceClient(cfg),
+		RefreshToken:        NewRefreshTokenClient(cfg),
+		Region:              NewRegionClient(cfg),
+		Shift:               NewShiftClient(cfg),
+		ShiftDay:            NewShiftDayClient(cfg),
+		User:                NewUserClient(cfg),
+		UserAccessPoint:     NewUserAccessPointClient(cfg),
+		UserBranch:          NewUserBranchClient(cfg),
+		UserDayOverride:     NewUserDayOverrideClient(cfg),
+		UserQRSession:       NewUserQRSessionClient(cfg),
+		UserShiftAssignment: NewUserShiftAssignmentClient(cfg),
 	}, nil
 }
 
@@ -253,8 +283,9 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AccessPoint, c.Address, c.AttendanceDay, c.Branch, c.BranchAddress, c.City,
-		c.Commune, c.Device, c.RefreshToken, c.Region, c.User, c.UserAccessPoint,
-		c.UserBranch,
+		c.Commune, c.Device, c.RefreshToken, c.Region, c.Shift, c.ShiftDay, c.User,
+		c.UserAccessPoint, c.UserBranch, c.UserDayOverride, c.UserQRSession,
+		c.UserShiftAssignment,
 	} {
 		n.Use(hooks...)
 	}
@@ -265,8 +296,9 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AccessPoint, c.Address, c.AttendanceDay, c.Branch, c.BranchAddress, c.City,
-		c.Commune, c.Device, c.RefreshToken, c.Region, c.User, c.UserAccessPoint,
-		c.UserBranch,
+		c.Commune, c.Device, c.RefreshToken, c.Region, c.Shift, c.ShiftDay, c.User,
+		c.UserAccessPoint, c.UserBranch, c.UserDayOverride, c.UserQRSession,
+		c.UserShiftAssignment,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -295,12 +327,22 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.RefreshToken.mutate(ctx, m)
 	case *RegionMutation:
 		return c.Region.mutate(ctx, m)
+	case *ShiftMutation:
+		return c.Shift.mutate(ctx, m)
+	case *ShiftDayMutation:
+		return c.ShiftDay.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserAccessPointMutation:
 		return c.UserAccessPoint.mutate(ctx, m)
 	case *UserBranchMutation:
 		return c.UserBranch.mutate(ctx, m)
+	case *UserDayOverrideMutation:
+		return c.UserDayOverride.mutate(ctx, m)
+	case *UserQRSessionMutation:
+		return c.UserQRSession.mutate(ctx, m)
+	case *UserShiftAssignmentMutation:
+		return c.UserShiftAssignment.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -1972,6 +2014,336 @@ func (c *RegionClient) mutate(ctx context.Context, m *RegionMutation) (Value, er
 	}
 }
 
+// ShiftClient is a client for the Shift schema.
+type ShiftClient struct {
+	config
+}
+
+// NewShiftClient returns a client for the Shift from the given config.
+func NewShiftClient(c config) *ShiftClient {
+	return &ShiftClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `shift.Hooks(f(g(h())))`.
+func (c *ShiftClient) Use(hooks ...Hook) {
+	c.hooks.Shift = append(c.hooks.Shift, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `shift.Intercept(f(g(h())))`.
+func (c *ShiftClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Shift = append(c.inters.Shift, interceptors...)
+}
+
+// Create returns a builder for creating a Shift entity.
+func (c *ShiftClient) Create() *ShiftCreate {
+	mutation := newShiftMutation(c.config, OpCreate)
+	return &ShiftCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Shift entities.
+func (c *ShiftClient) CreateBulk(builders ...*ShiftCreate) *ShiftCreateBulk {
+	return &ShiftCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ShiftClient) MapCreateBulk(slice any, setFunc func(*ShiftCreate, int)) *ShiftCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ShiftCreateBulk{err: fmt.Errorf("calling to ShiftClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ShiftCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ShiftCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Shift.
+func (c *ShiftClient) Update() *ShiftUpdate {
+	mutation := newShiftMutation(c.config, OpUpdate)
+	return &ShiftUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ShiftClient) UpdateOne(_m *Shift) *ShiftUpdateOne {
+	mutation := newShiftMutation(c.config, OpUpdateOne, withShift(_m))
+	return &ShiftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ShiftClient) UpdateOneID(id int) *ShiftUpdateOne {
+	mutation := newShiftMutation(c.config, OpUpdateOne, withShiftID(id))
+	return &ShiftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Shift.
+func (c *ShiftClient) Delete() *ShiftDelete {
+	mutation := newShiftMutation(c.config, OpDelete)
+	return &ShiftDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ShiftClient) DeleteOne(_m *Shift) *ShiftDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ShiftClient) DeleteOneID(id int) *ShiftDeleteOne {
+	builder := c.Delete().Where(shift.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ShiftDeleteOne{builder}
+}
+
+// Query returns a query builder for Shift.
+func (c *ShiftClient) Query() *ShiftQuery {
+	return &ShiftQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeShift},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Shift entity by its id.
+func (c *ShiftClient) Get(ctx context.Context, id int) (*Shift, error) {
+	return c.Query().Where(shift.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ShiftClient) GetX(ctx context.Context, id int) *Shift {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryDays queries the days edge of a Shift.
+func (c *ShiftClient) QueryDays(_m *Shift) *ShiftDayQuery {
+	query := (&ShiftDayClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(shift.Table, shift.FieldID, id),
+			sqlgraph.To(shiftday.Table, shiftday.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, shift.DaysTable, shift.DaysColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserAssignments queries the user_assignments edge of a Shift.
+func (c *ShiftClient) QueryUserAssignments(_m *Shift) *UserShiftAssignmentQuery {
+	query := (&UserShiftAssignmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(shift.Table, shift.FieldID, id),
+			sqlgraph.To(usershiftassignment.Table, usershiftassignment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, shift.UserAssignmentsTable, shift.UserAssignmentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDayOverrides queries the day_overrides edge of a Shift.
+func (c *ShiftClient) QueryDayOverrides(_m *Shift) *UserDayOverrideQuery {
+	query := (&UserDayOverrideClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(shift.Table, shift.FieldID, id),
+			sqlgraph.To(userdayoverride.Table, userdayoverride.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, shift.DayOverridesTable, shift.DayOverridesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ShiftClient) Hooks() []Hook {
+	return c.hooks.Shift
+}
+
+// Interceptors returns the client interceptors.
+func (c *ShiftClient) Interceptors() []Interceptor {
+	return c.inters.Shift
+}
+
+func (c *ShiftClient) mutate(ctx context.Context, m *ShiftMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ShiftCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ShiftUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ShiftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ShiftDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Shift mutation op: %q", m.Op())
+	}
+}
+
+// ShiftDayClient is a client for the ShiftDay schema.
+type ShiftDayClient struct {
+	config
+}
+
+// NewShiftDayClient returns a client for the ShiftDay from the given config.
+func NewShiftDayClient(c config) *ShiftDayClient {
+	return &ShiftDayClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `shiftday.Hooks(f(g(h())))`.
+func (c *ShiftDayClient) Use(hooks ...Hook) {
+	c.hooks.ShiftDay = append(c.hooks.ShiftDay, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `shiftday.Intercept(f(g(h())))`.
+func (c *ShiftDayClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ShiftDay = append(c.inters.ShiftDay, interceptors...)
+}
+
+// Create returns a builder for creating a ShiftDay entity.
+func (c *ShiftDayClient) Create() *ShiftDayCreate {
+	mutation := newShiftDayMutation(c.config, OpCreate)
+	return &ShiftDayCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ShiftDay entities.
+func (c *ShiftDayClient) CreateBulk(builders ...*ShiftDayCreate) *ShiftDayCreateBulk {
+	return &ShiftDayCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ShiftDayClient) MapCreateBulk(slice any, setFunc func(*ShiftDayCreate, int)) *ShiftDayCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ShiftDayCreateBulk{err: fmt.Errorf("calling to ShiftDayClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ShiftDayCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ShiftDayCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ShiftDay.
+func (c *ShiftDayClient) Update() *ShiftDayUpdate {
+	mutation := newShiftDayMutation(c.config, OpUpdate)
+	return &ShiftDayUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ShiftDayClient) UpdateOne(_m *ShiftDay) *ShiftDayUpdateOne {
+	mutation := newShiftDayMutation(c.config, OpUpdateOne, withShiftDay(_m))
+	return &ShiftDayUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ShiftDayClient) UpdateOneID(id int) *ShiftDayUpdateOne {
+	mutation := newShiftDayMutation(c.config, OpUpdateOne, withShiftDayID(id))
+	return &ShiftDayUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ShiftDay.
+func (c *ShiftDayClient) Delete() *ShiftDayDelete {
+	mutation := newShiftDayMutation(c.config, OpDelete)
+	return &ShiftDayDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ShiftDayClient) DeleteOne(_m *ShiftDay) *ShiftDayDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ShiftDayClient) DeleteOneID(id int) *ShiftDayDeleteOne {
+	builder := c.Delete().Where(shiftday.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ShiftDayDeleteOne{builder}
+}
+
+// Query returns a query builder for ShiftDay.
+func (c *ShiftDayClient) Query() *ShiftDayQuery {
+	return &ShiftDayQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeShiftDay},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ShiftDay entity by its id.
+func (c *ShiftDayClient) Get(ctx context.Context, id int) (*ShiftDay, error) {
+	return c.Query().Where(shiftday.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ShiftDayClient) GetX(ctx context.Context, id int) *ShiftDay {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryShift queries the shift edge of a ShiftDay.
+func (c *ShiftDayClient) QueryShift(_m *ShiftDay) *ShiftQuery {
+	query := (&ShiftClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(shiftday.Table, shiftday.FieldID, id),
+			sqlgraph.To(shift.Table, shift.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, shiftday.ShiftTable, shiftday.ShiftColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ShiftDayClient) Hooks() []Hook {
+	return c.hooks.ShiftDay
+}
+
+// Interceptors returns the client interceptors.
+func (c *ShiftDayClient) Interceptors() []Interceptor {
+	return c.inters.ShiftDay
+}
+
+func (c *ShiftDayClient) mutate(ctx context.Context, m *ShiftDayMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ShiftDayCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ShiftDayUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ShiftDayUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ShiftDayDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ShiftDay mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -2153,6 +2525,54 @@ func (c *UserClient) QueryAttendanceDays(_m *User) *AttendanceDayQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(attendanceday.Table, attendanceday.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AttendanceDaysTable, user.AttendanceDaysColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryShiftAssignments queries the shift_assignments edge of a User.
+func (c *UserClient) QueryShiftAssignments(_m *User) *UserShiftAssignmentQuery {
+	query := (&UserShiftAssignmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(usershiftassignment.Table, usershiftassignment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ShiftAssignmentsTable, user.ShiftAssignmentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDayOverrides queries the day_overrides edge of a User.
+func (c *UserClient) QueryDayOverrides(_m *User) *UserDayOverrideQuery {
+	query := (&UserDayOverrideClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userdayoverride.Table, userdayoverride.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.DayOverridesTable, user.DayOverridesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryQrSessions queries the qr_sessions edge of a User.
+func (c *UserClient) QueryQrSessions(_m *User) *UserQRSessionQuery {
+	query := (&UserQRSessionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userqrsession.Table, userqrsession.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.QrSessionsTable, user.QrSessionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2515,15 +2935,496 @@ func (c *UserBranchClient) mutate(ctx context.Context, m *UserBranchMutation) (V
 	}
 }
 
+// UserDayOverrideClient is a client for the UserDayOverride schema.
+type UserDayOverrideClient struct {
+	config
+}
+
+// NewUserDayOverrideClient returns a client for the UserDayOverride from the given config.
+func NewUserDayOverrideClient(c config) *UserDayOverrideClient {
+	return &UserDayOverrideClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userdayoverride.Hooks(f(g(h())))`.
+func (c *UserDayOverrideClient) Use(hooks ...Hook) {
+	c.hooks.UserDayOverride = append(c.hooks.UserDayOverride, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userdayoverride.Intercept(f(g(h())))`.
+func (c *UserDayOverrideClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserDayOverride = append(c.inters.UserDayOverride, interceptors...)
+}
+
+// Create returns a builder for creating a UserDayOverride entity.
+func (c *UserDayOverrideClient) Create() *UserDayOverrideCreate {
+	mutation := newUserDayOverrideMutation(c.config, OpCreate)
+	return &UserDayOverrideCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserDayOverride entities.
+func (c *UserDayOverrideClient) CreateBulk(builders ...*UserDayOverrideCreate) *UserDayOverrideCreateBulk {
+	return &UserDayOverrideCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserDayOverrideClient) MapCreateBulk(slice any, setFunc func(*UserDayOverrideCreate, int)) *UserDayOverrideCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserDayOverrideCreateBulk{err: fmt.Errorf("calling to UserDayOverrideClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserDayOverrideCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserDayOverrideCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserDayOverride.
+func (c *UserDayOverrideClient) Update() *UserDayOverrideUpdate {
+	mutation := newUserDayOverrideMutation(c.config, OpUpdate)
+	return &UserDayOverrideUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserDayOverrideClient) UpdateOne(_m *UserDayOverride) *UserDayOverrideUpdateOne {
+	mutation := newUserDayOverrideMutation(c.config, OpUpdateOne, withUserDayOverride(_m))
+	return &UserDayOverrideUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserDayOverrideClient) UpdateOneID(id int) *UserDayOverrideUpdateOne {
+	mutation := newUserDayOverrideMutation(c.config, OpUpdateOne, withUserDayOverrideID(id))
+	return &UserDayOverrideUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserDayOverride.
+func (c *UserDayOverrideClient) Delete() *UserDayOverrideDelete {
+	mutation := newUserDayOverrideMutation(c.config, OpDelete)
+	return &UserDayOverrideDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserDayOverrideClient) DeleteOne(_m *UserDayOverride) *UserDayOverrideDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserDayOverrideClient) DeleteOneID(id int) *UserDayOverrideDeleteOne {
+	builder := c.Delete().Where(userdayoverride.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserDayOverrideDeleteOne{builder}
+}
+
+// Query returns a query builder for UserDayOverride.
+func (c *UserDayOverrideClient) Query() *UserDayOverrideQuery {
+	return &UserDayOverrideQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserDayOverride},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserDayOverride entity by its id.
+func (c *UserDayOverrideClient) Get(ctx context.Context, id int) (*UserDayOverride, error) {
+	return c.Query().Where(userdayoverride.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserDayOverrideClient) GetX(ctx context.Context, id int) *UserDayOverride {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserDayOverride.
+func (c *UserDayOverrideClient) QueryUser(_m *UserDayOverride) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userdayoverride.Table, userdayoverride.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userdayoverride.UserTable, userdayoverride.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryShift queries the shift edge of a UserDayOverride.
+func (c *UserDayOverrideClient) QueryShift(_m *UserDayOverride) *ShiftQuery {
+	query := (&ShiftClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userdayoverride.Table, userdayoverride.FieldID, id),
+			sqlgraph.To(shift.Table, shift.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userdayoverride.ShiftTable, userdayoverride.ShiftColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserDayOverrideClient) Hooks() []Hook {
+	return c.hooks.UserDayOverride
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserDayOverrideClient) Interceptors() []Interceptor {
+	return c.inters.UserDayOverride
+}
+
+func (c *UserDayOverrideClient) mutate(ctx context.Context, m *UserDayOverrideMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserDayOverrideCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserDayOverrideUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserDayOverrideUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserDayOverrideDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserDayOverride mutation op: %q", m.Op())
+	}
+}
+
+// UserQRSessionClient is a client for the UserQRSession schema.
+type UserQRSessionClient struct {
+	config
+}
+
+// NewUserQRSessionClient returns a client for the UserQRSession from the given config.
+func NewUserQRSessionClient(c config) *UserQRSessionClient {
+	return &UserQRSessionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userqrsession.Hooks(f(g(h())))`.
+func (c *UserQRSessionClient) Use(hooks ...Hook) {
+	c.hooks.UserQRSession = append(c.hooks.UserQRSession, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userqrsession.Intercept(f(g(h())))`.
+func (c *UserQRSessionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserQRSession = append(c.inters.UserQRSession, interceptors...)
+}
+
+// Create returns a builder for creating a UserQRSession entity.
+func (c *UserQRSessionClient) Create() *UserQRSessionCreate {
+	mutation := newUserQRSessionMutation(c.config, OpCreate)
+	return &UserQRSessionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserQRSession entities.
+func (c *UserQRSessionClient) CreateBulk(builders ...*UserQRSessionCreate) *UserQRSessionCreateBulk {
+	return &UserQRSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserQRSessionClient) MapCreateBulk(slice any, setFunc func(*UserQRSessionCreate, int)) *UserQRSessionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserQRSessionCreateBulk{err: fmt.Errorf("calling to UserQRSessionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserQRSessionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserQRSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserQRSession.
+func (c *UserQRSessionClient) Update() *UserQRSessionUpdate {
+	mutation := newUserQRSessionMutation(c.config, OpUpdate)
+	return &UserQRSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserQRSessionClient) UpdateOne(_m *UserQRSession) *UserQRSessionUpdateOne {
+	mutation := newUserQRSessionMutation(c.config, OpUpdateOne, withUserQRSession(_m))
+	return &UserQRSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserQRSessionClient) UpdateOneID(id int) *UserQRSessionUpdateOne {
+	mutation := newUserQRSessionMutation(c.config, OpUpdateOne, withUserQRSessionID(id))
+	return &UserQRSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserQRSession.
+func (c *UserQRSessionClient) Delete() *UserQRSessionDelete {
+	mutation := newUserQRSessionMutation(c.config, OpDelete)
+	return &UserQRSessionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserQRSessionClient) DeleteOne(_m *UserQRSession) *UserQRSessionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserQRSessionClient) DeleteOneID(id int) *UserQRSessionDeleteOne {
+	builder := c.Delete().Where(userqrsession.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserQRSessionDeleteOne{builder}
+}
+
+// Query returns a query builder for UserQRSession.
+func (c *UserQRSessionClient) Query() *UserQRSessionQuery {
+	return &UserQRSessionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserQRSession},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserQRSession entity by its id.
+func (c *UserQRSessionClient) Get(ctx context.Context, id int) (*UserQRSession, error) {
+	return c.Query().Where(userqrsession.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserQRSessionClient) GetX(ctx context.Context, id int) *UserQRSession {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserQRSession.
+func (c *UserQRSessionClient) QueryUser(_m *UserQRSession) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userqrsession.Table, userqrsession.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userqrsession.UserTable, userqrsession.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserQRSessionClient) Hooks() []Hook {
+	return c.hooks.UserQRSession
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserQRSessionClient) Interceptors() []Interceptor {
+	return c.inters.UserQRSession
+}
+
+func (c *UserQRSessionClient) mutate(ctx context.Context, m *UserQRSessionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserQRSessionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserQRSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserQRSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserQRSessionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserQRSession mutation op: %q", m.Op())
+	}
+}
+
+// UserShiftAssignmentClient is a client for the UserShiftAssignment schema.
+type UserShiftAssignmentClient struct {
+	config
+}
+
+// NewUserShiftAssignmentClient returns a client for the UserShiftAssignment from the given config.
+func NewUserShiftAssignmentClient(c config) *UserShiftAssignmentClient {
+	return &UserShiftAssignmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usershiftassignment.Hooks(f(g(h())))`.
+func (c *UserShiftAssignmentClient) Use(hooks ...Hook) {
+	c.hooks.UserShiftAssignment = append(c.hooks.UserShiftAssignment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usershiftassignment.Intercept(f(g(h())))`.
+func (c *UserShiftAssignmentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserShiftAssignment = append(c.inters.UserShiftAssignment, interceptors...)
+}
+
+// Create returns a builder for creating a UserShiftAssignment entity.
+func (c *UserShiftAssignmentClient) Create() *UserShiftAssignmentCreate {
+	mutation := newUserShiftAssignmentMutation(c.config, OpCreate)
+	return &UserShiftAssignmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserShiftAssignment entities.
+func (c *UserShiftAssignmentClient) CreateBulk(builders ...*UserShiftAssignmentCreate) *UserShiftAssignmentCreateBulk {
+	return &UserShiftAssignmentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserShiftAssignmentClient) MapCreateBulk(slice any, setFunc func(*UserShiftAssignmentCreate, int)) *UserShiftAssignmentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserShiftAssignmentCreateBulk{err: fmt.Errorf("calling to UserShiftAssignmentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserShiftAssignmentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserShiftAssignmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserShiftAssignment.
+func (c *UserShiftAssignmentClient) Update() *UserShiftAssignmentUpdate {
+	mutation := newUserShiftAssignmentMutation(c.config, OpUpdate)
+	return &UserShiftAssignmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserShiftAssignmentClient) UpdateOne(_m *UserShiftAssignment) *UserShiftAssignmentUpdateOne {
+	mutation := newUserShiftAssignmentMutation(c.config, OpUpdateOne, withUserShiftAssignment(_m))
+	return &UserShiftAssignmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserShiftAssignmentClient) UpdateOneID(id int) *UserShiftAssignmentUpdateOne {
+	mutation := newUserShiftAssignmentMutation(c.config, OpUpdateOne, withUserShiftAssignmentID(id))
+	return &UserShiftAssignmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserShiftAssignment.
+func (c *UserShiftAssignmentClient) Delete() *UserShiftAssignmentDelete {
+	mutation := newUserShiftAssignmentMutation(c.config, OpDelete)
+	return &UserShiftAssignmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserShiftAssignmentClient) DeleteOne(_m *UserShiftAssignment) *UserShiftAssignmentDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserShiftAssignmentClient) DeleteOneID(id int) *UserShiftAssignmentDeleteOne {
+	builder := c.Delete().Where(usershiftassignment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserShiftAssignmentDeleteOne{builder}
+}
+
+// Query returns a query builder for UserShiftAssignment.
+func (c *UserShiftAssignmentClient) Query() *UserShiftAssignmentQuery {
+	return &UserShiftAssignmentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserShiftAssignment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserShiftAssignment entity by its id.
+func (c *UserShiftAssignmentClient) Get(ctx context.Context, id int) (*UserShiftAssignment, error) {
+	return c.Query().Where(usershiftassignment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserShiftAssignmentClient) GetX(ctx context.Context, id int) *UserShiftAssignment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserShiftAssignment.
+func (c *UserShiftAssignmentClient) QueryUser(_m *UserShiftAssignment) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usershiftassignment.Table, usershiftassignment.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usershiftassignment.UserTable, usershiftassignment.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryShift queries the shift edge of a UserShiftAssignment.
+func (c *UserShiftAssignmentClient) QueryShift(_m *UserShiftAssignment) *ShiftQuery {
+	query := (&ShiftClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usershiftassignment.Table, usershiftassignment.FieldID, id),
+			sqlgraph.To(shift.Table, shift.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usershiftassignment.ShiftTable, usershiftassignment.ShiftColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserShiftAssignmentClient) Hooks() []Hook {
+	return c.hooks.UserShiftAssignment
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserShiftAssignmentClient) Interceptors() []Interceptor {
+	return c.inters.UserShiftAssignment
+}
+
+func (c *UserShiftAssignmentClient) mutate(ctx context.Context, m *UserShiftAssignmentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserShiftAssignmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserShiftAssignmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserShiftAssignmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserShiftAssignmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserShiftAssignment mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
 		AccessPoint, Address, AttendanceDay, Branch, BranchAddress, City, Commune,
-		Device, RefreshToken, Region, User, UserAccessPoint, UserBranch []ent.Hook
+		Device, RefreshToken, Region, Shift, ShiftDay, User, UserAccessPoint,
+		UserBranch, UserDayOverride, UserQRSession, UserShiftAssignment []ent.Hook
 	}
 	inters struct {
 		AccessPoint, Address, AttendanceDay, Branch, BranchAddress, City, Commune,
-		Device, RefreshToken, Region, User, UserAccessPoint,
-		UserBranch []ent.Interceptor
+		Device, RefreshToken, Region, Shift, ShiftDay, User, UserAccessPoint,
+		UserBranch, UserDayOverride, UserQRSession,
+		UserShiftAssignment []ent.Interceptor
 	}
 )

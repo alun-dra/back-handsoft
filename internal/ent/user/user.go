@@ -22,6 +22,18 @@ const (
 	FieldRole = "role"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
+	// FieldFirstName holds the string denoting the first_name field in the database.
+	FieldFirstName = "first_name"
+	// FieldLastName holds the string denoting the last_name field in the database.
+	FieldLastName = "last_name"
+	// FieldMiddleName holds the string denoting the middle_name field in the database.
+	FieldMiddleName = "middle_name"
+	// FieldEmail holds the string denoting the email field in the database.
+	FieldEmail = "email"
+	// FieldEmployeeCode holds the string denoting the employee_code field in the database.
+	FieldEmployeeCode = "employee_code"
+	// FieldAccessCode holds the string denoting the access_code field in the database.
+	FieldAccessCode = "access_code"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -36,6 +48,12 @@ const (
 	EdgeUserAccessPoints = "user_access_points"
 	// EdgeAttendanceDays holds the string denoting the attendance_days edge name in mutations.
 	EdgeAttendanceDays = "attendance_days"
+	// EdgeShiftAssignments holds the string denoting the shift_assignments edge name in mutations.
+	EdgeShiftAssignments = "shift_assignments"
+	// EdgeDayOverrides holds the string denoting the day_overrides edge name in mutations.
+	EdgeDayOverrides = "day_overrides"
+	// EdgeQrSessions holds the string denoting the qr_sessions edge name in mutations.
+	EdgeQrSessions = "qr_sessions"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// RefreshTokensTable is the table that holds the refresh_tokens relation/edge.
@@ -73,6 +91,27 @@ const (
 	AttendanceDaysInverseTable = "attendance_days"
 	// AttendanceDaysColumn is the table column denoting the attendance_days relation/edge.
 	AttendanceDaysColumn = "user_attendance_days"
+	// ShiftAssignmentsTable is the table that holds the shift_assignments relation/edge.
+	ShiftAssignmentsTable = "user_shift_assignments"
+	// ShiftAssignmentsInverseTable is the table name for the UserShiftAssignment entity.
+	// It exists in this package in order to avoid circular dependency with the "usershiftassignment" package.
+	ShiftAssignmentsInverseTable = "user_shift_assignments"
+	// ShiftAssignmentsColumn is the table column denoting the shift_assignments relation/edge.
+	ShiftAssignmentsColumn = "user_id"
+	// DayOverridesTable is the table that holds the day_overrides relation/edge.
+	DayOverridesTable = "user_day_overrides"
+	// DayOverridesInverseTable is the table name for the UserDayOverride entity.
+	// It exists in this package in order to avoid circular dependency with the "userdayoverride" package.
+	DayOverridesInverseTable = "user_day_overrides"
+	// DayOverridesColumn is the table column denoting the day_overrides relation/edge.
+	DayOverridesColumn = "user_id"
+	// QrSessionsTable is the table that holds the qr_sessions relation/edge.
+	QrSessionsTable = "user_qr_sessions"
+	// QrSessionsInverseTable is the table name for the UserQRSession entity.
+	// It exists in this package in order to avoid circular dependency with the "userqrsession" package.
+	QrSessionsInverseTable = "user_qr_sessions"
+	// QrSessionsColumn is the table column denoting the qr_sessions relation/edge.
+	QrSessionsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -82,6 +121,12 @@ var Columns = []string{
 	FieldPasswordHash,
 	FieldRole,
 	FieldIsActive,
+	FieldFirstName,
+	FieldLastName,
+	FieldMiddleName,
+	FieldEmail,
+	FieldEmployeeCode,
+	FieldAccessCode,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -141,6 +186,36 @@ func ByRole(opts ...sql.OrderTermOption) OrderOption {
 // ByIsActive orders the results by the is_active field.
 func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+}
+
+// ByFirstName orders the results by the first_name field.
+func ByFirstName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFirstName, opts...).ToFunc()
+}
+
+// ByLastName orders the results by the last_name field.
+func ByLastName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastName, opts...).ToFunc()
+}
+
+// ByMiddleName orders the results by the middle_name field.
+func ByMiddleName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMiddleName, opts...).ToFunc()
+}
+
+// ByEmail orders the results by the email field.
+func ByEmail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmail, opts...).ToFunc()
+}
+
+// ByEmployeeCode orders the results by the employee_code field.
+func ByEmployeeCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmployeeCode, opts...).ToFunc()
+}
+
+// ByAccessCode orders the results by the access_code field.
+func ByAccessCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAccessCode, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -222,6 +297,48 @@ func ByAttendanceDays(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAttendanceDaysStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByShiftAssignmentsCount orders the results by shift_assignments count.
+func ByShiftAssignmentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newShiftAssignmentsStep(), opts...)
+	}
+}
+
+// ByShiftAssignments orders the results by shift_assignments terms.
+func ByShiftAssignments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newShiftAssignmentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByDayOverridesCount orders the results by day_overrides count.
+func ByDayOverridesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDayOverridesStep(), opts...)
+	}
+}
+
+// ByDayOverrides orders the results by day_overrides terms.
+func ByDayOverrides(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDayOverridesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByQrSessionsCount orders the results by qr_sessions count.
+func ByQrSessionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newQrSessionsStep(), opts...)
+	}
+}
+
+// ByQrSessions orders the results by qr_sessions terms.
+func ByQrSessions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newQrSessionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRefreshTokensStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -255,5 +372,26 @@ func newAttendanceDaysStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AttendanceDaysInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AttendanceDaysTable, AttendanceDaysColumn),
+	)
+}
+func newShiftAssignmentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ShiftAssignmentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ShiftAssignmentsTable, ShiftAssignmentsColumn),
+	)
+}
+func newDayOverridesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DayOverridesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DayOverridesTable, DayOverridesColumn),
+	)
+}
+func newQrSessionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(QrSessionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, QrSessionsTable, QrSessionsColumn),
 	)
 }

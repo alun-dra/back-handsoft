@@ -9,6 +9,9 @@ import (
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
+	"back/internal/ent/userdayoverride"
+	"back/internal/ent/userqrsession"
+	"back/internal/ent/usershiftassignment"
 	"context"
 	"errors"
 	"fmt"
@@ -61,6 +64,90 @@ func (_c *UserCreate) SetIsActive(v bool) *UserCreate {
 func (_c *UserCreate) SetNillableIsActive(v *bool) *UserCreate {
 	if v != nil {
 		_c.SetIsActive(*v)
+	}
+	return _c
+}
+
+// SetFirstName sets the "first_name" field.
+func (_c *UserCreate) SetFirstName(v string) *UserCreate {
+	_c.mutation.SetFirstName(v)
+	return _c
+}
+
+// SetNillableFirstName sets the "first_name" field if the given value is not nil.
+func (_c *UserCreate) SetNillableFirstName(v *string) *UserCreate {
+	if v != nil {
+		_c.SetFirstName(*v)
+	}
+	return _c
+}
+
+// SetLastName sets the "last_name" field.
+func (_c *UserCreate) SetLastName(v string) *UserCreate {
+	_c.mutation.SetLastName(v)
+	return _c
+}
+
+// SetNillableLastName sets the "last_name" field if the given value is not nil.
+func (_c *UserCreate) SetNillableLastName(v *string) *UserCreate {
+	if v != nil {
+		_c.SetLastName(*v)
+	}
+	return _c
+}
+
+// SetMiddleName sets the "middle_name" field.
+func (_c *UserCreate) SetMiddleName(v string) *UserCreate {
+	_c.mutation.SetMiddleName(v)
+	return _c
+}
+
+// SetNillableMiddleName sets the "middle_name" field if the given value is not nil.
+func (_c *UserCreate) SetNillableMiddleName(v *string) *UserCreate {
+	if v != nil {
+		_c.SetMiddleName(*v)
+	}
+	return _c
+}
+
+// SetEmail sets the "email" field.
+func (_c *UserCreate) SetEmail(v string) *UserCreate {
+	_c.mutation.SetEmail(v)
+	return _c
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_c *UserCreate) SetNillableEmail(v *string) *UserCreate {
+	if v != nil {
+		_c.SetEmail(*v)
+	}
+	return _c
+}
+
+// SetEmployeeCode sets the "employee_code" field.
+func (_c *UserCreate) SetEmployeeCode(v string) *UserCreate {
+	_c.mutation.SetEmployeeCode(v)
+	return _c
+}
+
+// SetNillableEmployeeCode sets the "employee_code" field if the given value is not nil.
+func (_c *UserCreate) SetNillableEmployeeCode(v *string) *UserCreate {
+	if v != nil {
+		_c.SetEmployeeCode(*v)
+	}
+	return _c
+}
+
+// SetAccessCode sets the "access_code" field.
+func (_c *UserCreate) SetAccessCode(v string) *UserCreate {
+	_c.mutation.SetAccessCode(v)
+	return _c
+}
+
+// SetNillableAccessCode sets the "access_code" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAccessCode(v *string) *UserCreate {
+	if v != nil {
+		_c.SetAccessCode(*v)
 	}
 	return _c
 }
@@ -166,6 +253,51 @@ func (_c *UserCreate) AddAttendanceDays(v ...*AttendanceDay) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddAttendanceDayIDs(ids...)
+}
+
+// AddShiftAssignmentIDs adds the "shift_assignments" edge to the UserShiftAssignment entity by IDs.
+func (_c *UserCreate) AddShiftAssignmentIDs(ids ...int) *UserCreate {
+	_c.mutation.AddShiftAssignmentIDs(ids...)
+	return _c
+}
+
+// AddShiftAssignments adds the "shift_assignments" edges to the UserShiftAssignment entity.
+func (_c *UserCreate) AddShiftAssignments(v ...*UserShiftAssignment) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddShiftAssignmentIDs(ids...)
+}
+
+// AddDayOverrideIDs adds the "day_overrides" edge to the UserDayOverride entity by IDs.
+func (_c *UserCreate) AddDayOverrideIDs(ids ...int) *UserCreate {
+	_c.mutation.AddDayOverrideIDs(ids...)
+	return _c
+}
+
+// AddDayOverrides adds the "day_overrides" edges to the UserDayOverride entity.
+func (_c *UserCreate) AddDayOverrides(v ...*UserDayOverride) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddDayOverrideIDs(ids...)
+}
+
+// AddQrSessionIDs adds the "qr_sessions" edge to the UserQRSession entity by IDs.
+func (_c *UserCreate) AddQrSessionIDs(ids ...int) *UserCreate {
+	_c.mutation.AddQrSessionIDs(ids...)
+	return _c
+}
+
+// AddQrSessions adds the "qr_sessions" edges to the UserQRSession entity.
+func (_c *UserCreate) AddQrSessions(v ...*UserQRSession) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddQrSessionIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -298,6 +430,30 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
+	if value, ok := _c.mutation.FirstName(); ok {
+		_spec.SetField(user.FieldFirstName, field.TypeString, value)
+		_node.FirstName = &value
+	}
+	if value, ok := _c.mutation.LastName(); ok {
+		_spec.SetField(user.FieldLastName, field.TypeString, value)
+		_node.LastName = &value
+	}
+	if value, ok := _c.mutation.MiddleName(); ok {
+		_spec.SetField(user.FieldMiddleName, field.TypeString, value)
+		_node.MiddleName = &value
+	}
+	if value, ok := _c.mutation.Email(); ok {
+		_spec.SetField(user.FieldEmail, field.TypeString, value)
+		_node.Email = &value
+	}
+	if value, ok := _c.mutation.EmployeeCode(); ok {
+		_spec.SetField(user.FieldEmployeeCode, field.TypeString, value)
+		_node.EmployeeCode = &value
+	}
+	if value, ok := _c.mutation.AccessCode(); ok {
+		_spec.SetField(user.FieldAccessCode, field.TypeString, value)
+		_node.AccessCode = &value
+	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -379,6 +535,54 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(attendanceday.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ShiftAssignmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ShiftAssignmentsTable,
+			Columns: []string{user.ShiftAssignmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usershiftassignment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.DayOverridesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DayOverridesTable,
+			Columns: []string{user.DayOverridesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdayoverride.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.QrSessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.QrSessionsTable,
+			Columns: []string{user.QrSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userqrsession.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -40,6 +40,9 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// Services
 	// =========================
 	usersService := services.NewUsersService(client)
+	userBranchService := services.NewUserBranchService(client)
+	userAccessPointService := services.NewUserAccessPointService(client)
+
 	tokenService := services.NewTokenService(cfg, client)
 
 	locationService := services.NewLocationService(client)
@@ -54,6 +57,9 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// Handlers
 	// =========================
 	authHandler := handlers.NewAuthHandler(cfg, usersService, tokenService)
+	usersHandler := handlers.NewUsersHandler(usersService)
+	userBranchHandler := handlers.NewUserBranchHandler(userBranchService)
+	userAccessPointHandler := handlers.NewUserAccessPointHandler(userAccessPointService)
 	deviceAuthHandler := handlers.NewDeviceAuthHandler(deviceAuthService)
 
 	locationHandler := handlers.NewLocationHandler(locationService)
@@ -83,7 +89,6 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// =========================
 	// Protected routes (AUTH)
 	// =========================
-
 	protectedRegister := middleware.Chain(
 		http.HandlerFunc(authHandler.Register),
 		middleware.JWT(cfg),
@@ -110,9 +115,75 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	mux.Handle("/api/v1/auth/sessions", protectedSessions)
 
 	// =========================
+	// Protected routes (USERS)
+	// =========================
+	protectedUsers := middleware.Chain(
+		http.HandlerFunc(usersHandler.Users),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/users", protectedUsers)
+
+	// Un solo prefijo para:
+	// - /api/v1/users/{id}
+	// - /api/v1/users/{id}/branches
+	// - /api/v1/users/{id}/branches/{branch_id}
+	// - /api/v1/users/{id}/access-points
+	// - /api/v1/users/{id}/access-points/{access_point_id}
+	protectedUserSubroutes := middleware.Chain(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			path := strings.Trim(r.URL.Path, "/")
+			parts := strings.Split(path, "/")
+
+			// /api/v1/users/{id}/branches
+			if len(parts) == 5 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "users" &&
+				parts[4] == "branches" {
+				userBranchHandler.UserBranches(w, r)
+				return
+			}
+
+			// /api/v1/users/{id}/branches/{branch_id}
+			if len(parts) == 6 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "users" &&
+				parts[4] == "branches" {
+				userBranchHandler.UserBranchByID(w, r)
+				return
+			}
+
+			// /api/v1/users/{id}/access-points
+			if len(parts) == 5 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "users" &&
+				parts[4] == "access-points" {
+				userAccessPointHandler.UserAccessPoints(w, r)
+				return
+			}
+
+			// /api/v1/users/{id}/access-points/{access_point_id}
+			if len(parts) == 6 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "users" &&
+				parts[4] == "access-points" {
+				userAccessPointHandler.UserAccessPointByID(w, r)
+				return
+			}
+
+			// /api/v1/users/{id}
+			usersHandler.UserByID(w, r)
+		}),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/users/", protectedUserSubroutes)
+
+	// =========================
 	// Protected routes (ADDRESSES)
 	// =========================
-
 	protectedAddresses := middleware.Chain(
 		http.HandlerFunc(addressHandler.Addresses),
 		middleware.JWT(cfg),
@@ -128,7 +199,6 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// =========================
 	// Protected routes (BRANCHES + ACCESS POINTS by Branch)
 	// =========================
-
 	protectedBranches := middleware.Chain(
 		http.HandlerFunc(branchHandler.Branches),
 		middleware.JWT(cfg),
@@ -163,7 +233,6 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// =========================
 	// Protected routes (ACCESS POINTS + DEVICES by Access Point)
 	// =========================
-
 	// Un solo prefijo para:
 	// - /api/v1/access-points/{id}
 	// - /api/v1/access-points/{id}/devices
@@ -192,7 +261,6 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// =========================
 	// Protected routes (DEVICES)
 	// =========================
-
 	protectedDeviceByID := middleware.Chain(
 		http.HandlerFunc(deviceHandler.DeviceByID),
 		middleware.JWT(cfg),

@@ -25,6 +25,18 @@ type User struct {
 	Role string `json:"role,omitempty"`
 	// IsActive holds the value of the "is_active" field.
 	IsActive bool `json:"is_active,omitempty"`
+	// FirstName holds the value of the "first_name" field.
+	FirstName *string `json:"first_name,omitempty"`
+	// LastName holds the value of the "last_name" field.
+	LastName *string `json:"last_name,omitempty"`
+	// MiddleName holds the value of the "middle_name" field.
+	MiddleName *string `json:"middle_name,omitempty"`
+	// Email holds the value of the "email" field.
+	Email *string `json:"email,omitempty"`
+	// EmployeeCode holds the value of the "employee_code" field.
+	EmployeeCode *string `json:"employee_code,omitempty"`
+	// AccessCode holds the value of the "access_code" field.
+	AccessCode *string `json:"access_code,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -47,9 +59,15 @@ type UserEdges struct {
 	UserAccessPoints []*UserAccessPoint `json:"user_access_points,omitempty"`
 	// AttendanceDays holds the value of the attendance_days edge.
 	AttendanceDays []*AttendanceDay `json:"attendance_days,omitempty"`
+	// ShiftAssignments holds the value of the shift_assignments edge.
+	ShiftAssignments []*UserShiftAssignment `json:"shift_assignments,omitempty"`
+	// DayOverrides holds the value of the day_overrides edge.
+	DayOverrides []*UserDayOverride `json:"day_overrides,omitempty"`
+	// QrSessions holds the value of the qr_sessions edge.
+	QrSessions []*UserQRSession `json:"qr_sessions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [8]bool
 }
 
 // RefreshTokensOrErr returns the RefreshTokens value or an error if the edge
@@ -97,6 +115,33 @@ func (e UserEdges) AttendanceDaysOrErr() ([]*AttendanceDay, error) {
 	return nil, &NotLoadedError{edge: "attendance_days"}
 }
 
+// ShiftAssignmentsOrErr returns the ShiftAssignments value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ShiftAssignmentsOrErr() ([]*UserShiftAssignment, error) {
+	if e.loadedTypes[5] {
+		return e.ShiftAssignments, nil
+	}
+	return nil, &NotLoadedError{edge: "shift_assignments"}
+}
+
+// DayOverridesOrErr returns the DayOverrides value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) DayOverridesOrErr() ([]*UserDayOverride, error) {
+	if e.loadedTypes[6] {
+		return e.DayOverrides, nil
+	}
+	return nil, &NotLoadedError{edge: "day_overrides"}
+}
+
+// QrSessionsOrErr returns the QrSessions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) QrSessionsOrErr() ([]*UserQRSession, error) {
+	if e.loadedTypes[7] {
+		return e.QrSessions, nil
+	}
+	return nil, &NotLoadedError{edge: "qr_sessions"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -106,7 +151,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldUsername, user.FieldPasswordHash, user.FieldRole:
+		case user.FieldUsername, user.FieldPasswordHash, user.FieldRole, user.FieldFirstName, user.FieldLastName, user.FieldMiddleName, user.FieldEmail, user.FieldEmployeeCode, user.FieldAccessCode:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -154,6 +199,48 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
 				_m.IsActive = value.Bool
+			}
+		case user.FieldFirstName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field first_name", values[i])
+			} else if value.Valid {
+				_m.FirstName = new(string)
+				*_m.FirstName = value.String
+			}
+		case user.FieldLastName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field last_name", values[i])
+			} else if value.Valid {
+				_m.LastName = new(string)
+				*_m.LastName = value.String
+			}
+		case user.FieldMiddleName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field middle_name", values[i])
+			} else if value.Valid {
+				_m.MiddleName = new(string)
+				*_m.MiddleName = value.String
+			}
+		case user.FieldEmail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field email", values[i])
+			} else if value.Valid {
+				_m.Email = new(string)
+				*_m.Email = value.String
+			}
+		case user.FieldEmployeeCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field employee_code", values[i])
+			} else if value.Valid {
+				_m.EmployeeCode = new(string)
+				*_m.EmployeeCode = value.String
+			}
+		case user.FieldAccessCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field access_code", values[i])
+			} else if value.Valid {
+				_m.AccessCode = new(string)
+				*_m.AccessCode = value.String
 			}
 		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -205,6 +292,21 @@ func (_m *User) QueryAttendanceDays() *AttendanceDayQuery {
 	return NewUserClient(_m.config).QueryAttendanceDays(_m)
 }
 
+// QueryShiftAssignments queries the "shift_assignments" edge of the User entity.
+func (_m *User) QueryShiftAssignments() *UserShiftAssignmentQuery {
+	return NewUserClient(_m.config).QueryShiftAssignments(_m)
+}
+
+// QueryDayOverrides queries the "day_overrides" edge of the User entity.
+func (_m *User) QueryDayOverrides() *UserDayOverrideQuery {
+	return NewUserClient(_m.config).QueryDayOverrides(_m)
+}
+
+// QueryQrSessions queries the "qr_sessions" edge of the User entity.
+func (_m *User) QueryQrSessions() *UserQRSessionQuery {
+	return NewUserClient(_m.config).QueryQrSessions(_m)
+}
+
 // Update returns a builder for updating this User.
 // Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -238,6 +340,36 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
+	builder.WriteString(", ")
+	if v := _m.FirstName; v != nil {
+		builder.WriteString("first_name=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.LastName; v != nil {
+		builder.WriteString("last_name=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.MiddleName; v != nil {
+		builder.WriteString("middle_name=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.Email; v != nil {
+		builder.WriteString("email=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.EmployeeCode; v != nil {
+		builder.WriteString("employee_code=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.AccessCode; v != nil {
+		builder.WriteString("access_code=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

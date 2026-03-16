@@ -348,6 +348,62 @@ var (
 			},
 		},
 	}
+	// ShiftsColumns holds the columns for the "shifts" table.
+	ShiftsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "start_time", Type: field.TypeString},
+		{Name: "end_time", Type: field.TypeString},
+		{Name: "break_minutes", Type: field.TypeInt, Default: 0},
+		{Name: "crosses_midnight", Type: field.TypeBool, Default: false},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ShiftsTable holds the schema information for the "shifts" table.
+	ShiftsTable = &schema.Table{
+		Name:       "shifts",
+		Columns:    ShiftsColumns,
+		PrimaryKey: []*schema.Column{ShiftsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "shift_name",
+				Unique:  true,
+				Columns: []*schema.Column{ShiftsColumns[1]},
+			},
+		},
+	}
+	// ShiftDaysColumns holds the columns for the "shift_days" table.
+	ShiftDaysColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "weekday", Type: field.TypeInt},
+		{Name: "is_working_day", Type: field.TypeBool, Default: true},
+		{Name: "mode", Type: field.TypeString, Default: "onsite"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "shift_id", Type: field.TypeInt},
+	}
+	// ShiftDaysTable holds the schema information for the "shift_days" table.
+	ShiftDaysTable = &schema.Table{
+		Name:       "shift_days",
+		Columns:    ShiftDaysColumns,
+		PrimaryKey: []*schema.Column{ShiftDaysColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "shift_days_shifts_days",
+				Columns:    []*schema.Column{ShiftDaysColumns[5]},
+				RefColumns: []*schema.Column{ShiftsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "shiftday_shift_id_weekday",
+				Unique:  true,
+				Columns: []*schema.Column{ShiftDaysColumns[5], ShiftDaysColumns[1]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -355,6 +411,12 @@ var (
 		{Name: "password_hash", Type: field.TypeString},
 		{Name: "role", Type: field.TypeString, Default: "user"},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "first_name", Type: field.TypeString, Nullable: true},
+		{Name: "last_name", Type: field.TypeString, Nullable: true},
+		{Name: "middle_name", Type: field.TypeString, Nullable: true},
+		{Name: "email", Type: field.TypeString, Nullable: true},
+		{Name: "employee_code", Type: field.TypeString, Nullable: true},
+		{Name: "access_code", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -368,6 +430,16 @@ var (
 				Name:    "user_username",
 				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[1]},
+			},
+			{
+				Name:    "user_email",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[8]},
+			},
+			{
+				Name:    "user_access_code",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[10]},
 			},
 		},
 	}
@@ -442,6 +514,117 @@ var (
 			},
 		},
 	}
+	// UserDayOverridesColumns holds the columns for the "user_day_overrides" table.
+	UserDayOverridesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "date", Type: field.TypeTime},
+		{Name: "is_day_off", Type: field.TypeBool, Default: false},
+		{Name: "mode", Type: field.TypeString, Default: "onsite"},
+		{Name: "notes", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "shift_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// UserDayOverridesTable holds the schema information for the "user_day_overrides" table.
+	UserDayOverridesTable = &schema.Table{
+		Name:       "user_day_overrides",
+		Columns:    UserDayOverridesColumns,
+		PrimaryKey: []*schema.Column{UserDayOverridesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_day_overrides_shifts_day_overrides",
+				Columns:    []*schema.Column{UserDayOverridesColumns[6]},
+				RefColumns: []*schema.Column{ShiftsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "user_day_overrides_users_day_overrides",
+				Columns:    []*schema.Column{UserDayOverridesColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userdayoverride_user_id_date",
+				Unique:  true,
+				Columns: []*schema.Column{UserDayOverridesColumns[7], UserDayOverridesColumns[1]},
+			},
+		},
+	}
+	// UserQrSessionsColumns holds the columns for the "user_qr_sessions" table.
+	UserQrSessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "token_hash", Type: field.TypeString},
+		{Name: "issued_at", Type: field.TypeTime},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "is_revoked", Type: field.TypeBool, Default: false},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// UserQrSessionsTable holds the schema information for the "user_qr_sessions" table.
+	UserQrSessionsTable = &schema.Table{
+		Name:       "user_qr_sessions",
+		Columns:    UserQrSessionsColumns,
+		PrimaryKey: []*schema.Column{UserQrSessionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_qr_sessions_users_qr_sessions",
+				Columns:    []*schema.Column{UserQrSessionsColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userqrsession_token_hash",
+				Unique:  true,
+				Columns: []*schema.Column{UserQrSessionsColumns[1]},
+			},
+			{
+				Name:    "userqrsession_user_id_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserQrSessionsColumns[6], UserQrSessionsColumns[3]},
+			},
+		},
+	}
+	// UserShiftAssignmentsColumns holds the columns for the "user_shift_assignments" table.
+	UserShiftAssignmentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "start_date", Type: field.TypeTime},
+		{Name: "end_date", Type: field.TypeTime, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "shift_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// UserShiftAssignmentsTable holds the schema information for the "user_shift_assignments" table.
+	UserShiftAssignmentsTable = &schema.Table{
+		Name:       "user_shift_assignments",
+		Columns:    UserShiftAssignmentsColumns,
+		PrimaryKey: []*schema.Column{UserShiftAssignmentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_shift_assignments_shifts_user_assignments",
+				Columns:    []*schema.Column{UserShiftAssignmentsColumns[5]},
+				RefColumns: []*schema.Column{ShiftsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "user_shift_assignments_users_shift_assignments",
+				Columns:    []*schema.Column{UserShiftAssignmentsColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usershiftassignment_user_id_shift_id_start_date",
+				Unique:  false,
+				Columns: []*schema.Column{UserShiftAssignmentsColumns[6], UserShiftAssignmentsColumns[5], UserShiftAssignmentsColumns[1]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AccessPointsTable,
@@ -454,9 +637,14 @@ var (
 		DevicesTable,
 		RefreshTokensTable,
 		RegionsTable,
+		ShiftsTable,
+		ShiftDaysTable,
 		UsersTable,
 		UserAccessPointsTable,
 		UserBranchesTable,
+		UserDayOverridesTable,
+		UserQrSessionsTable,
+		UserShiftAssignmentsTable,
 	}
 )
 
@@ -475,8 +663,14 @@ func init() {
 	CommunesTable.ForeignKeys[0].RefTable = CitiesTable
 	DevicesTable.ForeignKeys[0].RefTable = AccessPointsTable
 	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
+	ShiftDaysTable.ForeignKeys[0].RefTable = ShiftsTable
 	UserAccessPointsTable.ForeignKeys[0].RefTable = AccessPointsTable
 	UserAccessPointsTable.ForeignKeys[1].RefTable = UsersTable
 	UserBranchesTable.ForeignKeys[0].RefTable = BranchesTable
 	UserBranchesTable.ForeignKeys[1].RefTable = UsersTable
+	UserDayOverridesTable.ForeignKeys[0].RefTable = ShiftsTable
+	UserDayOverridesTable.ForeignKeys[1].RefTable = UsersTable
+	UserQrSessionsTable.ForeignKeys[0].RefTable = UsersTable
+	UserShiftAssignmentsTable.ForeignKeys[0].RefTable = ShiftsTable
+	UserShiftAssignmentsTable.ForeignKeys[1].RefTable = UsersTable
 }

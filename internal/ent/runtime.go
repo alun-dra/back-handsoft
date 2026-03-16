@@ -14,9 +14,14 @@ import (
 	"back/internal/ent/refreshtoken"
 	"back/internal/ent/region"
 	"back/internal/ent/schema"
+	"back/internal/ent/shift"
+	"back/internal/ent/shiftday"
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
+	"back/internal/ent/userdayoverride"
+	"back/internal/ent/userqrsession"
+	"back/internal/ent/usershiftassignment"
 	"time"
 )
 
@@ -212,6 +217,60 @@ func init() {
 	region.DefaultUpdatedAt = regionDescUpdatedAt.Default.(func() time.Time)
 	// region.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	region.UpdateDefaultUpdatedAt = regionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	shiftFields := schema.Shift{}.Fields()
+	_ = shiftFields
+	// shiftDescName is the schema descriptor for name field.
+	shiftDescName := shiftFields[0].Descriptor()
+	// shift.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	shift.NameValidator = shiftDescName.Validators[0].(func(string) error)
+	// shiftDescStartTime is the schema descriptor for start_time field.
+	shiftDescStartTime := shiftFields[2].Descriptor()
+	// shift.StartTimeValidator is a validator for the "start_time" field. It is called by the builders before save.
+	shift.StartTimeValidator = shiftDescStartTime.Validators[0].(func(string) error)
+	// shiftDescEndTime is the schema descriptor for end_time field.
+	shiftDescEndTime := shiftFields[3].Descriptor()
+	// shift.EndTimeValidator is a validator for the "end_time" field. It is called by the builders before save.
+	shift.EndTimeValidator = shiftDescEndTime.Validators[0].(func(string) error)
+	// shiftDescBreakMinutes is the schema descriptor for break_minutes field.
+	shiftDescBreakMinutes := shiftFields[4].Descriptor()
+	// shift.DefaultBreakMinutes holds the default value on creation for the break_minutes field.
+	shift.DefaultBreakMinutes = shiftDescBreakMinutes.Default.(int)
+	// shiftDescCrossesMidnight is the schema descriptor for crosses_midnight field.
+	shiftDescCrossesMidnight := shiftFields[5].Descriptor()
+	// shift.DefaultCrossesMidnight holds the default value on creation for the crosses_midnight field.
+	shift.DefaultCrossesMidnight = shiftDescCrossesMidnight.Default.(bool)
+	// shiftDescIsActive is the schema descriptor for is_active field.
+	shiftDescIsActive := shiftFields[6].Descriptor()
+	// shift.DefaultIsActive holds the default value on creation for the is_active field.
+	shift.DefaultIsActive = shiftDescIsActive.Default.(bool)
+	// shiftDescCreatedAt is the schema descriptor for created_at field.
+	shiftDescCreatedAt := shiftFields[7].Descriptor()
+	// shift.DefaultCreatedAt holds the default value on creation for the created_at field.
+	shift.DefaultCreatedAt = shiftDescCreatedAt.Default.(func() time.Time)
+	// shiftDescUpdatedAt is the schema descriptor for updated_at field.
+	shiftDescUpdatedAt := shiftFields[8].Descriptor()
+	// shift.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	shift.DefaultUpdatedAt = shiftDescUpdatedAt.Default.(func() time.Time)
+	// shift.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	shift.UpdateDefaultUpdatedAt = shiftDescUpdatedAt.UpdateDefault.(func() time.Time)
+	shiftdayFields := schema.ShiftDay{}.Fields()
+	_ = shiftdayFields
+	// shiftdayDescWeekday is the schema descriptor for weekday field.
+	shiftdayDescWeekday := shiftdayFields[1].Descriptor()
+	// shiftday.WeekdayValidator is a validator for the "weekday" field. It is called by the builders before save.
+	shiftday.WeekdayValidator = shiftdayDescWeekday.Validators[0].(func(int) error)
+	// shiftdayDescIsWorkingDay is the schema descriptor for is_working_day field.
+	shiftdayDescIsWorkingDay := shiftdayFields[2].Descriptor()
+	// shiftday.DefaultIsWorkingDay holds the default value on creation for the is_working_day field.
+	shiftday.DefaultIsWorkingDay = shiftdayDescIsWorkingDay.Default.(bool)
+	// shiftdayDescMode is the schema descriptor for mode field.
+	shiftdayDescMode := shiftdayFields[3].Descriptor()
+	// shiftday.DefaultMode holds the default value on creation for the mode field.
+	shiftday.DefaultMode = shiftdayDescMode.Default.(string)
+	// shiftdayDescCreatedAt is the schema descriptor for created_at field.
+	shiftdayDescCreatedAt := shiftdayFields[4].Descriptor()
+	// shiftday.DefaultCreatedAt holds the default value on creation for the created_at field.
+	shiftday.DefaultCreatedAt = shiftdayDescCreatedAt.Default.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescUsername is the schema descriptor for username field.
@@ -233,11 +292,11 @@ func init() {
 	// user.DefaultIsActive holds the default value on creation for the is_active field.
 	user.DefaultIsActive = userDescIsActive.Default.(bool)
 	// userDescCreatedAt is the schema descriptor for created_at field.
-	userDescCreatedAt := userFields[4].Descriptor()
+	userDescCreatedAt := userFields[10].Descriptor()
 	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
 	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
 	// userDescUpdatedAt is the schema descriptor for updated_at field.
-	userDescUpdatedAt := userFields[5].Descriptor()
+	userDescUpdatedAt := userFields[11].Descriptor()
 	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -258,4 +317,46 @@ func init() {
 	userbranchDescIsActive := userbranchFields[2].Descriptor()
 	// userbranch.DefaultIsActive holds the default value on creation for the is_active field.
 	userbranch.DefaultIsActive = userbranchDescIsActive.Default.(bool)
+	userdayoverrideFields := schema.UserDayOverride{}.Fields()
+	_ = userdayoverrideFields
+	// userdayoverrideDescIsDayOff is the schema descriptor for is_day_off field.
+	userdayoverrideDescIsDayOff := userdayoverrideFields[3].Descriptor()
+	// userdayoverride.DefaultIsDayOff holds the default value on creation for the is_day_off field.
+	userdayoverride.DefaultIsDayOff = userdayoverrideDescIsDayOff.Default.(bool)
+	// userdayoverrideDescMode is the schema descriptor for mode field.
+	userdayoverrideDescMode := userdayoverrideFields[4].Descriptor()
+	// userdayoverride.DefaultMode holds the default value on creation for the mode field.
+	userdayoverride.DefaultMode = userdayoverrideDescMode.Default.(string)
+	// userdayoverrideDescCreatedAt is the schema descriptor for created_at field.
+	userdayoverrideDescCreatedAt := userdayoverrideFields[6].Descriptor()
+	// userdayoverride.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userdayoverride.DefaultCreatedAt = userdayoverrideDescCreatedAt.Default.(func() time.Time)
+	userqrsessionFields := schema.UserQRSession{}.Fields()
+	_ = userqrsessionFields
+	// userqrsessionDescTokenHash is the schema descriptor for token_hash field.
+	userqrsessionDescTokenHash := userqrsessionFields[1].Descriptor()
+	// userqrsession.TokenHashValidator is a validator for the "token_hash" field. It is called by the builders before save.
+	userqrsession.TokenHashValidator = userqrsessionDescTokenHash.Validators[0].(func(string) error)
+	// userqrsessionDescIssuedAt is the schema descriptor for issued_at field.
+	userqrsessionDescIssuedAt := userqrsessionFields[2].Descriptor()
+	// userqrsession.DefaultIssuedAt holds the default value on creation for the issued_at field.
+	userqrsession.DefaultIssuedAt = userqrsessionDescIssuedAt.Default.(func() time.Time)
+	// userqrsessionDescIsRevoked is the schema descriptor for is_revoked field.
+	userqrsessionDescIsRevoked := userqrsessionFields[4].Descriptor()
+	// userqrsession.DefaultIsRevoked holds the default value on creation for the is_revoked field.
+	userqrsession.DefaultIsRevoked = userqrsessionDescIsRevoked.Default.(bool)
+	// userqrsessionDescCreatedAt is the schema descriptor for created_at field.
+	userqrsessionDescCreatedAt := userqrsessionFields[5].Descriptor()
+	// userqrsession.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userqrsession.DefaultCreatedAt = userqrsessionDescCreatedAt.Default.(func() time.Time)
+	usershiftassignmentFields := schema.UserShiftAssignment{}.Fields()
+	_ = usershiftassignmentFields
+	// usershiftassignmentDescIsActive is the schema descriptor for is_active field.
+	usershiftassignmentDescIsActive := usershiftassignmentFields[4].Descriptor()
+	// usershiftassignment.DefaultIsActive holds the default value on creation for the is_active field.
+	usershiftassignment.DefaultIsActive = usershiftassignmentDescIsActive.Default.(bool)
+	// usershiftassignmentDescCreatedAt is the schema descriptor for created_at field.
+	usershiftassignmentDescCreatedAt := usershiftassignmentFields[5].Descriptor()
+	// usershiftassignment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usershiftassignment.DefaultCreatedAt = usershiftassignmentDescCreatedAt.Default.(func() time.Time)
 }

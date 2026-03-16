@@ -322,6 +322,29 @@ definitions:
         example: admin
         type: string
     type: object
+  handlers.UserDTO:
+    properties:
+      access_code:
+        type: string
+      email:
+        type: string
+      employee_code:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
   handlers.createAccessPointRequest:
     properties:
       is_active:
@@ -400,6 +423,39 @@ definitions:
         type: string
       username:
         example: device_puerta_1
+        type: string
+    type: object
+  handlers.createUserRequest:
+    properties:
+      access_code:
+        example: ACC-001
+        type: string
+      email:
+        example: juan.perez@empresa.cl
+        type: string
+      employee_code:
+        example: EMP-001
+        type: string
+      first_name:
+        example: Juan
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      last_name:
+        example: Perez
+        type: string
+      middle_name:
+        example: Andres
+        type: string
+      password:
+        example: "123456"
+        type: string
+      role:
+        example: user
+        type: string
+      username:
+        example: juan.perez
         type: string
     type: object
   handlers.deviceLoginRequest:
@@ -487,6 +543,39 @@ definitions:
         type: string
       username:
         example: device_puerta_1
+        type: string
+    type: object
+  handlers.patchUserRequest:
+    properties:
+      access_code:
+        example: ACC-001
+        type: string
+      email:
+        example: juan.perez@empresa.cl
+        type: string
+      employee_code:
+        example: EMP-001
+        type: string
+      first_name:
+        example: Juan
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      last_name:
+        example: Perez
+        type: string
+      middle_name:
+        example: Andres
+        type: string
+      password:
+        example: "123456"
+        type: string
+      role:
+        example: user
+        type: string
+      username:
+        example: juan.perez
         type: string
     type: object
   handlers.refreshRequest:
@@ -1690,6 +1779,266 @@ paths:
       summary: Listar ciudades por región
       tags:
       - Location
+  /api/v1/users:
+    get:
+      consumes:
+      - application/json
+      description: GET lista usuarios. POST crea usuario. (solo admin)
+      parameters:
+      - description: Crear usuario (solo POST, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.UserDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.UserDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Usuarios
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: GET lista usuarios. POST crea usuario. (solo admin)
+      parameters:
+      - description: Crear usuario (solo POST, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.UserDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.UserDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Usuarios
+      tags:
+      - Users
+  /api/v1/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: GET detalle de usuario. PATCH edita usuario. DELETE elimina usuario.
+        (solo admin para PATCH/DELETE)
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch usuario (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Usuario por ID
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      description: GET detalle de usuario. PATCH edita usuario. DELETE elimina usuario.
+        (solo admin para PATCH/DELETE)
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch usuario (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Usuario por ID
+      tags:
+      - Users
+    patch:
+      consumes:
+      - application/json
+      description: GET detalle de usuario. PATCH edita usuario. DELETE elimina usuario.
+        (solo admin para PATCH/DELETE)
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch usuario (solo PATCH, admin)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Usuario por ID
+      tags:
+      - Users
 schemes:
 - http
 securityDefinitions:
