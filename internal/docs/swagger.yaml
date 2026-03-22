@@ -297,6 +297,55 @@ definitions:
         items: {}
         type: array
     type: object
+  handlers.ShiftDTO:
+    properties:
+      break_minutes:
+        example: 60
+        type: integer
+      created_at:
+        type: string
+      crosses_midnight:
+        example: false
+        type: boolean
+      description:
+        example: Lunes a viernes 08:00 a 17:00
+        type: string
+      end_time:
+        example: "17:00"
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Turno mañana
+        type: string
+      start_time:
+        example: "08:00"
+        type: string
+      updated_at:
+        type: string
+    type: object
+  handlers.ShiftDayDTO:
+    properties:
+      id:
+        example: 1
+        type: integer
+      is_working_day:
+        example: true
+        type: boolean
+      mode:
+        example: onsite
+        type: string
+      shift_id:
+        example: 1
+        type: integer
+      weekday:
+        example: 1
+        type: integer
+    type: object
   handlers.TokenResponse:
     properties:
       access_token:
@@ -345,6 +394,52 @@ definitions:
       username:
         type: string
     type: object
+  handlers.UserDayOverrideDTO:
+    properties:
+      created_at:
+        type: string
+      date:
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_day_off:
+        example: false
+        type: boolean
+      mode:
+        example: remote
+        type: string
+      notes:
+        example: Trabajo desde casa
+        type: string
+      shift_id:
+        example: 2
+        type: integer
+      user_id:
+        example: 10
+        type: integer
+    type: object
+  handlers.UserShiftAssignmentDTO:
+    properties:
+      created_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      shift_id:
+        example: 1
+        type: integer
+      start_date:
+        type: string
+      user_id:
+        example: 10
+        type: integer
+    type: object
   handlers.createAccessPointRequest:
     properties:
       is_active:
@@ -367,6 +462,21 @@ definitions:
         type: string
       street:
         example: Av. Siempre Viva
+        type: string
+    type: object
+  handlers.createAssignmentRequest:
+    properties:
+      end_date:
+        example: "2026-03-31"
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      shift_id:
+        example: 1
+        type: integer
+      start_date:
+        example: "2026-03-01"
         type: string
     type: object
   handlers.createBranchRequest:
@@ -423,6 +533,48 @@ definitions:
         type: string
       username:
         example: device_puerta_1
+        type: string
+    type: object
+  handlers.createOverrideRequest:
+    properties:
+      date:
+        example: "2026-03-20"
+        type: string
+      is_day_off:
+        example: false
+        type: boolean
+      mode:
+        example: remote
+        type: string
+      notes:
+        example: Trabajo desde casa
+        type: string
+      shift_id:
+        example: 2
+        type: integer
+    type: object
+  handlers.createShiftRequest:
+    properties:
+      break_minutes:
+        example: 60
+        type: integer
+      crosses_midnight:
+        example: false
+        type: boolean
+      description:
+        example: Lunes a viernes 08:00 a 17:00
+        type: string
+      end_time:
+        example: "17:00"
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Turno mañana
+        type: string
+      start_time:
+        example: "08:00"
         type: string
     type: object
   handlers.createUserRequest:
@@ -545,6 +697,30 @@ definitions:
         example: device_puerta_1
         type: string
     type: object
+  handlers.patchShiftRequest:
+    properties:
+      break_minutes:
+        example: 60
+        type: integer
+      crosses_midnight:
+        example: false
+        type: boolean
+      description:
+        example: Lunes a viernes 08:00 a 17:00
+        type: string
+      end_time:
+        example: "17:00"
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Turno mañana
+        type: string
+      start_time:
+        example: "08:00"
+        type: string
+    type: object
   handlers.patchUserRequest:
     properties:
       access_code:
@@ -596,6 +772,18 @@ definitions:
         example: admin
         type: string
     type: object
+  handlers.shiftDayInput:
+    properties:
+      is_working_day:
+        example: true
+        type: boolean
+      mode:
+        example: onsite
+        type: string
+      weekday:
+        example: 1
+        type: integer
+    type: object
   handlers.updateAddressRequest:
     properties:
       apartment:
@@ -612,10 +800,19 @@ definitions:
         example: Av. Siempre Viva
         type: string
     type: object
+host: localhost:8080
 info:
-  contact: {}
-  description: API REST del sistema
-  title: Backend GO API
+  contact:
+    email: soporte@minolsoft.cl
+    name: Minolsoft
+    url: https://minolsoft.cl
+  description: Plataforma de gestión de asistencia, turnos, sucursales, accesos y
+    dispositivos
+  license:
+    name: Proprietary
+    url: https://minolsoft.cl/license
+  termsOfService: https://minolsoft.cl/terms
+  title: Reloj Control API
   version: "1.0"
 paths:
   /api/v1/access-points/{id}:
@@ -1779,6 +1976,352 @@ paths:
       summary: Listar ciudades por región
       tags:
       - Location
+  /api/v1/shifts:
+    get:
+      consumes:
+      - application/json
+      description: GET lista turnos. POST crea un nuevo turno.
+      parameters:
+      - description: Crear turno
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createShiftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.ShiftDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.ShiftDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Turnos
+      tags:
+      - Shifts
+    post:
+      consumes:
+      - application/json
+      description: GET lista turnos. POST crea un nuevo turno.
+      parameters:
+      - description: Crear turno
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createShiftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.ShiftDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.ShiftDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Turnos
+      tags:
+      - Shifts
+  /api/v1/shifts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: GET obtiene un turno. PATCH actualiza parcialmente. DELETE elimina.
+      parameters:
+      - description: ID del turno
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Actualizar turno
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchShiftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ShiftDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Turno por ID
+      tags:
+      - Shifts
+    get:
+      consumes:
+      - application/json
+      description: GET obtiene un turno. PATCH actualiza parcialmente. DELETE elimina.
+      parameters:
+      - description: ID del turno
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Actualizar turno
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchShiftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ShiftDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Turno por ID
+      tags:
+      - Shifts
+    patch:
+      consumes:
+      - application/json
+      description: GET obtiene un turno. PATCH actualiza parcialmente. DELETE elimina.
+      parameters:
+      - description: ID del turno
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Actualizar turno
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.patchShiftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ShiftDTO'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Turno por ID
+      tags:
+      - Shifts
+  /api/v1/shifts/{id}/days:
+    get:
+      consumes:
+      - application/json
+      description: GET lista la configuración semanal del turno. PUT reemplaza toda
+        la configuración semanal del turno.
+      parameters:
+      - description: ID del turno
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Reemplazar días del turno
+        in: body
+        name: body
+        schema:
+          items:
+            $ref: '#/definitions/handlers.shiftDayInput'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.ShiftDayDTO'
+            type: array
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Días del turno
+      tags:
+      - Shift Days
+    put:
+      consumes:
+      - application/json
+      description: GET lista la configuración semanal del turno. PUT reemplaza toda
+        la configuración semanal del turno.
+      parameters:
+      - description: ID del turno
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Reemplazar días del turno
+        in: body
+        name: body
+        schema:
+          items:
+            $ref: '#/definitions/handlers.shiftDayInput'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.ShiftDayDTO'
+            type: array
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Días del turno
+      tags:
+      - Shift Days
   /api/v1/users:
     get:
       consumes:
@@ -2039,8 +2582,224 @@ paths:
       summary: Usuario por ID
       tags:
       - Users
-schemes:
-- http
+  /api/v1/users/{id}/day-overrides:
+    get:
+      consumes:
+      - application/json
+      description: GET lista excepciones diarias del usuario. POST crea un override
+        puntual para una fecha específica.
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Crear override diario
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createOverrideRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.UserDayOverrideDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.UserDayOverrideDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Overrides diarios del usuario
+      tags:
+      - User Day Overrides
+    post:
+      consumes:
+      - application/json
+      description: GET lista excepciones diarias del usuario. POST crea un override
+        puntual para una fecha específica.
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Crear override diario
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createOverrideRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.UserDayOverrideDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.UserDayOverrideDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Overrides diarios del usuario
+      tags:
+      - User Day Overrides
+  /api/v1/users/{id}/shift-assignments:
+    get:
+      consumes:
+      - application/json
+      description: GET lista las asignaciones de turno de un usuario. POST asigna
+        un turno al usuario desde una fecha dada.
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Crear asignación de turno
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createAssignmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.UserShiftAssignmentDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.UserShiftAssignmentDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Asignaciones de turno del usuario
+      tags:
+      - User Shift Assignments
+    post:
+      consumes:
+      - application/json
+      description: GET lista las asignaciones de turno de un usuario. POST asigna
+        un turno al usuario desde una fecha dada.
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Crear asignación de turno
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.createAssignmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.UserShiftAssignmentDTO'
+            type: array
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.UserShiftAssignmentDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Asignaciones de turno del usuario
+      tags:
+      - User Shift Assignments
 securityDefinitions:
   BearerAuth:
     in: header

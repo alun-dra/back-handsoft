@@ -23,8 +23,9 @@ type Config struct {
 
 	DatabaseURL string
 
-	JWT  JWTConfig
-	CORS CORSConfig
+	JWT     JWTConfig
+	CORS    CORSConfig
+	Swagger SwaggerConfig
 
 	RequestTimeout time.Duration
 	LogLevel       string
@@ -43,6 +44,11 @@ type CORSConfig struct {
 	AllowedMethods   []string
 	AllowedHeaders   []string
 	AllowCredentials bool
+}
+
+type SwaggerConfig struct {
+	User string
+	Pass string
 }
 
 func Load() *Config {
@@ -72,6 +78,11 @@ func Load() *Config {
 			AllowCredentials: mustBool("CORS_ALLOW_CREDENTIALS"),
 		},
 
+		Swagger: SwaggerConfig{
+			User: mustEnv("SWAGGER_USER"),
+			Pass: mustEnv("SWAGGER_PASS"),
+		},
+
 		RequestTimeout: time.Duration(mustInt("REQUEST_TIMEOUT_SECONDS")) * time.Second,
 		LogLevel:       getEnv("LOG_LEVEL", defaultLogLevel(env)),
 	}
@@ -98,6 +109,13 @@ func validate(cfg *Config) {
 		log.Fatal("JWT_AUDIENCE no puede estar vacío")
 	}
 
+	if strings.TrimSpace(cfg.Swagger.User) == "" {
+		log.Fatal("SWAGGER_USER vacío")
+	}
+	if len(strings.TrimSpace(cfg.Swagger.Pass)) < 6 {
+		log.Fatal("SWAGGER_PASS demasiado corto")
+	}
+
 	if cfg.Env == EnvProduction {
 		for _, o := range cfg.CORS.AllowedOrigins {
 			if o == "*" {
@@ -107,7 +125,6 @@ func validate(cfg *Config) {
 	}
 
 	if cfg.CORS.AllowCredentials {
-
 		for _, o := range cfg.CORS.AllowedOrigins {
 			if o == "*" {
 				log.Fatal("CORS_ALLOW_CREDENTIALS=true no es compatible con CORS_ALLOWED_ORIGINS='*'")
@@ -183,7 +200,7 @@ func mustBool(key string) bool {
 
 func (c *Config) StringSafe() string {
 	return fmt.Sprintf(
-		"ENV=%s PORT=%s DB=set JWT_ISSUER=%s JWT_AUD=%v JWT_TTL=%d CORS_ORIGINS=%v TIMEOUT=%s LOG_LEVEL=%s",
-		c.Env, c.Port, c.JWT.Issuer, c.JWT.Audience, c.JWT.AccessTTLMinutes, c.CORS.AllowedOrigins, c.RequestTimeout, c.LogLevel,
+		"ENV=%s PORT=%s DB=set JWT_ISSUER=%s JWT_AUD=%v JWT_TTL=%d CORS_ORIGINS=%v SWAGGER_USER=%s SWAGGER_PASS=set TIMEOUT=%s LOG_LEVEL=%s",
+		c.Env, c.Port, c.JWT.Issuer, c.JWT.Audience, c.JWT.AccessTTLMinutes, c.CORS.AllowedOrigins, c.Swagger.User, c.RequestTimeout, c.LogLevel,
 	)
 }

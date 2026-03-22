@@ -13,11 +13,22 @@ import (
 	"back/internal/server"
 )
 
-// @title           Backend GO API
-// @version         1.0
-// @description     API REST del sistema
-// @BasePath        /
-// @schemes         http
+// @title Reloj Control API
+// @version 1.0
+// @description Plataforma de gestión de asistencia, turnos, sucursales, accesos y dispositivos
+// @termsOfService https://minolsoft.cl/terms
+
+// @contact.name Minolsoft
+// @contact.url https://minolsoft.cl
+// @contact.email soporte@minolsoft.cl
+
+// @license.name Proprietary
+// @license.url https://minolsoft.cl/license
+
+// @host localhost:8080
+// @BasePath /
+
+// 🔐 AUTH JWT
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
