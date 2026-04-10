@@ -23,6 +23,7 @@ import (
 	"back/internal/ent/region"
 	"back/internal/ent/shift"
 	"back/internal/ent/shiftday"
+	"back/internal/ent/shiftinstance"
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
@@ -65,6 +66,8 @@ type Client struct {
 	Shift *ShiftClient
 	// ShiftDay is the client for interacting with the ShiftDay builders.
 	ShiftDay *ShiftDayClient
+	// ShiftInstance is the client for interacting with the ShiftInstance builders.
+	ShiftInstance *ShiftInstanceClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserAccessPoint is the client for interacting with the UserAccessPoint builders.
@@ -100,6 +103,7 @@ func (c *Client) init() {
 	c.Region = NewRegionClient(c.config)
 	c.Shift = NewShiftClient(c.config)
 	c.ShiftDay = NewShiftDayClient(c.config)
+	c.ShiftInstance = NewShiftInstanceClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserAccessPoint = NewUserAccessPointClient(c.config)
 	c.UserBranch = NewUserBranchClient(c.config)
@@ -210,6 +214,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Region:              NewRegionClient(cfg),
 		Shift:               NewShiftClient(cfg),
 		ShiftDay:            NewShiftDayClient(cfg),
+		ShiftInstance:       NewShiftInstanceClient(cfg),
 		User:                NewUserClient(cfg),
 		UserAccessPoint:     NewUserAccessPointClient(cfg),
 		UserBranch:          NewUserBranchClient(cfg),
@@ -247,6 +252,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Region:              NewRegionClient(cfg),
 		Shift:               NewShiftClient(cfg),
 		ShiftDay:            NewShiftDayClient(cfg),
+		ShiftInstance:       NewShiftInstanceClient(cfg),
 		User:                NewUserClient(cfg),
 		UserAccessPoint:     NewUserAccessPointClient(cfg),
 		UserBranch:          NewUserBranchClient(cfg),
@@ -283,9 +289,9 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AccessPoint, c.Address, c.AttendanceDay, c.Branch, c.BranchAddress, c.City,
-		c.Commune, c.Device, c.RefreshToken, c.Region, c.Shift, c.ShiftDay, c.User,
-		c.UserAccessPoint, c.UserBranch, c.UserDayOverride, c.UserQRSession,
-		c.UserShiftAssignment,
+		c.Commune, c.Device, c.RefreshToken, c.Region, c.Shift, c.ShiftDay,
+		c.ShiftInstance, c.User, c.UserAccessPoint, c.UserBranch, c.UserDayOverride,
+		c.UserQRSession, c.UserShiftAssignment,
 	} {
 		n.Use(hooks...)
 	}
@@ -296,9 +302,9 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AccessPoint, c.Address, c.AttendanceDay, c.Branch, c.BranchAddress, c.City,
-		c.Commune, c.Device, c.RefreshToken, c.Region, c.Shift, c.ShiftDay, c.User,
-		c.UserAccessPoint, c.UserBranch, c.UserDayOverride, c.UserQRSession,
-		c.UserShiftAssignment,
+		c.Commune, c.Device, c.RefreshToken, c.Region, c.Shift, c.ShiftDay,
+		c.ShiftInstance, c.User, c.UserAccessPoint, c.UserBranch, c.UserDayOverride,
+		c.UserQRSession, c.UserShiftAssignment,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -331,6 +337,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Shift.mutate(ctx, m)
 	case *ShiftDayMutation:
 		return c.ShiftDay.mutate(ctx, m)
+	case *ShiftInstanceMutation:
+		return c.ShiftInstance.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserAccessPointMutation:
@@ -2138,6 +2146,22 @@ func (c *ShiftClient) QueryDays(_m *Shift) *ShiftDayQuery {
 	return query
 }
 
+// QueryInstances queries the instances edge of a Shift.
+func (c *ShiftClient) QueryInstances(_m *Shift) *ShiftInstanceQuery {
+	query := (&ShiftInstanceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(shift.Table, shift.FieldID, id),
+			sqlgraph.To(shiftinstance.Table, shiftinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, shift.InstancesTable, shift.InstancesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUserAssignments queries the user_assignments edge of a Shift.
 func (c *ShiftClient) QueryUserAssignments(_m *Shift) *UserShiftAssignmentQuery {
 	query := (&UserShiftAssignmentClient{config: c.config}).Query()
@@ -2341,6 +2365,155 @@ func (c *ShiftDayClient) mutate(ctx context.Context, m *ShiftDayMutation) (Value
 		return (&ShiftDayDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ShiftDay mutation op: %q", m.Op())
+	}
+}
+
+// ShiftInstanceClient is a client for the ShiftInstance schema.
+type ShiftInstanceClient struct {
+	config
+}
+
+// NewShiftInstanceClient returns a client for the ShiftInstance from the given config.
+func NewShiftInstanceClient(c config) *ShiftInstanceClient {
+	return &ShiftInstanceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `shiftinstance.Hooks(f(g(h())))`.
+func (c *ShiftInstanceClient) Use(hooks ...Hook) {
+	c.hooks.ShiftInstance = append(c.hooks.ShiftInstance, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `shiftinstance.Intercept(f(g(h())))`.
+func (c *ShiftInstanceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ShiftInstance = append(c.inters.ShiftInstance, interceptors...)
+}
+
+// Create returns a builder for creating a ShiftInstance entity.
+func (c *ShiftInstanceClient) Create() *ShiftInstanceCreate {
+	mutation := newShiftInstanceMutation(c.config, OpCreate)
+	return &ShiftInstanceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ShiftInstance entities.
+func (c *ShiftInstanceClient) CreateBulk(builders ...*ShiftInstanceCreate) *ShiftInstanceCreateBulk {
+	return &ShiftInstanceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ShiftInstanceClient) MapCreateBulk(slice any, setFunc func(*ShiftInstanceCreate, int)) *ShiftInstanceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ShiftInstanceCreateBulk{err: fmt.Errorf("calling to ShiftInstanceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ShiftInstanceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ShiftInstanceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ShiftInstance.
+func (c *ShiftInstanceClient) Update() *ShiftInstanceUpdate {
+	mutation := newShiftInstanceMutation(c.config, OpUpdate)
+	return &ShiftInstanceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ShiftInstanceClient) UpdateOne(_m *ShiftInstance) *ShiftInstanceUpdateOne {
+	mutation := newShiftInstanceMutation(c.config, OpUpdateOne, withShiftInstance(_m))
+	return &ShiftInstanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ShiftInstanceClient) UpdateOneID(id int) *ShiftInstanceUpdateOne {
+	mutation := newShiftInstanceMutation(c.config, OpUpdateOne, withShiftInstanceID(id))
+	return &ShiftInstanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ShiftInstance.
+func (c *ShiftInstanceClient) Delete() *ShiftInstanceDelete {
+	mutation := newShiftInstanceMutation(c.config, OpDelete)
+	return &ShiftInstanceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ShiftInstanceClient) DeleteOne(_m *ShiftInstance) *ShiftInstanceDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ShiftInstanceClient) DeleteOneID(id int) *ShiftInstanceDeleteOne {
+	builder := c.Delete().Where(shiftinstance.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ShiftInstanceDeleteOne{builder}
+}
+
+// Query returns a query builder for ShiftInstance.
+func (c *ShiftInstanceClient) Query() *ShiftInstanceQuery {
+	return &ShiftInstanceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeShiftInstance},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ShiftInstance entity by its id.
+func (c *ShiftInstanceClient) Get(ctx context.Context, id int) (*ShiftInstance, error) {
+	return c.Query().Where(shiftinstance.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ShiftInstanceClient) GetX(ctx context.Context, id int) *ShiftInstance {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryShift queries the shift edge of a ShiftInstance.
+func (c *ShiftInstanceClient) QueryShift(_m *ShiftInstance) *ShiftQuery {
+	query := (&ShiftClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(shiftinstance.Table, shiftinstance.FieldID, id),
+			sqlgraph.To(shift.Table, shift.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, shiftinstance.ShiftTable, shiftinstance.ShiftColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ShiftInstanceClient) Hooks() []Hook {
+	return c.hooks.ShiftInstance
+}
+
+// Interceptors returns the client interceptors.
+func (c *ShiftInstanceClient) Interceptors() []Interceptor {
+	return c.inters.ShiftInstance
+}
+
+func (c *ShiftInstanceClient) mutate(ctx context.Context, m *ShiftInstanceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ShiftInstanceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ShiftInstanceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ShiftInstanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ShiftInstanceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ShiftInstance mutation op: %q", m.Op())
 	}
 }
 
@@ -3418,13 +3591,14 @@ func (c *UserShiftAssignmentClient) mutate(ctx context.Context, m *UserShiftAssi
 type (
 	hooks struct {
 		AccessPoint, Address, AttendanceDay, Branch, BranchAddress, City, Commune,
-		Device, RefreshToken, Region, Shift, ShiftDay, User, UserAccessPoint,
-		UserBranch, UserDayOverride, UserQRSession, UserShiftAssignment []ent.Hook
+		Device, RefreshToken, Region, Shift, ShiftDay, ShiftInstance, User,
+		UserAccessPoint, UserBranch, UserDayOverride, UserQRSession,
+		UserShiftAssignment []ent.Hook
 	}
 	inters struct {
 		AccessPoint, Address, AttendanceDay, Branch, BranchAddress, City, Commune,
-		Device, RefreshToken, Region, Shift, ShiftDay, User, UserAccessPoint,
-		UserBranch, UserDayOverride, UserQRSession,
+		Device, RefreshToken, Region, Shift, ShiftDay, ShiftInstance, User,
+		UserAccessPoint, UserBranch, UserDayOverride, UserQRSession,
 		UserShiftAssignment []ent.Interceptor
 	}
 )

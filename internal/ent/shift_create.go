@@ -5,6 +5,7 @@ package ent
 import (
 	"back/internal/ent/shift"
 	"back/internal/ent/shiftday"
+	"back/internal/ent/shiftinstance"
 	"back/internal/ent/userdayoverride"
 	"back/internal/ent/usershiftassignment"
 	"context"
@@ -39,6 +40,20 @@ func (_c *ShiftCreate) SetDescription(v string) *ShiftCreate {
 func (_c *ShiftCreate) SetNillableDescription(v *string) *ShiftCreate {
 	if v != nil {
 		_c.SetDescription(*v)
+	}
+	return _c
+}
+
+// SetDate sets the "date" field.
+func (_c *ShiftCreate) SetDate(v time.Time) *ShiftCreate {
+	_c.mutation.SetDate(v)
+	return _c
+}
+
+// SetNillableDate sets the "date" field if the given value is not nil.
+func (_c *ShiftCreate) SetNillableDate(v *time.Time) *ShiftCreate {
+	if v != nil {
+		_c.SetDate(*v)
 	}
 	return _c
 }
@@ -138,6 +153,21 @@ func (_c *ShiftCreate) AddDays(v ...*ShiftDay) *ShiftCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddDayIDs(ids...)
+}
+
+// AddInstanceIDs adds the "instances" edge to the ShiftInstance entity by IDs.
+func (_c *ShiftCreate) AddInstanceIDs(ids ...int) *ShiftCreate {
+	_c.mutation.AddInstanceIDs(ids...)
+	return _c
+}
+
+// AddInstances adds the "instances" edges to the ShiftInstance entity.
+func (_c *ShiftCreate) AddInstances(v ...*ShiftInstance) *ShiftCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddInstanceIDs(ids...)
 }
 
 // AddUserAssignmentIDs adds the "user_assignments" edge to the UserShiftAssignment entity by IDs.
@@ -302,6 +332,10 @@ func (_c *ShiftCreate) createSpec() (*Shift, *sqlgraph.CreateSpec) {
 		_spec.SetField(shift.FieldDescription, field.TypeString, value)
 		_node.Description = &value
 	}
+	if value, ok := _c.mutation.Date(); ok {
+		_spec.SetField(shift.FieldDate, field.TypeTime, value)
+		_node.Date = &value
+	}
 	if value, ok := _c.mutation.StartTime(); ok {
 		_spec.SetField(shift.FieldStartTime, field.TypeString, value)
 		_node.StartTime = value
@@ -339,6 +373,22 @@ func (_c *ShiftCreate) createSpec() (*Shift, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(shiftday.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.InstancesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   shift.InstancesTable,
+			Columns: []string{shift.InstancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(shiftinstance.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

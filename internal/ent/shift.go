@@ -21,6 +21,8 @@ type Shift struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description *string `json:"description,omitempty"`
+	// Date holds the value of the "date" field.
+	Date *time.Time `json:"date,omitempty"`
 	// StartTime holds the value of the "start_time" field.
 	StartTime string `json:"start_time,omitempty"`
 	// EndTime holds the value of the "end_time" field.
@@ -45,13 +47,15 @@ type Shift struct {
 type ShiftEdges struct {
 	// Days holds the value of the days edge.
 	Days []*ShiftDay `json:"days,omitempty"`
+	// Instances holds the value of the instances edge.
+	Instances []*ShiftInstance `json:"instances,omitempty"`
 	// UserAssignments holds the value of the user_assignments edge.
 	UserAssignments []*UserShiftAssignment `json:"user_assignments,omitempty"`
 	// DayOverrides holds the value of the day_overrides edge.
 	DayOverrides []*UserDayOverride `json:"day_overrides,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // DaysOrErr returns the Days value or an error if the edge
@@ -63,10 +67,19 @@ func (e ShiftEdges) DaysOrErr() ([]*ShiftDay, error) {
 	return nil, &NotLoadedError{edge: "days"}
 }
 
+// InstancesOrErr returns the Instances value or an error if the edge
+// was not loaded in eager-loading.
+func (e ShiftEdges) InstancesOrErr() ([]*ShiftInstance, error) {
+	if e.loadedTypes[1] {
+		return e.Instances, nil
+	}
+	return nil, &NotLoadedError{edge: "instances"}
+}
+
 // UserAssignmentsOrErr returns the UserAssignments value or an error if the edge
 // was not loaded in eager-loading.
 func (e ShiftEdges) UserAssignmentsOrErr() ([]*UserShiftAssignment, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.UserAssignments, nil
 	}
 	return nil, &NotLoadedError{edge: "user_assignments"}
@@ -75,7 +88,7 @@ func (e ShiftEdges) UserAssignmentsOrErr() ([]*UserShiftAssignment, error) {
 // DayOverridesOrErr returns the DayOverrides value or an error if the edge
 // was not loaded in eager-loading.
 func (e ShiftEdges) DayOverridesOrErr() ([]*UserDayOverride, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.DayOverrides, nil
 	}
 	return nil, &NotLoadedError{edge: "day_overrides"}
@@ -92,7 +105,7 @@ func (*Shift) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case shift.FieldName, shift.FieldDescription, shift.FieldStartTime, shift.FieldEndTime:
 			values[i] = new(sql.NullString)
-		case shift.FieldCreatedAt, shift.FieldUpdatedAt:
+		case shift.FieldDate, shift.FieldCreatedAt, shift.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -127,6 +140,13 @@ func (_m *Shift) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Description = new(string)
 				*_m.Description = value.String
+			}
+		case shift.FieldDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date", values[i])
+			} else if value.Valid {
+				_m.Date = new(time.Time)
+				*_m.Date = value.Time
 			}
 		case shift.FieldStartTime:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -188,6 +208,11 @@ func (_m *Shift) QueryDays() *ShiftDayQuery {
 	return NewShiftClient(_m.config).QueryDays(_m)
 }
 
+// QueryInstances queries the "instances" edge of the Shift entity.
+func (_m *Shift) QueryInstances() *ShiftInstanceQuery {
+	return NewShiftClient(_m.config).QueryInstances(_m)
+}
+
 // QueryUserAssignments queries the "user_assignments" edge of the Shift entity.
 func (_m *Shift) QueryUserAssignments() *UserShiftAssignmentQuery {
 	return NewShiftClient(_m.config).QueryUserAssignments(_m)
@@ -227,6 +252,11 @@ func (_m *Shift) String() string {
 	if v := _m.Description; v != nil {
 		builder.WriteString("description=")
 		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.Date; v != nil {
+		builder.WriteString("date=")
+		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("start_time=")

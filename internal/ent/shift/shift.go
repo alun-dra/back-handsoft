@@ -18,6 +18,8 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldDate holds the string denoting the date field in the database.
+	FieldDate = "date"
 	// FieldStartTime holds the string denoting the start_time field in the database.
 	FieldStartTime = "start_time"
 	// FieldEndTime holds the string denoting the end_time field in the database.
@@ -34,6 +36,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeDays holds the string denoting the days edge name in mutations.
 	EdgeDays = "days"
+	// EdgeInstances holds the string denoting the instances edge name in mutations.
+	EdgeInstances = "instances"
 	// EdgeUserAssignments holds the string denoting the user_assignments edge name in mutations.
 	EdgeUserAssignments = "user_assignments"
 	// EdgeDayOverrides holds the string denoting the day_overrides edge name in mutations.
@@ -47,6 +51,13 @@ const (
 	DaysInverseTable = "shift_days"
 	// DaysColumn is the table column denoting the days relation/edge.
 	DaysColumn = "shift_id"
+	// InstancesTable is the table that holds the instances relation/edge.
+	InstancesTable = "shift_instances"
+	// InstancesInverseTable is the table name for the ShiftInstance entity.
+	// It exists in this package in order to avoid circular dependency with the "shiftinstance" package.
+	InstancesInverseTable = "shift_instances"
+	// InstancesColumn is the table column denoting the instances relation/edge.
+	InstancesColumn = "shift_id"
 	// UserAssignmentsTable is the table that holds the user_assignments relation/edge.
 	UserAssignmentsTable = "user_shift_assignments"
 	// UserAssignmentsInverseTable is the table name for the UserShiftAssignment entity.
@@ -68,6 +79,7 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldDescription,
+	FieldDate,
 	FieldStartTime,
 	FieldEndTime,
 	FieldBreakMinutes,
@@ -126,6 +138,11 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
+// ByDate orders the results by the date field.
+func ByDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDate, opts...).ToFunc()
+}
+
 // ByStartTime orders the results by the start_time field.
 func ByStartTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStartTime, opts...).ToFunc()
@@ -175,6 +192,20 @@ func ByDays(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByInstancesCount orders the results by instances count.
+func ByInstancesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newInstancesStep(), opts...)
+	}
+}
+
+// ByInstances orders the results by instances terms.
+func ByInstances(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newInstancesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAssignmentsCount orders the results by user_assignments count.
 func ByUserAssignmentsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -207,6 +238,13 @@ func newDaysStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DaysInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, DaysTable, DaysColumn),
+	)
+}
+func newInstancesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(InstancesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, InstancesTable, InstancesColumn),
 	)
 }
 func newUserAssignmentsStep() *sqlgraph.Step {

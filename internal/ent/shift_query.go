@@ -6,6 +6,7 @@ import (
 	"back/internal/ent/predicate"
 	"back/internal/ent/shift"
 	"back/internal/ent/shiftday"
+	"back/internal/ent/shiftinstance"
 	"back/internal/ent/userdayoverride"
 	"back/internal/ent/usershiftassignment"
 	"context"
@@ -27,6 +28,7 @@ type ShiftQuery struct {
 	inters              []Interceptor
 	predicates          []predicate.Shift
 	withDays            *ShiftDayQuery
+	withInstances       *ShiftInstanceQuery
 	withUserAssignments *UserShiftAssignmentQuery
 	withDayOverrides    *UserDayOverrideQuery
 	// intermediate query (i.e. traversal path).
@@ -80,6 +82,28 @@ func (_q *ShiftQuery) QueryDays() *ShiftDayQuery {
 			sqlgraph.From(shift.Table, shift.FieldID, selector),
 			sqlgraph.To(shiftday.Table, shiftday.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, shift.DaysTable, shift.DaysColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryInstances chains the current query on the "instances" edge.
+func (_q *ShiftQuery) QueryInstances() *ShiftInstanceQuery {
+	query := (&ShiftInstanceClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(shift.Table, shift.FieldID, selector),
+			sqlgraph.To(shiftinstance.Table, shiftinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, shift.InstancesTable, shift.InstancesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -324,6 +348,7 @@ func (_q *ShiftQuery) Clone() *ShiftQuery {
 		inters:              append([]Interceptor{}, _q.inters...),
 		predicates:          append([]predicate.Shift{}, _q.predicates...),
 		withDays:            _q.withDays.Clone(),
+		withInstances:       _q.withInstances.Clone(),
 		withUserAssignments: _q.withUserAssignments.Clone(),
 		withDayOverrides:    _q.withDayOverrides.Clone(),
 		// clone intermediate query.
@@ -340,6 +365,17 @@ func (_q *ShiftQuery) WithDays(opts ...func(*ShiftDayQuery)) *ShiftQuery {
 		opt(query)
 	}
 	_q.withDays = query
+	return _q
+}
+
+// WithInstances tells the query-builder to eager-load the nodes that are connected to
+// the "instances" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ShiftQuery) WithInstances(opts ...func(*ShiftInstanceQuery)) *ShiftQuery {
+	query := (&ShiftInstanceClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withInstances = query
 	return _q
 }
 
@@ -443,8 +479,9 @@ func (_q *ShiftQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Shift,
 	var (
 		nodes       = []*Shift{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withDays != nil,
+			_q.withInstances != nil,
 			_q.withUserAssignments != nil,
 			_q.withDayOverrides != nil,
 		}
@@ -471,6 +508,13 @@ func (_q *ShiftQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Shift,
 		if err := _q.loadDays(ctx, query, nodes,
 			func(n *Shift) { n.Edges.Days = []*ShiftDay{} },
 			func(n *Shift, e *ShiftDay) { n.Edges.Days = append(n.Edges.Days, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withInstances; query != nil {
+		if err := _q.loadInstances(ctx, query, nodes,
+			func(n *Shift) { n.Edges.Instances = []*ShiftInstance{} },
+			func(n *Shift, e *ShiftInstance) { n.Edges.Instances = append(n.Edges.Instances, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -506,6 +550,36 @@ func (_q *ShiftQuery) loadDays(ctx context.Context, query *ShiftDayQuery, nodes 
 	}
 	query.Where(predicate.ShiftDay(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(shift.DaysColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ShiftID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "shift_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *ShiftQuery) loadInstances(ctx context.Context, query *ShiftInstanceQuery, nodes []*Shift, init func(*Shift), assign func(*Shift, *ShiftInstance)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Shift)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(shiftinstance.FieldShiftID)
+	}
+	query.Where(predicate.ShiftInstance(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(shift.InstancesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

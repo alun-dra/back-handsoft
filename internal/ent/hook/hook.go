@@ -152,6 +152,18 @@ func (f ShiftDayFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ShiftDayMutation", m)
 }
 
+// The ShiftInstanceFunc type is an adapter to allow the use of ordinary
+// function as ShiftInstance mutator.
+type ShiftInstanceFunc func(context.Context, *ent.ShiftInstanceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ShiftInstanceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ShiftInstanceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ShiftInstanceMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

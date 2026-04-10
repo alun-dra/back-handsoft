@@ -353,6 +353,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "date", Type: field.TypeTime, Nullable: true},
 		{Name: "start_time", Type: field.TypeString},
 		{Name: "end_time", Type: field.TypeString},
 		{Name: "break_minutes", Type: field.TypeInt, Default: 0},
@@ -401,6 +402,36 @@ var (
 				Name:    "shiftday_shift_id_weekday",
 				Unique:  true,
 				Columns: []*schema.Column{ShiftDaysColumns[5], ShiftDaysColumns[1]},
+			},
+		},
+	}
+	// ShiftInstancesColumns holds the columns for the "shift_instances" table.
+	ShiftInstancesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "date", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
+		{Name: "state", Type: field.TypeString, Default: "scheduled"},
+		{Name: "mode", Type: field.TypeString, Default: "onsite"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "shift_id", Type: field.TypeInt},
+	}
+	// ShiftInstancesTable holds the schema information for the "shift_instances" table.
+	ShiftInstancesTable = &schema.Table{
+		Name:       "shift_instances",
+		Columns:    ShiftInstancesColumns,
+		PrimaryKey: []*schema.Column{ShiftInstancesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "shift_instances_shifts_instances",
+				Columns:    []*schema.Column{ShiftInstancesColumns[5]},
+				RefColumns: []*schema.Column{ShiftsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "shiftinstance_shift_id_date",
+				Unique:  true,
+				Columns: []*schema.Column{ShiftInstancesColumns[5], ShiftInstancesColumns[1]},
 			},
 		},
 	}
@@ -639,6 +670,7 @@ var (
 		RegionsTable,
 		ShiftsTable,
 		ShiftDaysTable,
+		ShiftInstancesTable,
 		UsersTable,
 		UserAccessPointsTable,
 		UserBranchesTable,
@@ -664,6 +696,7 @@ func init() {
 	DevicesTable.ForeignKeys[0].RefTable = AccessPointsTable
 	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
 	ShiftDaysTable.ForeignKeys[0].RefTable = ShiftsTable
+	ShiftInstancesTable.ForeignKeys[0].RefTable = ShiftsTable
 	UserAccessPointsTable.ForeignKeys[0].RefTable = AccessPointsTable
 	UserAccessPointsTable.ForeignKeys[1].RefTable = UsersTable
 	UserBranchesTable.ForeignKeys[0].RefTable = BranchesTable

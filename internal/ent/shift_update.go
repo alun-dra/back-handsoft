@@ -6,6 +6,7 @@ import (
 	"back/internal/ent/predicate"
 	"back/internal/ent/shift"
 	"back/internal/ent/shiftday"
+	"back/internal/ent/shiftinstance"
 	"back/internal/ent/userdayoverride"
 	"back/internal/ent/usershiftassignment"
 	"context"
@@ -62,6 +63,26 @@ func (_u *ShiftUpdate) SetNillableDescription(v *string) *ShiftUpdate {
 // ClearDescription clears the value of the "description" field.
 func (_u *ShiftUpdate) ClearDescription() *ShiftUpdate {
 	_u.mutation.ClearDescription()
+	return _u
+}
+
+// SetDate sets the "date" field.
+func (_u *ShiftUpdate) SetDate(v time.Time) *ShiftUpdate {
+	_u.mutation.SetDate(v)
+	return _u
+}
+
+// SetNillableDate sets the "date" field if the given value is not nil.
+func (_u *ShiftUpdate) SetNillableDate(v *time.Time) *ShiftUpdate {
+	if v != nil {
+		_u.SetDate(*v)
+	}
+	return _u
+}
+
+// ClearDate clears the value of the "date" field.
+func (_u *ShiftUpdate) ClearDate() *ShiftUpdate {
+	_u.mutation.ClearDate()
 	return _u
 }
 
@@ -163,6 +184,21 @@ func (_u *ShiftUpdate) AddDays(v ...*ShiftDay) *ShiftUpdate {
 	return _u.AddDayIDs(ids...)
 }
 
+// AddInstanceIDs adds the "instances" edge to the ShiftInstance entity by IDs.
+func (_u *ShiftUpdate) AddInstanceIDs(ids ...int) *ShiftUpdate {
+	_u.mutation.AddInstanceIDs(ids...)
+	return _u
+}
+
+// AddInstances adds the "instances" edges to the ShiftInstance entity.
+func (_u *ShiftUpdate) AddInstances(v ...*ShiftInstance) *ShiftUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddInstanceIDs(ids...)
+}
+
 // AddUserAssignmentIDs adds the "user_assignments" edge to the UserShiftAssignment entity by IDs.
 func (_u *ShiftUpdate) AddUserAssignmentIDs(ids ...int) *ShiftUpdate {
 	_u.mutation.AddUserAssignmentIDs(ids...)
@@ -217,6 +253,27 @@ func (_u *ShiftUpdate) RemoveDays(v ...*ShiftDay) *ShiftUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveDayIDs(ids...)
+}
+
+// ClearInstances clears all "instances" edges to the ShiftInstance entity.
+func (_u *ShiftUpdate) ClearInstances() *ShiftUpdate {
+	_u.mutation.ClearInstances()
+	return _u
+}
+
+// RemoveInstanceIDs removes the "instances" edge to ShiftInstance entities by IDs.
+func (_u *ShiftUpdate) RemoveInstanceIDs(ids ...int) *ShiftUpdate {
+	_u.mutation.RemoveInstanceIDs(ids...)
+	return _u
+}
+
+// RemoveInstances removes "instances" edges to ShiftInstance entities.
+func (_u *ShiftUpdate) RemoveInstances(v ...*ShiftInstance) *ShiftUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveInstanceIDs(ids...)
 }
 
 // ClearUserAssignments clears all "user_assignments" edges to the UserShiftAssignment entity.
@@ -338,6 +395,12 @@ func (_u *ShiftUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(shift.FieldDescription, field.TypeString)
 	}
+	if value, ok := _u.mutation.Date(); ok {
+		_spec.SetField(shift.FieldDate, field.TypeTime, value)
+	}
+	if _u.mutation.DateCleared() {
+		_spec.ClearField(shift.FieldDate, field.TypeTime)
+	}
 	if value, ok := _u.mutation.StartTime(); ok {
 		_spec.SetField(shift.FieldStartTime, field.TypeString, value)
 	}
@@ -397,6 +460,51 @@ func (_u *ShiftUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(shiftday.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.InstancesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   shift.InstancesTable,
+			Columns: []string{shift.InstancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(shiftinstance.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedInstancesIDs(); len(nodes) > 0 && !_u.mutation.InstancesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   shift.InstancesTable,
+			Columns: []string{shift.InstancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(shiftinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.InstancesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   shift.InstancesTable,
+			Columns: []string{shift.InstancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(shiftinstance.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -548,6 +656,26 @@ func (_u *ShiftUpdateOne) ClearDescription() *ShiftUpdateOne {
 	return _u
 }
 
+// SetDate sets the "date" field.
+func (_u *ShiftUpdateOne) SetDate(v time.Time) *ShiftUpdateOne {
+	_u.mutation.SetDate(v)
+	return _u
+}
+
+// SetNillableDate sets the "date" field if the given value is not nil.
+func (_u *ShiftUpdateOne) SetNillableDate(v *time.Time) *ShiftUpdateOne {
+	if v != nil {
+		_u.SetDate(*v)
+	}
+	return _u
+}
+
+// ClearDate clears the value of the "date" field.
+func (_u *ShiftUpdateOne) ClearDate() *ShiftUpdateOne {
+	_u.mutation.ClearDate()
+	return _u
+}
+
 // SetStartTime sets the "start_time" field.
 func (_u *ShiftUpdateOne) SetStartTime(v string) *ShiftUpdateOne {
 	_u.mutation.SetStartTime(v)
@@ -646,6 +774,21 @@ func (_u *ShiftUpdateOne) AddDays(v ...*ShiftDay) *ShiftUpdateOne {
 	return _u.AddDayIDs(ids...)
 }
 
+// AddInstanceIDs adds the "instances" edge to the ShiftInstance entity by IDs.
+func (_u *ShiftUpdateOne) AddInstanceIDs(ids ...int) *ShiftUpdateOne {
+	_u.mutation.AddInstanceIDs(ids...)
+	return _u
+}
+
+// AddInstances adds the "instances" edges to the ShiftInstance entity.
+func (_u *ShiftUpdateOne) AddInstances(v ...*ShiftInstance) *ShiftUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddInstanceIDs(ids...)
+}
+
 // AddUserAssignmentIDs adds the "user_assignments" edge to the UserShiftAssignment entity by IDs.
 func (_u *ShiftUpdateOne) AddUserAssignmentIDs(ids ...int) *ShiftUpdateOne {
 	_u.mutation.AddUserAssignmentIDs(ids...)
@@ -700,6 +843,27 @@ func (_u *ShiftUpdateOne) RemoveDays(v ...*ShiftDay) *ShiftUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveDayIDs(ids...)
+}
+
+// ClearInstances clears all "instances" edges to the ShiftInstance entity.
+func (_u *ShiftUpdateOne) ClearInstances() *ShiftUpdateOne {
+	_u.mutation.ClearInstances()
+	return _u
+}
+
+// RemoveInstanceIDs removes the "instances" edge to ShiftInstance entities by IDs.
+func (_u *ShiftUpdateOne) RemoveInstanceIDs(ids ...int) *ShiftUpdateOne {
+	_u.mutation.RemoveInstanceIDs(ids...)
+	return _u
+}
+
+// RemoveInstances removes "instances" edges to ShiftInstance entities.
+func (_u *ShiftUpdateOne) RemoveInstances(v ...*ShiftInstance) *ShiftUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveInstanceIDs(ids...)
 }
 
 // ClearUserAssignments clears all "user_assignments" edges to the UserShiftAssignment entity.
@@ -851,6 +1015,12 @@ func (_u *ShiftUpdateOne) sqlSave(ctx context.Context) (_node *Shift, err error)
 	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(shift.FieldDescription, field.TypeString)
 	}
+	if value, ok := _u.mutation.Date(); ok {
+		_spec.SetField(shift.FieldDate, field.TypeTime, value)
+	}
+	if _u.mutation.DateCleared() {
+		_spec.ClearField(shift.FieldDate, field.TypeTime)
+	}
 	if value, ok := _u.mutation.StartTime(); ok {
 		_spec.SetField(shift.FieldStartTime, field.TypeString, value)
 	}
@@ -910,6 +1080,51 @@ func (_u *ShiftUpdateOne) sqlSave(ctx context.Context) (_node *Shift, err error)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(shiftday.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.InstancesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   shift.InstancesTable,
+			Columns: []string{shift.InstancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(shiftinstance.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedInstancesIDs(); len(nodes) > 0 && !_u.mutation.InstancesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   shift.InstancesTable,
+			Columns: []string{shift.InstancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(shiftinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.InstancesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   shift.InstancesTable,
+			Columns: []string{shift.InstancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(shiftinstance.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

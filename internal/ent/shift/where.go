@@ -65,6 +65,11 @@ func Description(v string) predicate.Shift {
 	return predicate.Shift(sql.FieldEQ(FieldDescription, v))
 }
 
+// Date applies equality check predicate on the "date" field. It's identical to DateEQ.
+func Date(v time.Time) predicate.Shift {
+	return predicate.Shift(sql.FieldEQ(FieldDate, v))
+}
+
 // StartTime applies equality check predicate on the "start_time" field. It's identical to StartTimeEQ.
 func StartTime(v string) predicate.Shift {
 	return predicate.Shift(sql.FieldEQ(FieldStartTime, v))
@@ -238,6 +243,56 @@ func DescriptionEqualFold(v string) predicate.Shift {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.Shift {
 	return predicate.Shift(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// DateEQ applies the EQ predicate on the "date" field.
+func DateEQ(v time.Time) predicate.Shift {
+	return predicate.Shift(sql.FieldEQ(FieldDate, v))
+}
+
+// DateNEQ applies the NEQ predicate on the "date" field.
+func DateNEQ(v time.Time) predicate.Shift {
+	return predicate.Shift(sql.FieldNEQ(FieldDate, v))
+}
+
+// DateIn applies the In predicate on the "date" field.
+func DateIn(vs ...time.Time) predicate.Shift {
+	return predicate.Shift(sql.FieldIn(FieldDate, vs...))
+}
+
+// DateNotIn applies the NotIn predicate on the "date" field.
+func DateNotIn(vs ...time.Time) predicate.Shift {
+	return predicate.Shift(sql.FieldNotIn(FieldDate, vs...))
+}
+
+// DateGT applies the GT predicate on the "date" field.
+func DateGT(v time.Time) predicate.Shift {
+	return predicate.Shift(sql.FieldGT(FieldDate, v))
+}
+
+// DateGTE applies the GTE predicate on the "date" field.
+func DateGTE(v time.Time) predicate.Shift {
+	return predicate.Shift(sql.FieldGTE(FieldDate, v))
+}
+
+// DateLT applies the LT predicate on the "date" field.
+func DateLT(v time.Time) predicate.Shift {
+	return predicate.Shift(sql.FieldLT(FieldDate, v))
+}
+
+// DateLTE applies the LTE predicate on the "date" field.
+func DateLTE(v time.Time) predicate.Shift {
+	return predicate.Shift(sql.FieldLTE(FieldDate, v))
+}
+
+// DateIsNil applies the IsNil predicate on the "date" field.
+func DateIsNil() predicate.Shift {
+	return predicate.Shift(sql.FieldIsNull(FieldDate))
+}
+
+// DateNotNil applies the NotNil predicate on the "date" field.
+func DateNotNil() predicate.Shift {
+	return predicate.Shift(sql.FieldNotNull(FieldDate))
 }
 
 // StartTimeEQ applies the EQ predicate on the "start_time" field.
@@ -525,6 +580,29 @@ func HasDays() predicate.Shift {
 func HasDaysWith(preds ...predicate.ShiftDay) predicate.Shift {
 	return predicate.Shift(func(s *sql.Selector) {
 		step := newDaysStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasInstances applies the HasEdge predicate on the "instances" edge.
+func HasInstances() predicate.Shift {
+	return predicate.Shift(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, InstancesTable, InstancesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasInstancesWith applies the HasEdge predicate on the "instances" edge with a given conditions (other predicates).
+func HasInstancesWith(preds ...predicate.ShiftInstance) predicate.Shift {
+	return predicate.Shift(func(s *sql.Selector) {
+		step := newInstancesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

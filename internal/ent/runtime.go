@@ -16,6 +16,7 @@ import (
 	"back/internal/ent/schema"
 	"back/internal/ent/shift"
 	"back/internal/ent/shiftday"
+	"back/internal/ent/shiftinstance"
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
@@ -224,31 +225,31 @@ func init() {
 	// shift.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	shift.NameValidator = shiftDescName.Validators[0].(func(string) error)
 	// shiftDescStartTime is the schema descriptor for start_time field.
-	shiftDescStartTime := shiftFields[2].Descriptor()
+	shiftDescStartTime := shiftFields[3].Descriptor()
 	// shift.StartTimeValidator is a validator for the "start_time" field. It is called by the builders before save.
 	shift.StartTimeValidator = shiftDescStartTime.Validators[0].(func(string) error)
 	// shiftDescEndTime is the schema descriptor for end_time field.
-	shiftDescEndTime := shiftFields[3].Descriptor()
+	shiftDescEndTime := shiftFields[4].Descriptor()
 	// shift.EndTimeValidator is a validator for the "end_time" field. It is called by the builders before save.
 	shift.EndTimeValidator = shiftDescEndTime.Validators[0].(func(string) error)
 	// shiftDescBreakMinutes is the schema descriptor for break_minutes field.
-	shiftDescBreakMinutes := shiftFields[4].Descriptor()
+	shiftDescBreakMinutes := shiftFields[5].Descriptor()
 	// shift.DefaultBreakMinutes holds the default value on creation for the break_minutes field.
 	shift.DefaultBreakMinutes = shiftDescBreakMinutes.Default.(int)
 	// shiftDescCrossesMidnight is the schema descriptor for crosses_midnight field.
-	shiftDescCrossesMidnight := shiftFields[5].Descriptor()
+	shiftDescCrossesMidnight := shiftFields[6].Descriptor()
 	// shift.DefaultCrossesMidnight holds the default value on creation for the crosses_midnight field.
 	shift.DefaultCrossesMidnight = shiftDescCrossesMidnight.Default.(bool)
 	// shiftDescIsActive is the schema descriptor for is_active field.
-	shiftDescIsActive := shiftFields[6].Descriptor()
+	shiftDescIsActive := shiftFields[7].Descriptor()
 	// shift.DefaultIsActive holds the default value on creation for the is_active field.
 	shift.DefaultIsActive = shiftDescIsActive.Default.(bool)
 	// shiftDescCreatedAt is the schema descriptor for created_at field.
-	shiftDescCreatedAt := shiftFields[7].Descriptor()
+	shiftDescCreatedAt := shiftFields[8].Descriptor()
 	// shift.DefaultCreatedAt holds the default value on creation for the created_at field.
 	shift.DefaultCreatedAt = shiftDescCreatedAt.Default.(func() time.Time)
 	// shiftDescUpdatedAt is the schema descriptor for updated_at field.
-	shiftDescUpdatedAt := shiftFields[8].Descriptor()
+	shiftDescUpdatedAt := shiftFields[9].Descriptor()
 	// shift.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	shift.DefaultUpdatedAt = shiftDescUpdatedAt.Default.(func() time.Time)
 	// shift.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -271,6 +272,20 @@ func init() {
 	shiftdayDescCreatedAt := shiftdayFields[4].Descriptor()
 	// shiftday.DefaultCreatedAt holds the default value on creation for the created_at field.
 	shiftday.DefaultCreatedAt = shiftdayDescCreatedAt.Default.(func() time.Time)
+	shiftinstanceFields := schema.ShiftInstance{}.Fields()
+	_ = shiftinstanceFields
+	// shiftinstanceDescState is the schema descriptor for state field.
+	shiftinstanceDescState := shiftinstanceFields[2].Descriptor()
+	// shiftinstance.DefaultState holds the default value on creation for the state field.
+	shiftinstance.DefaultState = shiftinstanceDescState.Default.(string)
+	// shiftinstanceDescMode is the schema descriptor for mode field.
+	shiftinstanceDescMode := shiftinstanceFields[3].Descriptor()
+	// shiftinstance.DefaultMode holds the default value on creation for the mode field.
+	shiftinstance.DefaultMode = shiftinstanceDescMode.Default.(string)
+	// shiftinstanceDescCreatedAt is the schema descriptor for created_at field.
+	shiftinstanceDescCreatedAt := shiftinstanceFields[4].Descriptor()
+	// shiftinstance.DefaultCreatedAt holds the default value on creation for the created_at field.
+	shiftinstance.DefaultCreatedAt = shiftinstanceDescCreatedAt.Default.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescUsername is the schema descriptor for username field.

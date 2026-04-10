@@ -20,13 +20,16 @@ func NewShiftHandler(svc *services.ShiftService) *ShiftHandler {
 }
 
 type createShiftRequest struct {
-	Name            string  `json:"name" example:"Turno mañana"`
-	Description     *string `json:"description,omitempty" example:"Lunes a viernes 08:00 a 17:00"`
-	StartTime       string  `json:"start_time" example:"08:00"`
-	EndTime         string  `json:"end_time" example:"17:00"`
-	BreakMinutes    int     `json:"break_minutes" example:"60"`
-	CrossesMidnight *bool   `json:"crosses_midnight,omitempty" example:"false"`
-	IsActive        *bool   `json:"is_active,omitempty" example:"true"`
+	Name            string                  `json:"name" example:"Turno mañana"`
+	Description     *string                 `json:"description,omitempty" example:"Lunes a viernes 08:00 a 17:00"`
+	StartTime       string                  `json:"start_time" example:"08:00"`
+	EndTime         string                  `json:"end_time" example:"17:00"`
+	BreakMinutes    int                     `json:"break_minutes" example:"60"`
+	CrossesMidnight *bool                   `json:"crosses_midnight,omitempty" example:"false"`
+	IsActive        *bool                   `json:"is_active,omitempty" example:"true"`
+	ScheduleType    string                  `json:"schedule_type"`
+	WorkDays        []services.WorkDayInput `json:"work_days"`
+	StartDate       string                  `json:"start_date"` // Recibimos string "2026-04-10"
 }
 
 type patchShiftRequest struct {
@@ -86,6 +89,8 @@ func (h *ShiftHandler) Shifts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		parsedDate, _ := time.Parse("2006-01-02", req.StartDate)
+
 		s, err := h.Svc.Create(r.Context(), services.CreateShiftInput{
 			Name:            req.Name,
 			Description:     req.Description,
@@ -94,6 +99,9 @@ func (h *ShiftHandler) Shifts(w http.ResponseWriter, r *http.Request) {
 			BreakMinutes:    req.BreakMinutes,
 			CrossesMidnight: req.CrossesMidnight,
 			IsActive:        req.IsActive,
+			ScheduleType:    req.ScheduleType, // <--- PASAR ESTO
+			WorkDays:        req.WorkDays,     // <--- PASAR ESTO
+			StartDate:       parsedDate,       // <--- PASAR ESTO
 		})
 		if err != nil {
 			http.Error(w, err.Error(), 400)
@@ -182,4 +190,53 @@ func parseID(path string) int {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 	id, _ := strconv.Atoi(parts[len(parts)-1])
 	return id
+}
+
+// Calendar godoc
+// @Summary      Calendario de instancias
+// @Description  Obtiene las instancias de turnos generadas entre dos fechas
+// @Tags         Shifts
+// @Produce      json
+// @Security     BearerAuth
+// @Param        start  query     string  true  "Fecha inicio YYYY-MM-DD"
+// @Param        end    query     string  true  "Fecha fin YYYY-MM-DD"
+// @Success      200    {array}   interface{}
+// @Router       /api/v1/calendar [get]
+func (h *ShiftHandler) Calendar(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", 405)
+		return
+	}
+
+	// 1. Obtener parámetros de la URL
+	startQuery := r.URL.Query().Get("start")
+	endQuery := r.URL.Query().Get("end")
+
+	if startQuery == "" || endQuery == "" {
+		http.Error(w, "start and end dates are required", 400)
+		return
+	}
+
+	// 2. Parsear fechas (Formato ISO YYYY-MM-DD)
+	const layout = "2006-01-02"
+	startTime, err := time.Parse(layout, startQuery)
+	if err != nil {
+		http.Error(w, "invalid start date format", 400)
+		return
+	}
+	endTime, err := time.Parse(layout, endQuery)
+	if err != nil {
+		http.Error(w, "invalid end date format", 400)
+		return
+	}
+
+	// 3. Llamar al servicio (Asegúrate de haber creado GetCalendar en el service)
+	instances, err := h.Svc.GetCalendar(r.Context(), startTime, endTime)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(instances)
 }

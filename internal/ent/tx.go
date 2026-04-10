@@ -36,6 +36,8 @@ type Tx struct {
 	Shift *ShiftClient
 	// ShiftDay is the client for interacting with the ShiftDay builders.
 	ShiftDay *ShiftDayClient
+	// ShiftInstance is the client for interacting with the ShiftInstance builders.
+	ShiftInstance *ShiftInstanceClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserAccessPoint is the client for interacting with the UserAccessPoint builders.
@@ -191,6 +193,7 @@ func (tx *Tx) init() {
 	tx.Region = NewRegionClient(tx.config)
 	tx.Shift = NewShiftClient(tx.config)
 	tx.ShiftDay = NewShiftDayClient(tx.config)
+	tx.ShiftInstance = NewShiftInstanceClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserAccessPoint = NewUserAccessPointClient(tx.config)
 	tx.UserBranch = NewUserBranchClient(tx.config)

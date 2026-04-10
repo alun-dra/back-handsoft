@@ -42,6 +42,9 @@ type Shift func(*sql.Selector)
 // ShiftDay is the predicate function for shiftday builders.
 type ShiftDay func(*sql.Selector)
 
+// ShiftInstance is the predicate function for shiftinstance builders.
+type ShiftInstance func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 

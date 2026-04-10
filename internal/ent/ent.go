@@ -15,6 +15,7 @@ import (
 	"back/internal/ent/region"
 	"back/internal/ent/shift"
 	"back/internal/ent/shiftday"
+	"back/internal/ent/shiftinstance"
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
@@ -102,6 +103,7 @@ func checkColumn(t, c string) error {
 			region.Table:              region.ValidColumn,
 			shift.Table:               shift.ValidColumn,
 			shiftday.Table:            shiftday.ValidColumn,
+			shiftinstance.Table:       shiftinstance.ValidColumn,
 			user.Table:                user.ValidColumn,
 			useraccesspoint.Table:     useraccesspoint.ValidColumn,
 			userbranch.Table:          userbranch.ValidColumn,

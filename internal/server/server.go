@@ -242,6 +242,13 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	)
 	mux.Handle("/api/v1/shifts", protectedShifts)
 
+	protectedCalendar := middleware.Chain(
+		http.HandlerFunc(shiftHandler.Calendar),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/calendar", protectedCalendar)
+	mux.Handle("/api/v1/calendar/", protectedCalendar)
+
 	// Un solo prefijo para:
 	// - /api/v1/shifts/{id}
 	// - /api/v1/shifts/{id}/days

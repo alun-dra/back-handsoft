@@ -17,6 +17,7 @@ func (Shift) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").NotEmpty(),
 		field.String("description").Optional().Nillable(),
+		field.Time("date").Optional().Nillable(),
 
 		field.String("start_time").NotEmpty(), // "08:00"
 		field.String("end_time").NotEmpty(),   // "17:00"
@@ -45,6 +46,7 @@ func (Shift) Indexes() []ent.Index {
 func (Shift) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("days", ShiftDay.Type),
+		edge.To("instances", ShiftInstance.Type),
 		edge.To("user_assignments", UserShiftAssignment.Type),
 		edge.To("day_overrides", UserDayOverride.Type),
 	}

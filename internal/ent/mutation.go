@@ -16,6 +16,7 @@ import (
 	"back/internal/ent/region"
 	"back/internal/ent/shift"
 	"back/internal/ent/shiftday"
+	"back/internal/ent/shiftinstance"
 	"back/internal/ent/user"
 	"back/internal/ent/useraccesspoint"
 	"back/internal/ent/userbranch"
@@ -53,6 +54,7 @@ const (
 	TypeRegion              = "Region"
 	TypeShift               = "Shift"
 	TypeShiftDay            = "ShiftDay"
+	TypeShiftInstance       = "ShiftInstance"
 	TypeUser                = "User"
 	TypeUserAccessPoint     = "UserAccessPoint"
 	TypeUserBranch          = "UserBranch"
@@ -7464,6 +7466,7 @@ type ShiftMutation struct {
 	id                      *int
 	name                    *string
 	description             *string
+	date                    *time.Time
 	start_time              *string
 	end_time                *string
 	break_minutes           *int
@@ -7476,6 +7479,9 @@ type ShiftMutation struct {
 	days                    map[int]struct{}
 	removeddays             map[int]struct{}
 	cleareddays             bool
+	instances               map[int]struct{}
+	removedinstances        map[int]struct{}
+	clearedinstances        bool
 	user_assignments        map[int]struct{}
 	removeduser_assignments map[int]struct{}
 	cleareduser_assignments bool
@@ -7668,6 +7674,55 @@ func (m *ShiftMutation) DescriptionCleared() bool {
 func (m *ShiftMutation) ResetDescription() {
 	m.description = nil
 	delete(m.clearedFields, shift.FieldDescription)
+}
+
+// SetDate sets the "date" field.
+func (m *ShiftMutation) SetDate(t time.Time) {
+	m.date = &t
+}
+
+// Date returns the value of the "date" field in the mutation.
+func (m *ShiftMutation) Date() (r time.Time, exists bool) {
+	v := m.date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDate returns the old "date" field's value of the Shift entity.
+// If the Shift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ShiftMutation) OldDate(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDate: %w", err)
+	}
+	return oldValue.Date, nil
+}
+
+// ClearDate clears the value of the "date" field.
+func (m *ShiftMutation) ClearDate() {
+	m.date = nil
+	m.clearedFields[shift.FieldDate] = struct{}{}
+}
+
+// DateCleared returns if the "date" field was cleared in this mutation.
+func (m *ShiftMutation) DateCleared() bool {
+	_, ok := m.clearedFields[shift.FieldDate]
+	return ok
+}
+
+// ResetDate resets all changes to the "date" field.
+func (m *ShiftMutation) ResetDate() {
+	m.date = nil
+	delete(m.clearedFields, shift.FieldDate)
 }
 
 // SetStartTime sets the "start_time" field.
@@ -7996,6 +8051,60 @@ func (m *ShiftMutation) ResetDays() {
 	m.removeddays = nil
 }
 
+// AddInstanceIDs adds the "instances" edge to the ShiftInstance entity by ids.
+func (m *ShiftMutation) AddInstanceIDs(ids ...int) {
+	if m.instances == nil {
+		m.instances = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.instances[ids[i]] = struct{}{}
+	}
+}
+
+// ClearInstances clears the "instances" edge to the ShiftInstance entity.
+func (m *ShiftMutation) ClearInstances() {
+	m.clearedinstances = true
+}
+
+// InstancesCleared reports if the "instances" edge to the ShiftInstance entity was cleared.
+func (m *ShiftMutation) InstancesCleared() bool {
+	return m.clearedinstances
+}
+
+// RemoveInstanceIDs removes the "instances" edge to the ShiftInstance entity by IDs.
+func (m *ShiftMutation) RemoveInstanceIDs(ids ...int) {
+	if m.removedinstances == nil {
+		m.removedinstances = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.instances, ids[i])
+		m.removedinstances[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedInstances returns the removed IDs of the "instances" edge to the ShiftInstance entity.
+func (m *ShiftMutation) RemovedInstancesIDs() (ids []int) {
+	for id := range m.removedinstances {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// InstancesIDs returns the "instances" edge IDs in the mutation.
+func (m *ShiftMutation) InstancesIDs() (ids []int) {
+	for id := range m.instances {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetInstances resets all changes to the "instances" edge.
+func (m *ShiftMutation) ResetInstances() {
+	m.instances = nil
+	m.clearedinstances = false
+	m.removedinstances = nil
+}
+
 // AddUserAssignmentIDs adds the "user_assignments" edge to the UserShiftAssignment entity by ids.
 func (m *ShiftMutation) AddUserAssignmentIDs(ids ...int) {
 	if m.user_assignments == nil {
@@ -8138,12 +8247,15 @@ func (m *ShiftMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ShiftMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.name != nil {
 		fields = append(fields, shift.FieldName)
 	}
 	if m.description != nil {
 		fields = append(fields, shift.FieldDescription)
+	}
+	if m.date != nil {
+		fields = append(fields, shift.FieldDate)
 	}
 	if m.start_time != nil {
 		fields = append(fields, shift.FieldStartTime)
@@ -8178,6 +8290,8 @@ func (m *ShiftMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case shift.FieldDescription:
 		return m.Description()
+	case shift.FieldDate:
+		return m.Date()
 	case shift.FieldStartTime:
 		return m.StartTime()
 	case shift.FieldEndTime:
@@ -8205,6 +8319,8 @@ func (m *ShiftMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldName(ctx)
 	case shift.FieldDescription:
 		return m.OldDescription(ctx)
+	case shift.FieldDate:
+		return m.OldDate(ctx)
 	case shift.FieldStartTime:
 		return m.OldStartTime(ctx)
 	case shift.FieldEndTime:
@@ -8241,6 +8357,13 @@ func (m *ShiftMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
+		return nil
+	case shift.FieldDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDate(v)
 		return nil
 	case shift.FieldStartTime:
 		v, ok := value.(string)
@@ -8339,6 +8462,9 @@ func (m *ShiftMutation) ClearedFields() []string {
 	if m.FieldCleared(shift.FieldDescription) {
 		fields = append(fields, shift.FieldDescription)
 	}
+	if m.FieldCleared(shift.FieldDate) {
+		fields = append(fields, shift.FieldDate)
+	}
 	return fields
 }
 
@@ -8356,6 +8482,9 @@ func (m *ShiftMutation) ClearField(name string) error {
 	case shift.FieldDescription:
 		m.ClearDescription()
 		return nil
+	case shift.FieldDate:
+		m.ClearDate()
+		return nil
 	}
 	return fmt.Errorf("unknown Shift nullable field %s", name)
 }
@@ -8369,6 +8498,9 @@ func (m *ShiftMutation) ResetField(name string) error {
 		return nil
 	case shift.FieldDescription:
 		m.ResetDescription()
+		return nil
+	case shift.FieldDate:
+		m.ResetDate()
 		return nil
 	case shift.FieldStartTime:
 		m.ResetStartTime()
@@ -8397,9 +8529,12 @@ func (m *ShiftMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ShiftMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.days != nil {
 		edges = append(edges, shift.EdgeDays)
+	}
+	if m.instances != nil {
+		edges = append(edges, shift.EdgeInstances)
 	}
 	if m.user_assignments != nil {
 		edges = append(edges, shift.EdgeUserAssignments)
@@ -8417,6 +8552,12 @@ func (m *ShiftMutation) AddedIDs(name string) []ent.Value {
 	case shift.EdgeDays:
 		ids := make([]ent.Value, 0, len(m.days))
 		for id := range m.days {
+			ids = append(ids, id)
+		}
+		return ids
+	case shift.EdgeInstances:
+		ids := make([]ent.Value, 0, len(m.instances))
+		for id := range m.instances {
 			ids = append(ids, id)
 		}
 		return ids
@@ -8438,9 +8579,12 @@ func (m *ShiftMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ShiftMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removeddays != nil {
 		edges = append(edges, shift.EdgeDays)
+	}
+	if m.removedinstances != nil {
+		edges = append(edges, shift.EdgeInstances)
 	}
 	if m.removeduser_assignments != nil {
 		edges = append(edges, shift.EdgeUserAssignments)
@@ -8458,6 +8602,12 @@ func (m *ShiftMutation) RemovedIDs(name string) []ent.Value {
 	case shift.EdgeDays:
 		ids := make([]ent.Value, 0, len(m.removeddays))
 		for id := range m.removeddays {
+			ids = append(ids, id)
+		}
+		return ids
+	case shift.EdgeInstances:
+		ids := make([]ent.Value, 0, len(m.removedinstances))
+		for id := range m.removedinstances {
 			ids = append(ids, id)
 		}
 		return ids
@@ -8479,9 +8629,12 @@ func (m *ShiftMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ShiftMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.cleareddays {
 		edges = append(edges, shift.EdgeDays)
+	}
+	if m.clearedinstances {
+		edges = append(edges, shift.EdgeInstances)
 	}
 	if m.cleareduser_assignments {
 		edges = append(edges, shift.EdgeUserAssignments)
@@ -8498,6 +8651,8 @@ func (m *ShiftMutation) EdgeCleared(name string) bool {
 	switch name {
 	case shift.EdgeDays:
 		return m.cleareddays
+	case shift.EdgeInstances:
+		return m.clearedinstances
 	case shift.EdgeUserAssignments:
 		return m.cleareduser_assignments
 	case shift.EdgeDayOverrides:
@@ -8520,6 +8675,9 @@ func (m *ShiftMutation) ResetEdge(name string) error {
 	switch name {
 	case shift.EdgeDays:
 		m.ResetDays()
+		return nil
+	case shift.EdgeInstances:
+		m.ResetInstances()
 		return nil
 	case shift.EdgeUserAssignments:
 		m.ResetUserAssignments()
@@ -9161,6 +9319,605 @@ func (m *ShiftDayMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ShiftDay edge %s", name)
+}
+
+// ShiftInstanceMutation represents an operation that mutates the ShiftInstance nodes in the graph.
+type ShiftInstanceMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	date          *time.Time
+	state         *string
+	mode          *string
+	created_at    *time.Time
+	clearedFields map[string]struct{}
+	shift         *int
+	clearedshift  bool
+	done          bool
+	oldValue      func(context.Context) (*ShiftInstance, error)
+	predicates    []predicate.ShiftInstance
+}
+
+var _ ent.Mutation = (*ShiftInstanceMutation)(nil)
+
+// shiftinstanceOption allows management of the mutation configuration using functional options.
+type shiftinstanceOption func(*ShiftInstanceMutation)
+
+// newShiftInstanceMutation creates new mutation for the ShiftInstance entity.
+func newShiftInstanceMutation(c config, op Op, opts ...shiftinstanceOption) *ShiftInstanceMutation {
+	m := &ShiftInstanceMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeShiftInstance,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withShiftInstanceID sets the ID field of the mutation.
+func withShiftInstanceID(id int) shiftinstanceOption {
+	return func(m *ShiftInstanceMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ShiftInstance
+		)
+		m.oldValue = func(ctx context.Context) (*ShiftInstance, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ShiftInstance.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withShiftInstance sets the old ShiftInstance of the mutation.
+func withShiftInstance(node *ShiftInstance) shiftinstanceOption {
+	return func(m *ShiftInstanceMutation) {
+		m.oldValue = func(context.Context) (*ShiftInstance, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ShiftInstanceMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ShiftInstanceMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ShiftInstanceMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ShiftInstanceMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ShiftInstance.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetShiftID sets the "shift_id" field.
+func (m *ShiftInstanceMutation) SetShiftID(i int) {
+	m.shift = &i
+}
+
+// ShiftID returns the value of the "shift_id" field in the mutation.
+func (m *ShiftInstanceMutation) ShiftID() (r int, exists bool) {
+	v := m.shift
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldShiftID returns the old "shift_id" field's value of the ShiftInstance entity.
+// If the ShiftInstance object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ShiftInstanceMutation) OldShiftID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldShiftID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldShiftID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldShiftID: %w", err)
+	}
+	return oldValue.ShiftID, nil
+}
+
+// ResetShiftID resets all changes to the "shift_id" field.
+func (m *ShiftInstanceMutation) ResetShiftID() {
+	m.shift = nil
+}
+
+// SetDate sets the "date" field.
+func (m *ShiftInstanceMutation) SetDate(t time.Time) {
+	m.date = &t
+}
+
+// Date returns the value of the "date" field in the mutation.
+func (m *ShiftInstanceMutation) Date() (r time.Time, exists bool) {
+	v := m.date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDate returns the old "date" field's value of the ShiftInstance entity.
+// If the ShiftInstance object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ShiftInstanceMutation) OldDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDate: %w", err)
+	}
+	return oldValue.Date, nil
+}
+
+// ResetDate resets all changes to the "date" field.
+func (m *ShiftInstanceMutation) ResetDate() {
+	m.date = nil
+}
+
+// SetState sets the "state" field.
+func (m *ShiftInstanceMutation) SetState(s string) {
+	m.state = &s
+}
+
+// State returns the value of the "state" field in the mutation.
+func (m *ShiftInstanceMutation) State() (r string, exists bool) {
+	v := m.state
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldState returns the old "state" field's value of the ShiftInstance entity.
+// If the ShiftInstance object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ShiftInstanceMutation) OldState(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldState is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldState requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldState: %w", err)
+	}
+	return oldValue.State, nil
+}
+
+// ResetState resets all changes to the "state" field.
+func (m *ShiftInstanceMutation) ResetState() {
+	m.state = nil
+}
+
+// SetMode sets the "mode" field.
+func (m *ShiftInstanceMutation) SetMode(s string) {
+	m.mode = &s
+}
+
+// Mode returns the value of the "mode" field in the mutation.
+func (m *ShiftInstanceMutation) Mode() (r string, exists bool) {
+	v := m.mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMode returns the old "mode" field's value of the ShiftInstance entity.
+// If the ShiftInstance object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ShiftInstanceMutation) OldMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMode: %w", err)
+	}
+	return oldValue.Mode, nil
+}
+
+// ResetMode resets all changes to the "mode" field.
+func (m *ShiftInstanceMutation) ResetMode() {
+	m.mode = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ShiftInstanceMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ShiftInstanceMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ShiftInstance entity.
+// If the ShiftInstance object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ShiftInstanceMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ShiftInstanceMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// ClearShift clears the "shift" edge to the Shift entity.
+func (m *ShiftInstanceMutation) ClearShift() {
+	m.clearedshift = true
+	m.clearedFields[shiftinstance.FieldShiftID] = struct{}{}
+}
+
+// ShiftCleared reports if the "shift" edge to the Shift entity was cleared.
+func (m *ShiftInstanceMutation) ShiftCleared() bool {
+	return m.clearedshift
+}
+
+// ShiftIDs returns the "shift" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ShiftID instead. It exists only for internal usage by the builders.
+func (m *ShiftInstanceMutation) ShiftIDs() (ids []int) {
+	if id := m.shift; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetShift resets all changes to the "shift" edge.
+func (m *ShiftInstanceMutation) ResetShift() {
+	m.shift = nil
+	m.clearedshift = false
+}
+
+// Where appends a list predicates to the ShiftInstanceMutation builder.
+func (m *ShiftInstanceMutation) Where(ps ...predicate.ShiftInstance) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ShiftInstanceMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ShiftInstanceMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ShiftInstance, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ShiftInstanceMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ShiftInstanceMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ShiftInstance).
+func (m *ShiftInstanceMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ShiftInstanceMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.shift != nil {
+		fields = append(fields, shiftinstance.FieldShiftID)
+	}
+	if m.date != nil {
+		fields = append(fields, shiftinstance.FieldDate)
+	}
+	if m.state != nil {
+		fields = append(fields, shiftinstance.FieldState)
+	}
+	if m.mode != nil {
+		fields = append(fields, shiftinstance.FieldMode)
+	}
+	if m.created_at != nil {
+		fields = append(fields, shiftinstance.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ShiftInstanceMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case shiftinstance.FieldShiftID:
+		return m.ShiftID()
+	case shiftinstance.FieldDate:
+		return m.Date()
+	case shiftinstance.FieldState:
+		return m.State()
+	case shiftinstance.FieldMode:
+		return m.Mode()
+	case shiftinstance.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ShiftInstanceMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case shiftinstance.FieldShiftID:
+		return m.OldShiftID(ctx)
+	case shiftinstance.FieldDate:
+		return m.OldDate(ctx)
+	case shiftinstance.FieldState:
+		return m.OldState(ctx)
+	case shiftinstance.FieldMode:
+		return m.OldMode(ctx)
+	case shiftinstance.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ShiftInstance field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ShiftInstanceMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case shiftinstance.FieldShiftID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetShiftID(v)
+		return nil
+	case shiftinstance.FieldDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDate(v)
+		return nil
+	case shiftinstance.FieldState:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetState(v)
+		return nil
+	case shiftinstance.FieldMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMode(v)
+		return nil
+	case shiftinstance.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ShiftInstance field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ShiftInstanceMutation) AddedFields() []string {
+	var fields []string
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ShiftInstanceMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ShiftInstanceMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ShiftInstance numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ShiftInstanceMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ShiftInstanceMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ShiftInstanceMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ShiftInstance nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ShiftInstanceMutation) ResetField(name string) error {
+	switch name {
+	case shiftinstance.FieldShiftID:
+		m.ResetShiftID()
+		return nil
+	case shiftinstance.FieldDate:
+		m.ResetDate()
+		return nil
+	case shiftinstance.FieldState:
+		m.ResetState()
+		return nil
+	case shiftinstance.FieldMode:
+		m.ResetMode()
+		return nil
+	case shiftinstance.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ShiftInstance field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ShiftInstanceMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.shift != nil {
+		edges = append(edges, shiftinstance.EdgeShift)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ShiftInstanceMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case shiftinstance.EdgeShift:
+		if id := m.shift; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ShiftInstanceMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ShiftInstanceMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ShiftInstanceMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedshift {
+		edges = append(edges, shiftinstance.EdgeShift)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ShiftInstanceMutation) EdgeCleared(name string) bool {
+	switch name {
+	case shiftinstance.EdgeShift:
+		return m.clearedshift
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ShiftInstanceMutation) ClearEdge(name string) error {
+	switch name {
+	case shiftinstance.EdgeShift:
+		m.ClearShift()
+		return nil
+	}
+	return fmt.Errorf("unknown ShiftInstance unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ShiftInstanceMutation) ResetEdge(name string) error {
+	switch name {
+	case shiftinstance.EdgeShift:
+		m.ResetShift()
+		return nil
+	}
+	return fmt.Errorf("unknown ShiftInstance edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.
