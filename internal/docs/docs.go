@@ -1434,6 +1434,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/calendar": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene las instancias de turnos generadas entre dos fechas",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Shifts"
+                ],
+                "summary": "Calendario de instancias",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Fecha inicio YYYY-MM-DD",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fecha fin YYYY-MM-DD",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {}
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cities/{id}/communes": {
             "get": {
                 "produces": [
@@ -2502,6 +2544,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/overview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET retorna todos los usuarios con información simplificada (nombre, email, role, sucursales, turno actual)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Lista de usuarios - Vista general",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.UserOverviewDTO"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/{id}": {
             "get": {
                 "security": [
@@ -2916,6 +2998,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/{id}/overview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET retorna información simplificada para tabla (nombre, email, role, sucursales, turno actual)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Vista general del usuario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del usuario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserOverviewDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/{id}/shift-assignments": {
             "get": {
                 "security": [
@@ -3214,6 +3348,19 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.BranchOverviewDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Bodega Central"
                 }
             }
         },
@@ -3580,6 +3727,35 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.ShiftOverviewDTO": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string",
+                    "example": "2026-04-30"
+                },
+                "end_time": {
+                    "type": "string",
+                    "example": "17:00"
+                },
+                "shift_id": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "shift_name": {
+                    "type": "string",
+                    "example": "Turno Mañana"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2026-04-01"
+                },
+                "start_time": {
+                    "type": "string",
+                    "example": "08:00"
+                }
+            }
+        },
         "handlers.TokenResponse": {
             "type": "object",
             "properties": {
@@ -3682,6 +3858,40 @@ const docTemplate = `{
                 "user_id": {
                     "type": "integer",
                     "example": 10
+                }
+            }
+        },
+        "handlers.UserOverviewDTO": {
+            "type": "object",
+            "properties": {
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.BranchOverviewDTO"
+                    }
+                },
+                "current_shift": {
+                    "$ref": "#/definitions/handlers.ShiftOverviewDTO"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "juan@empresa.cl"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Juan Perez"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
                 }
             }
         },
@@ -3900,9 +4110,22 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Turno mañana"
                 },
+                "schedule_type": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "description": "Recibimos string \"2026-04-10\"",
+                    "type": "string"
+                },
                 "start_time": {
                     "type": "string",
                     "example": "08:00"
+                },
+                "work_days": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.WorkDayInput"
+                    }
                 }
             }
         },
@@ -4213,6 +4436,20 @@ const docTemplate = `{
                 "street": {
                     "type": "string",
                     "example": "Av. Siempre Viva"
+                }
+            }
+        },
+        "services.WorkDayInput": {
+            "type": "object",
+            "properties": {
+                "is_working_day": {
+                    "type": "boolean"
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "weekday": {
+                    "type": "integer"
                 }
             }
         }

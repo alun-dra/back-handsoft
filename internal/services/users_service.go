@@ -370,3 +370,29 @@ func (s *UsersService) VerifyLogin(ctx context.Context, username, password strin
 	}
 	return u, nil
 }
+
+func (s *UsersService) GetOverviewData(ctx context.Context, userID int) (*ent.User, error) {
+	return s.Client.User.
+		Query().
+		Where(user.IDEQ(userID)).
+		WithUserBranches(func(uq *ent.UserBranchQuery) {
+			uq.WithBranch()
+		}).
+		WithShiftAssignments(func(sq *ent.UserShiftAssignmentQuery) {
+			sq.WithShift()
+		}).
+		Only(ctx)
+}
+
+func (s *UsersService) ListOverview(ctx context.Context) ([]*ent.User, error) {
+	return s.Client.User.
+		Query().
+		WithUserBranches(func(uq *ent.UserBranchQuery) {
+			uq.WithBranch()
+		}).
+		WithShiftAssignments(func(sq *ent.UserShiftAssignmentQuery) {
+			sq.WithShift()
+		}).
+		Order(ent.Asc(user.FieldFirstName), ent.Asc(user.FieldLastName), ent.Asc(user.FieldUsername)).
+		All(ctx)
+}

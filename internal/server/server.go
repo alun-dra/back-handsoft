@@ -153,6 +153,13 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	)
 	mux.Handle("/api/v1/users", protectedUsers)
 
+	// Vista general de todos los usuarios (nombre, email, role, branches, shift)
+	protectedUsersOverview := middleware.Chain(
+		http.HandlerFunc(usersHandler.UsersOverview),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/users/overview", protectedUsersOverview)
+
 	// Un solo prefijo para:
 	// - /api/v1/users/{id}
 	// - /api/v1/users/{id}/branches
@@ -223,6 +230,16 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[2] == "users" &&
 				parts[4] == "day-overrides" {
 				userDayOverrideHandler.Overrides(w, r, parseUserID(parts[3]))
+				return
+			}
+
+			// /api/v1/users/{id}/overview
+			if len(parts) == 5 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "users" &&
+				parts[4] == "overview" {
+				usersHandler.UserOverview(w, r)
 				return
 			}
 

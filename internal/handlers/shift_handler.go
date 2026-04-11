@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"back/internal/ent"
+	"back/internal/middleware"
 	"back/internal/services"
 )
 
@@ -208,6 +209,19 @@ func (h *ShiftHandler) Calendar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 0. Extraer userID del JWT en context
+	claims, ok := middleware.GetClaims(r)
+	if !ok || claims.Subject == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil || userID <= 0 {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	// 1. Obtener parámetros de la URL
 	startQuery := r.URL.Query().Get("start")
 	endQuery := r.URL.Query().Get("end")
@@ -230,8 +244,8 @@ func (h *ShiftHandler) Calendar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Llamar al servicio (Asegúrate de haber creado GetCalendar en el service)
-	instances, err := h.Svc.GetCalendar(r.Context(), startTime, endTime)
+	// 3. Llamar al servicio con userID
+	instances, err := h.Svc.GetCalendar(r.Context(), userID, startTime, endTime)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return

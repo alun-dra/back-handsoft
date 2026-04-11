@@ -90,6 +90,15 @@ definitions:
       name:
         type: string
     type: object
+  handlers.BranchOverviewDTO:
+    properties:
+      id:
+        example: 10
+        type: integer
+      name:
+        example: Bodega Central
+        type: string
+    type: object
   handlers.CityResponse:
     properties:
       id:
@@ -346,6 +355,27 @@ definitions:
         example: 1
         type: integer
     type: object
+  handlers.ShiftOverviewDTO:
+    properties:
+      end_date:
+        example: "2026-04-30"
+        type: string
+      end_time:
+        example: "17:00"
+        type: string
+      shift_id:
+        example: 3
+        type: integer
+      shift_name:
+        example: Turno Mañana
+        type: string
+      start_date:
+        example: "2026-04-01"
+        type: string
+      start_time:
+        example: "08:00"
+        type: string
+    type: object
   handlers.TokenResponse:
     properties:
       access_token:
@@ -418,6 +448,30 @@ definitions:
       user_id:
         example: 10
         type: integer
+    type: object
+  handlers.UserOverviewDTO:
+    properties:
+      branches:
+        items:
+          $ref: '#/definitions/handlers.BranchOverviewDTO'
+        type: array
+      current_shift:
+        $ref: '#/definitions/handlers.ShiftOverviewDTO'
+      email:
+        example: juan@empresa.cl
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Juan Perez
+        type: string
+      role:
+        example: user
+        type: string
     type: object
   handlers.UserShiftAssignmentDTO:
     properties:
@@ -573,9 +627,18 @@ definitions:
       name:
         example: Turno mañana
         type: string
+      schedule_type:
+        type: string
+      start_date:
+        description: Recibimos string "2026-04-10"
+        type: string
       start_time:
         example: "08:00"
         type: string
+      work_days:
+        items:
+          $ref: '#/definitions/services.WorkDayInput'
+        type: array
     type: object
   handlers.createUserRequest:
     properties:
@@ -799,6 +862,15 @@ definitions:
       street:
         example: Av. Siempre Viva
         type: string
+    type: object
+  services.WorkDayInput:
+    properties:
+      is_working_day:
+        type: boolean
+      mode:
+        type: string
+      weekday:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -1731,6 +1803,33 @@ paths:
       summary: Accesos por sucursal
       tags:
       - Access Points
+  /api/v1/calendar:
+    get:
+      description: Obtiene las instancias de turnos generadas entre dos fechas
+      parameters:
+      - description: Fecha inicio YYYY-MM-DD
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: Fecha fin YYYY-MM-DD
+        in: query
+        name: end
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Calendario de instancias
+      tags:
+      - Shifts
   /api/v1/cities/{id}/communes:
     get:
       parameters:
@@ -2691,6 +2790,40 @@ paths:
       summary: Overrides diarios del usuario
       tags:
       - User Day Overrides
+  /api/v1/users/{id}/overview:
+    get:
+      description: GET retorna información simplificada para tabla (nombre, email,
+        role, sucursales, turno actual)
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserOverviewDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Vista general del usuario
+      tags:
+      - Users
   /api/v1/users/{id}/shift-assignments:
     get:
       consumes:
@@ -2800,6 +2933,32 @@ paths:
       summary: Asignaciones de turno del usuario
       tags:
       - User Shift Assignments
+  /api/v1/users/overview:
+    get:
+      description: GET retorna todos los usuarios con información simplificada (nombre,
+        email, role, sucursales, turno actual)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.UserOverviewDTO'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Lista de usuarios - Vista general
+      tags:
+      - Users
 securityDefinitions:
   BearerAuth:
     in: header
