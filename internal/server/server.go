@@ -243,6 +243,16 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				return
 			}
 
+			// /api/v1/users/{id}/export
+			if len(parts) == 5 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "users" &&
+				parts[4] == "export" {
+				usersHandler.UserExcelExport(w, r, parseUserID(parts[3]))
+				return
+			}
+
 			// /api/v1/users/{id}
 			usersHandler.UserByID(w, r)
 		}),

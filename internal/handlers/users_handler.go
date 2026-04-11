@@ -89,6 +89,120 @@ type UserOverviewDTO struct {
 	CurrentShift *ShiftOverviewDTO  `json:"current_shift,omitempty"`
 }
 
+/* ========================
+   EXCEL EXPORT DTOs
+   ======================== */
+
+type AddressDTO struct {
+	ID         int     `json:"id"`
+	Street     string  `json:"street"`
+	Number     string  `json:"number"`
+	Apartment  *string `json:"apartment,omitempty"`
+	CommuneName string `json:"commune_name"`
+	CityName   string  `json:"city_name"`
+	RegionName string  `json:"region_name"`
+	CreatedAt  string  `json:"created_at"`
+	UpdatedAt  string  `json:"updated_at"`
+}
+
+type BranchDTO struct {
+	ID       int     `json:"id"`
+	Name     string  `json:"name"`
+	Code     *string `json:"code,omitempty"`
+	IsActive bool    `json:"is_active"`
+}
+
+type UserBranchExcelDTO struct {
+	ID           int        `json:"id"`
+	Branch       BranchDTO  `json:"branch"`
+	RoleInBranch *string    `json:"role_in_branch,omitempty"`
+	IsActive     bool       `json:"is_active"`
+}
+
+type UserAccessPointExcelDTO struct {
+	ID           int    `json:"id"`
+	AccessPointID int   `json:"access_point_id"`
+	AccessPointName string `json:"access_point_name"`
+	IsActive     bool    `json:"is_active"`
+	AssignedAt   string  `json:"assigned_at"`
+	RevokedAt    *string `json:"revoked_at,omitempty"`
+}
+
+type UserShiftAssignmentExcelDTO struct {
+	ID        int     `json:"id"`
+	ShiftID   int     `json:"shift_id"`
+	ShiftName string  `json:"shift_name"`
+	StartTime string  `json:"shift_start_time"`
+	EndTime   string  `json:"shift_end_time"`
+	StartDate string  `json:"start_date"`
+	EndDate   *string `json:"end_date,omitempty"`
+	IsActive  bool    `json:"is_active"`
+	CreatedAt string  `json:"created_at"`
+}
+
+type UserDayOverrideExcelDTO struct {
+	ID        int     `json:"id"`
+	Date      string  `json:"date"`
+	IsDayOff  bool    `json:"is_day_off"`
+	Mode      string  `json:"mode"`
+	ShiftID   *int    `json:"shift_id,omitempty"`
+	ShiftName *string `json:"shift_name,omitempty"`
+	Notes     *string `json:"notes,omitempty"`
+	CreatedAt string  `json:"created_at"`
+}
+
+type AttendanceDayDTO struct {
+	ID             int     `json:"id"`
+	WorkDate       string  `json:"work_date"`
+	WorkInAt       *string `json:"work_in_at,omitempty"`
+	BreakOutAt     *string `json:"break_out_at,omitempty"`
+	BreakInAt      *string `json:"break_in_at,omitempty"`
+	WorkOutAt      *string `json:"work_out_at,omitempty"`
+	BranchID       int     `json:"branch_id"`
+	AccessPointID  *int    `json:"access_point_id,omitempty"`
+	CreatedAt      string  `json:"created_at"`
+	UpdatedAt      string  `json:"updated_at"`
+}
+
+type RefreshTokenDTO struct {
+	ID        int     `json:"id"`
+	CreatedAt string  `json:"created_at"`
+	ExpiresAt string  `json:"expires_at"`
+	RevokedAt *string `json:"revoked_at,omitempty"`
+}
+
+type UserQRSessionDTO struct {
+	ID        int     `json:"id"`
+	IssuedAt  string  `json:"issued_at"`
+	ExpiresAt string  `json:"expires_at"`
+	IsRevoked bool    `json:"is_revoked"`
+	CreatedAt string  `json:"created_at"`
+}
+
+type UserExcelExportDTO struct {
+	ID                int                            `json:"id"`
+	Username          string                         `json:"username"`
+	FirstName         *string                        `json:"first_name,omitempty"`
+	LastName          *string                        `json:"last_name,omitempty"`
+	MiddleName        *string                        `json:"middle_name,omitempty"`
+	Email             *string                        `json:"email,omitempty"`
+	Role              string                         `json:"role"`
+	EmployeeCode      *string                        `json:"employee_code,omitempty"`
+	AccessCode        *string                        `json:"access_code,omitempty"`
+	IsActive          bool                           `json:"is_active"`
+	CreatedAt         string                         `json:"created_at"`
+	UpdatedAt         string                         `json:"updated_at"`
+
+	Addresses         []AddressDTO                   `json:"addresses,omitempty"`
+	UserBranches      []UserBranchExcelDTO           `json:"user_branches,omitempty"`
+	UserAccessPoints  []UserAccessPointExcelDTO      `json:"user_access_points,omitempty"`
+	ShiftAssignments  []UserShiftAssignmentExcelDTO  `json:"shift_assignments,omitempty"`
+	DayOverrides      []UserDayOverrideExcelDTO      `json:"day_overrides,omitempty"`
+	AttendanceDays    []AttendanceDayDTO             `json:"attendance_days,omitempty"`
+	RefreshTokens     []RefreshTokenDTO              `json:"refresh_tokens,omitempty"`
+	QRSessions        []UserQRSessionDTO             `json:"qr_sessions,omitempty"`
+}
+
 /* =========================
    ROUTES
    ========================= */
@@ -470,6 +584,263 @@ func mapUserOverviewDTO(u *ent.User) UserOverviewDTO {
 				}
 				break // Solo toma el primer turno activo
 			}
+		}
+	}
+
+	return dto
+}
+
+// UserExcelExport godoc
+// @Summary      Exportar usuario - Datos completos
+// @Description  GET retorna todos los datos del usuario incluyendo direcciones, sucursales, turnos, asistencia, etc. Para exportar a Excel
+// @Tags         Users
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path     int  true  "ID del usuario"
+// @Success      200   {object} UserExcelExportDTO
+// @Failure      401   {object} ErrorResponse
+// @Failure      404   {object} ErrorResponse
+// @Failure      500   {object} ErrorResponse
+// @Router       /api/v1/users/{id}/export [get]
+func (h *UsersHandler) UserExcelExport(w http.ResponseWriter, r *http.Request, userID int) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	u, err := h.Svc.GetUserFullData(r.Context(), userID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			http.Error(w, "Not Found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	resp := mapUserExcelExportDTO(u)
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func mapUserExcelExportDTO(u *ent.User) UserExcelExportDTO {
+	dto := UserExcelExportDTO{
+		ID:           u.ID,
+		Username:     u.Username,
+		FirstName:    u.FirstName,
+		LastName:     u.LastName,
+		MiddleName:   u.MiddleName,
+		Email:        u.Email,
+		Role:         u.Role,
+		EmployeeCode: u.EmployeeCode,
+		AccessCode:   u.AccessCode,
+		IsActive:     u.IsActive,
+		CreatedAt:    u.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:    u.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}
+
+	// Mapear Addresses
+	dto.Addresses = make([]AddressDTO, 0)
+	if len(u.Edges.Addresses) > 0 {
+		for _, addr := range u.Edges.Addresses {
+			communeName := ""
+			cityName := ""
+			regionName := ""
+
+			if addr.Edges.Commune != nil {
+				communeName = addr.Edges.Commune.Name
+				if addr.Edges.Commune.Edges.City != nil {
+					cityName = addr.Edges.Commune.Edges.City.Name
+					if addr.Edges.Commune.Edges.City.Edges.Region != nil {
+						regionName = addr.Edges.Commune.Edges.City.Edges.Region.Name
+					}
+				}
+			}
+
+			dto.Addresses = append(dto.Addresses, AddressDTO{
+				ID:         addr.ID,
+				Street:     addr.Street,
+				Number:     addr.Number,
+				Apartment:  addr.Apartment,
+				CommuneName: communeName,
+				CityName:   cityName,
+				RegionName: regionName,
+				CreatedAt:  addr.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+				UpdatedAt:  addr.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			})
+		}
+	}
+
+	// Mapear UserBranches
+	dto.UserBranches = make([]UserBranchExcelDTO, 0)
+	if len(u.Edges.UserBranches) > 0 {
+		for _, ub := range u.Edges.UserBranches {
+			branchDTO := BranchDTO{}
+			if ub.Edges.Branch != nil {
+				branchDTO = BranchDTO{
+					ID:       ub.Edges.Branch.ID,
+					Name:     ub.Edges.Branch.Name,
+					Code:     ub.Edges.Branch.Code,
+					IsActive: ub.Edges.Branch.IsActive,
+				}
+			}
+			dto.UserBranches = append(dto.UserBranches, UserBranchExcelDTO{
+				ID:          ub.ID,
+				Branch:      branchDTO,
+				RoleInBranch: ub.RoleInBranch,
+				IsActive:    ub.IsActive,
+			})
+		}
+	}
+
+	// Mapear UserAccessPoints
+	dto.UserAccessPoints = make([]UserAccessPointExcelDTO, 0)
+	if len(u.Edges.UserAccessPoints) > 0 {
+		for _, uap := range u.Edges.UserAccessPoints {
+			apName := ""
+			apID := 0
+			if uap.Edges.AccessPoint != nil {
+				apID = uap.Edges.AccessPoint.ID
+				apName = uap.Edges.AccessPoint.Name
+			}
+			var revokedAt *string
+			if uap.RevokedAt != nil {
+				t := uap.RevokedAt.Format("2006-01-02T15:04:05Z07:00")
+				revokedAt = &t
+			}
+			dto.UserAccessPoints = append(dto.UserAccessPoints, UserAccessPointExcelDTO{
+				ID:               uap.ID,
+				AccessPointID:    apID,
+				AccessPointName:  apName,
+				IsActive:         uap.IsActive,
+				AssignedAt:       uap.AssignedAt.Format("2006-01-02T15:04:05Z07:00"),
+				RevokedAt:        revokedAt,
+			})
+		}
+	}
+
+	// Mapear ShiftAssignments
+	dto.ShiftAssignments = make([]UserShiftAssignmentExcelDTO, 0)
+	if len(u.Edges.ShiftAssignments) > 0 {
+		for _, sa := range u.Edges.ShiftAssignments {
+			shiftID := 0
+			shiftName := ""
+			startTime := ""
+			endTime := ""
+			if sa.Edges.Shift != nil {
+				shiftID = sa.Edges.Shift.ID
+				shiftName = sa.Edges.Shift.Name
+				startTime = sa.Edges.Shift.StartTime
+				endTime = sa.Edges.Shift.EndTime
+			}
+			var endDate *string
+			if sa.EndDate != nil {
+				t := sa.EndDate.Format("2006-01-02")
+				endDate = &t
+			}
+			dto.ShiftAssignments = append(dto.ShiftAssignments, UserShiftAssignmentExcelDTO{
+				ID:        sa.ID,
+				ShiftID:   shiftID,
+				ShiftName: shiftName,
+				StartTime: startTime,
+				EndTime:   endTime,
+				StartDate: sa.StartDate.Format("2006-01-02"),
+				EndDate:   endDate,
+				IsActive:  sa.IsActive,
+				CreatedAt: sa.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			})
+		}
+	}
+
+	// Mapear DayOverrides
+	dto.DayOverrides = make([]UserDayOverrideExcelDTO, 0)
+	if len(u.Edges.DayOverrides) > 0 {
+		for _, dod := range u.Edges.DayOverrides {
+			var shiftID *int
+			var shiftName *string
+			if dod.Edges.Shift != nil {
+				shiftID = &dod.Edges.Shift.ID
+				shiftName = &dod.Edges.Shift.Name
+			}
+			dto.DayOverrides = append(dto.DayOverrides, UserDayOverrideExcelDTO{
+				ID:        dod.ID,
+				Date:      dod.Date.Format("2006-01-02"),
+				IsDayOff:  dod.IsDayOff,
+				Mode:      dod.Mode,
+				ShiftID:   shiftID,
+				ShiftName: shiftName,
+				Notes:     dod.Notes,
+				CreatedAt: dod.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			})
+		}
+	}
+
+	// Mapear AttendanceDays
+	dto.AttendanceDays = make([]AttendanceDayDTO, 0)
+	if len(u.Edges.AttendanceDays) > 0 {
+		for _, ad := range u.Edges.AttendanceDays {
+			var workInAt, breakOutAt, breakInAt, workOutAt *string
+			if ad.WorkInAt != nil {
+				t := ad.WorkInAt.Format("2006-01-02T15:04:05Z07:00")
+				workInAt = &t
+			}
+			if ad.BreakOutAt != nil {
+				t := ad.BreakOutAt.Format("2006-01-02T15:04:05Z07:00")
+				breakOutAt = &t
+			}
+			if ad.BreakInAt != nil {
+				t := ad.BreakInAt.Format("2006-01-02T15:04:05Z07:00")
+				breakInAt = &t
+			}
+			if ad.WorkOutAt != nil {
+				t := ad.WorkOutAt.Format("2006-01-02T15:04:05Z07:00")
+				workOutAt = &t
+			}
+			dto.AttendanceDays = append(dto.AttendanceDays, AttendanceDayDTO{
+				ID:            ad.ID,
+				WorkDate:      ad.WorkDate.Format("2006-01-02"),
+				WorkInAt:      workInAt,
+				BreakOutAt:    breakOutAt,
+				BreakInAt:     breakInAt,
+				WorkOutAt:     workOutAt,
+				BranchID:      ad.BranchID,
+				AccessPointID: ad.AccessPointID,
+				CreatedAt:     ad.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+				UpdatedAt:     ad.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			})
+		}
+	}
+
+	// Mapear RefreshTokens
+	dto.RefreshTokens = make([]RefreshTokenDTO, 0)
+	if len(u.Edges.RefreshTokens) > 0 {
+		for _, rt := range u.Edges.RefreshTokens {
+			var revokedAt *string
+			if rt.RevokedAt != nil {
+				t := rt.RevokedAt.Format("2006-01-02T15:04:05Z07:00")
+				revokedAt = &t
+			}
+			dto.RefreshTokens = append(dto.RefreshTokens, RefreshTokenDTO{
+				ID:        rt.ID,
+				CreatedAt: rt.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+				ExpiresAt: rt.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
+				RevokedAt: revokedAt,
+			})
+		}
+	}
+
+	// Mapear QRSessions
+	dto.QRSessions = make([]UserQRSessionDTO, 0)
+	if len(u.Edges.QrSessions) > 0 {
+		for _, qs := range u.Edges.QrSessions {
+			dto.QRSessions = append(dto.QRSessions, UserQRSessionDTO{
+				ID:        qs.ID,
+				IssuedAt:  qs.IssuedAt.Format("2006-01-02T15:04:05Z07:00"),
+				ExpiresAt: qs.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
+				IsRevoked: qs.IsRevoked,
+				CreatedAt: qs.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			})
 		}
 	}
 

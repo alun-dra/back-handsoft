@@ -2998,6 +2998,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/{id}/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GET retorna todos los datos del usuario incluyendo direcciones, sucursales, turnos, asistencia, etc. Para exportar a Excel",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Exportar usuario - Datos completos",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del usuario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserExcelExportDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/{id}/overview": {
             "get": {
                 "security": [
@@ -3261,6 +3313,38 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.AddressDTO": {
+            "type": "object",
+            "properties": {
+                "apartment": {
+                    "type": "string"
+                },
+                "city_name": {
+                    "type": "string"
+                },
+                "commune_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "region_name": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.AddressResponse": {
             "type": "object",
             "properties": {
@@ -3291,6 +3375,41 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.AttendanceDayDTO": {
+            "type": "object",
+            "properties": {
+                "access_point_id": {
+                    "type": "integer"
+                },
+                "branch_id": {
+                    "type": "integer"
+                },
+                "break_in_at": {
+                    "type": "string"
+                },
+                "break_out_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "work_date": {
+                    "type": "string"
+                },
+                "work_in_at": {
+                    "type": "string"
+                },
+                "work_out_at": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.BranchAddressDTO": {
             "type": "object",
             "properties": {
@@ -3307,6 +3426,23 @@ const docTemplate = `{
                 },
                 "region": {},
                 "street": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BranchDTO": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -3607,6 +3743,23 @@ const docTemplate = `{
         "handlers.NoContentResponse": {
             "type": "object"
         },
+        "handlers.RefreshTokenDTO": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "revoked_at": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.RegionResponse": {
             "type": "object",
             "properties": {
@@ -3791,6 +3944,46 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UserAccessPointExcelDTO": {
+            "type": "object",
+            "properties": {
+                "access_point_id": {
+                    "type": "integer"
+                },
+                "access_point_name": {
+                    "type": "string"
+                },
+                "assigned_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "revoked_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UserBranchExcelDTO": {
+            "type": "object",
+            "properties": {
+                "branch": {
+                    "$ref": "#/definitions/handlers.BranchDTO"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "role_in_branch": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UserDTO": {
             "type": "object",
             "properties": {
@@ -3861,6 +4054,124 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UserDayOverrideExcelDTO": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_day_off": {
+                    "type": "boolean"
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "shift_id": {
+                    "type": "integer"
+                },
+                "shift_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UserExcelExportDTO": {
+            "type": "object",
+            "properties": {
+                "access_code": {
+                    "type": "string"
+                },
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AddressDTO"
+                    }
+                },
+                "attendance_days": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AttendanceDayDTO"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "day_overrides": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.UserDayOverrideExcelDTO"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employee_code": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "middle_name": {
+                    "type": "string"
+                },
+                "qr_sessions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.UserQRSessionDTO"
+                    }
+                },
+                "refresh_tokens": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.RefreshTokenDTO"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                },
+                "shift_assignments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.UserShiftAssignmentExcelDTO"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_access_points": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.UserAccessPointExcelDTO"
+                    }
+                },
+                "user_branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.UserBranchExcelDTO"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UserOverviewDTO": {
             "type": "object",
             "properties": {
@@ -3895,6 +4206,26 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UserQRSessionDTO": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_revoked": {
+                    "type": "boolean"
+                },
+                "issued_at": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UserShiftAssignmentDTO": {
             "type": "object",
             "properties": {
@@ -3922,6 +4253,38 @@ const docTemplate = `{
                 "user_id": {
                     "type": "integer",
                     "example": 10
+                }
+            }
+        },
+        "handlers.UserShiftAssignmentExcelDTO": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "shift_end_time": {
+                    "type": "string"
+                },
+                "shift_id": {
+                    "type": "integer"
+                },
+                "shift_name": {
+                    "type": "string"
+                },
+                "shift_start_time": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
                 }
             }
         },

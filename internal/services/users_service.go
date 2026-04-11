@@ -396,3 +396,32 @@ func (s *UsersService) ListOverview(ctx context.Context) ([]*ent.User, error) {
 		Order(ent.Asc(user.FieldFirstName), ent.Asc(user.FieldLastName), ent.Asc(user.FieldUsername)).
 		All(ctx)
 }
+
+func (s *UsersService) GetUserFullData(ctx context.Context, userID int) (*ent.User, error) {
+	return s.Client.User.
+		Query().
+		Where(user.IDEQ(userID)).
+		WithAddresses(func(aq *ent.AddressQuery) {
+			aq.WithCommune(func(cq *ent.CommuneQuery) {
+				cq.WithCity(func(cityq *ent.CityQuery) {
+					cityq.WithRegion()
+				})
+			})
+		}).
+		WithUserBranches(func(ubq *ent.UserBranchQuery) {
+			ubq.WithBranch()
+		}).
+		WithUserAccessPoints(func(uapq *ent.UserAccessPointQuery) {
+			uapq.WithAccessPoint()
+		}).
+		WithAttendanceDays().
+		WithShiftAssignments(func(saq *ent.UserShiftAssignmentQuery) {
+			saq.WithShift()
+		}).
+		WithDayOverrides(func(doq *ent.UserDayOverrideQuery) {
+			doq.WithShift()
+		}).
+		WithRefreshTokens().
+		WithQrSessions().
+		Only(ctx)
+}

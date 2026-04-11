@@ -28,6 +28,27 @@ definitions:
       name:
         type: string
     type: object
+  handlers.AddressDTO:
+    properties:
+      apartment:
+        type: string
+      city_name:
+        type: string
+      commune_name:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      number:
+        type: string
+      region_name:
+        type: string
+      street:
+        type: string
+      updated_at:
+        type: string
+    type: object
   handlers.AddressResponse:
     properties:
       apartment:
@@ -50,6 +71,29 @@ definitions:
       updated_at:
         type: string
     type: object
+  handlers.AttendanceDayDTO:
+    properties:
+      access_point_id:
+        type: integer
+      branch_id:
+        type: integer
+      break_in_at:
+        type: string
+      break_out_at:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
+      work_date:
+        type: string
+      work_in_at:
+        type: string
+      work_out_at:
+        type: string
+    type: object
   handlers.BranchAddressDTO:
     properties:
       apartment:
@@ -62,6 +106,17 @@ definitions:
         type: string
       region: {}
       street:
+        type: string
+    type: object
+  handlers.BranchDTO:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
         type: string
     type: object
   handlers.BranchDetailDTO:
@@ -269,6 +324,17 @@ definitions:
     type: object
   handlers.NoContentResponse:
     type: object
+  handlers.RefreshTokenDTO:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: integer
+      revoked_at:
+        type: string
+    type: object
   handlers.RegionResponse:
     properties:
       code:
@@ -401,6 +467,32 @@ definitions:
         example: admin
         type: string
     type: object
+  handlers.UserAccessPointExcelDTO:
+    properties:
+      access_point_id:
+        type: integer
+      access_point_name:
+        type: string
+      assigned_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      revoked_at:
+        type: string
+    type: object
+  handlers.UserBranchExcelDTO:
+    properties:
+      branch:
+        $ref: '#/definitions/handlers.BranchDTO'
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      role_in_branch:
+        type: string
+    type: object
   handlers.UserDTO:
     properties:
       access_code:
@@ -449,6 +541,84 @@ definitions:
         example: 10
         type: integer
     type: object
+  handlers.UserDayOverrideExcelDTO:
+    properties:
+      created_at:
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      is_day_off:
+        type: boolean
+      mode:
+        type: string
+      notes:
+        type: string
+      shift_id:
+        type: integer
+      shift_name:
+        type: string
+    type: object
+  handlers.UserExcelExportDTO:
+    properties:
+      access_code:
+        type: string
+      addresses:
+        items:
+          $ref: '#/definitions/handlers.AddressDTO'
+        type: array
+      attendance_days:
+        items:
+          $ref: '#/definitions/handlers.AttendanceDayDTO'
+        type: array
+      created_at:
+        type: string
+      day_overrides:
+        items:
+          $ref: '#/definitions/handlers.UserDayOverrideExcelDTO'
+        type: array
+      email:
+        type: string
+      employee_code:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      qr_sessions:
+        items:
+          $ref: '#/definitions/handlers.UserQRSessionDTO'
+        type: array
+      refresh_tokens:
+        items:
+          $ref: '#/definitions/handlers.RefreshTokenDTO'
+        type: array
+      role:
+        type: string
+      shift_assignments:
+        items:
+          $ref: '#/definitions/handlers.UserShiftAssignmentExcelDTO'
+        type: array
+      updated_at:
+        type: string
+      user_access_points:
+        items:
+          $ref: '#/definitions/handlers.UserAccessPointExcelDTO'
+        type: array
+      user_branches:
+        items:
+          $ref: '#/definitions/handlers.UserBranchExcelDTO'
+        type: array
+      username:
+        type: string
+    type: object
   handlers.UserOverviewDTO:
     properties:
       branches:
@@ -473,6 +643,19 @@ definitions:
         example: user
         type: string
     type: object
+  handlers.UserQRSessionDTO:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: integer
+      is_revoked:
+        type: boolean
+      issued_at:
+        type: string
+    type: object
   handlers.UserShiftAssignmentDTO:
     properties:
       created_at:
@@ -493,6 +676,27 @@ definitions:
       user_id:
         example: 10
         type: integer
+    type: object
+  handlers.UserShiftAssignmentExcelDTO:
+    properties:
+      created_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      shift_end_time:
+        type: string
+      shift_id:
+        type: integer
+      shift_name:
+        type: string
+      shift_start_time:
+        type: string
+      start_date:
+        type: string
     type: object
   handlers.createAccessPointRequest:
     properties:
@@ -2790,6 +2994,40 @@ paths:
       summary: Overrides diarios del usuario
       tags:
       - User Day Overrides
+  /api/v1/users/{id}/export:
+    get:
+      description: GET retorna todos los datos del usuario incluyendo direcciones,
+        sucursales, turnos, asistencia, etc. Para exportar a Excel
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserExcelExportDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Exportar usuario - Datos completos
+      tags:
+      - Users
   /api/v1/users/{id}/overview:
     get:
       description: GET retorna información simplificada para tabla (nombre, email,
