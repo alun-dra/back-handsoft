@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -29,7 +30,10 @@ func (ShiftInstance) Edges() []ent.Edge {
 			Ref("instances").
 			Field("shift_id").
 			Unique().
-			Required(),
+			Required().
+			Annotations(entsql.Annotation{
+				OnDelete: entsql.Cascade,
+			}),
 	}
 }
 

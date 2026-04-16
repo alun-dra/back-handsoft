@@ -57,6 +57,7 @@ type PatchShiftInput struct {
 func (s *ShiftService) List(ctx context.Context) ([]*ent.Shift, error) {
 	return s.Client.Shift.
 		Query().
+		WithDays().
 		Order(ent.Asc(shift.FieldName)).
 		All(ctx)
 }
@@ -65,7 +66,11 @@ func (s *ShiftService) GetByID(ctx context.Context, shiftID int) (*ent.Shift, er
 	if shiftID <= 0 {
 		return nil, ErrShiftInvalidInput
 	}
-	return s.Client.Shift.Get(ctx, shiftID)
+	return s.Client.Shift.
+		Query().
+		Where(shift.ID(shiftID)).
+		WithDays().
+		Only(ctx)
 }
 
 func (s *ShiftService) Create(ctx context.Context, in CreateShiftInput) (*ent.Shift, error) {
@@ -113,6 +118,22 @@ func (s *ShiftService) Create(ctx context.Context, in CreateShiftInput) (*ent.Sh
 	if err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("error al crear turno: %w", err)
+	}
+
+	var daysBulk []*ent.ShiftDayCreate
+	for _, wd := range in.WorkDays {
+		daysBulk = append(daysBulk, tx.ShiftDay.Create().
+			SetShiftID(newShift.ID).
+			SetWeekday(wd.Weekday).
+			SetIsWorkingDay(wd.IsWorkingDay).
+			SetMode(wd.Mode))
+	}
+
+	if len(daysBulk) > 0 {
+		if err := tx.ShiftDay.CreateBulk(daysBulk...).Exec(ctx); err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("error guardando configuración de días: %w", err)
+		}
 	}
 
 	// 5. Generar Calendario (ShiftInstances)

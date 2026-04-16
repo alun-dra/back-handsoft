@@ -44,16 +44,23 @@ type patchShiftRequest struct {
 }
 
 type ShiftDTO struct {
-	ID              int       `json:"id" example:"1"`
-	Name            string    `json:"name" example:"Turno mañana"`
-	Description     *string   `json:"description,omitempty" example:"Lunes a viernes 08:00 a 17:00"`
-	StartTime       string    `json:"start_time" example:"08:00"`
-	EndTime         string    `json:"end_time" example:"17:00"`
-	BreakMinutes    int       `json:"break_minutes" example:"60"`
-	CrossesMidnight bool      `json:"crosses_midnight" example:"false"`
-	IsActive        bool      `json:"is_active" example:"true"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID              int          `json:"id" example:"1"`
+	Name            string       `json:"name" example:"Turno mañana"`
+	Description     *string      `json:"description,omitempty" example:"Lunes a viernes 08:00 a 17:00"`
+	StartTime       string       `json:"start_time" example:"08:00"`
+	EndTime         string       `json:"end_time" example:"17:00"`
+	BreakMinutes    int          `json:"break_minutes" example:"60"`
+	CrossesMidnight bool         `json:"crosses_midnight" example:"false"`
+	IsActive        bool         `json:"is_active" example:"true"`
+	CreatedAt       time.Time    `json:"created_at"`
+	UpdatedAt       time.Time    `json:"updated_at"`
+	WorkDays        []WorkDayDTO `json:"work_days,omitempty"`
+}
+
+type WorkDayDTO struct {
+	Weekday      int    `json:"weekday"`
+	IsWorkingDay bool   `json:"is_working_day"`
+	Mode         string `json:"mode"`
 }
 
 // Shifts godoc

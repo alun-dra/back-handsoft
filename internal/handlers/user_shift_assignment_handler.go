@@ -65,7 +65,7 @@ func (h *UserShiftAssignmentHandler) Assignments(w http.ResponseWriter, r *http.
 	case http.MethodPost:
 		var req createAssignmentRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
