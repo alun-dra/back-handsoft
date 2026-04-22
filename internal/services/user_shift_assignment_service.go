@@ -53,6 +53,21 @@ func (s *UserShiftAssignmentService) Create(ctx context.Context, userID int, in 
 		return nil, err
 	}
 
+	if _, err := s.Client.Shift.Query().Where(shift.IDEQ(in.ShiftID)).Only(ctx); err != nil {
+		return nil, err
+	}
+
+	_, err := s.Client.UserShiftAssignment.Update().Where(
+		usershiftassignment.UserID(userID),
+		usershiftassignment.IsActiveEQ(true),
+	).
+		SetIsActive(false).
+		Save(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
 	create := s.Client.UserShiftAssignment.Create().
 		SetUserID(userID).
 		SetShiftID(in.ShiftID).

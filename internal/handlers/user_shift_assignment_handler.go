@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"back/internal/ent"
 	"back/internal/services"
 )
 
@@ -59,8 +60,14 @@ func (h *UserShiftAssignmentHandler) Assignments(w http.ResponseWriter, r *http.
 			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
+
+		resp := make([]UserShiftAssignmentDTO, len(items))
+		for i, a := range items {
+			resp[i] = mapAssignment(a)
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(items)
+		_ = json.NewEncoder(w).Encode(resp)
 
 	case http.MethodPost:
 		var req createAssignmentRequest
@@ -102,5 +109,17 @@ func (h *UserShiftAssignmentHandler) Assignments(w http.ResponseWriter, r *http.
 
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func mapAssignment(a *ent.UserShiftAssignment) UserShiftAssignmentDTO {
+	return UserShiftAssignmentDTO{
+		ID:        a.ID,
+		UserID:    a.UserID,
+		ShiftID:   a.ShiftID,
+		StartDate: a.StartDate,
+		EndDate:   a.EndDate,
+		IsActive:  a.IsActive,
+		CreatedAt: a.CreatedAt,
 	}
 }
