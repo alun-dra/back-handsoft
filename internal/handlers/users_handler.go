@@ -11,11 +11,12 @@ import (
 )
 
 type UsersHandler struct {
-	Svc *services.UsersService
+	Svc   *services.UsersService
+	QRSvc *services.QRSessionService
 }
 
-func NewUsersHandler(svc *services.UsersService) *UsersHandler {
-	return &UsersHandler{Svc: svc}
+func NewUsersHandler(svc *services.UsersService, qrSvc *services.QRSessionService) *UsersHandler {
+	return &UsersHandler{Svc: svc, QRSvc: qrSvc}
 }
 
 /* =========================
@@ -52,17 +53,34 @@ type patchUserRequest struct {
    RESPONSES
    ========================= */
 
+type UsersAccessPointDTO struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	IsActive bool   `json:"is_active"`
+}
+
+type UsersBranchDTO struct {
+	ID           int              `json:"id"`
+	BranchID     int              `json:"branch_id"`
+	BranchName   string           `json:"branch_name"`
+	BranchCode   *string          `json:"branch_code,omitempty"`
+	IsActive     bool             `json:"is_active"`
+	RoleInBranch *string          `json:"role_in_branch,omitempty"`
+	AccessPoints []UsersAccessPointDTO `json:"access_points"`
+}
+
 type UserDTO struct {
-	ID           int     `json:"id"`
-	Username     string  `json:"username"`
-	Role         string  `json:"role"`
-	IsActive     bool    `json:"is_active"`
-	FirstName    *string `json:"first_name,omitempty"`
-	LastName     *string `json:"last_name,omitempty"`
-	MiddleName   *string `json:"middle_name,omitempty"`
-	Email        *string `json:"email,omitempty"`
-	EmployeeCode *string `json:"employee_code,omitempty"`
-	AccessCode   *string `json:"access_code,omitempty"`
+	ID           int             `json:"id"`
+	Username     string          `json:"username"`
+	Role         string          `json:"role"`
+	IsActive     bool            `json:"is_active"`
+	FirstName    *string         `json:"first_name,omitempty"`
+	LastName     *string         `json:"last_name,omitempty"`
+	MiddleName   *string         `json:"middle_name,omitempty"`
+	Email        *string         `json:"email,omitempty"`
+	EmployeeCode *string         `json:"employee_code,omitempty"`
+	AccessCode   *string         `json:"access_code,omitempty"`
+	Branches     []UsersBranchDTO `json:"branches"`
 }
 
 type BranchOverviewDTO struct {
@@ -526,6 +544,33 @@ func parseUserIDFromPath(path string) (int, bool) {
 }
 
 func mapUserDTO(u *ent.User) UserDTO {
+	branches := make([]UsersBranchDTO, 0, len(u.Edges.UserBranches))
+	for _, ub := range u.Edges.UserBranches {
+		var branchName string
+		var branchCode *string
+		aps := make([]UsersAccessPointDTO, 0)
+		if ub.Edges.Branch != nil {
+			branchName = ub.Edges.Branch.Name
+			branchCode = ub.Edges.Branch.Code
+			for _, ap := range ub.Edges.Branch.Edges.AccessPoints {
+				aps = append(aps, UsersAccessPointDTO{
+					ID:       ap.ID,
+					Name:     ap.Name,
+					IsActive: ap.IsActive,
+				})
+			}
+		}
+		branches = append(branches, UsersBranchDTO{
+			ID:           ub.ID,
+			BranchID:     ub.BranchID,
+			BranchName:   branchName,
+			BranchCode:   branchCode,
+			IsActive:     ub.IsActive,
+			RoleInBranch: ub.RoleInBranch,
+			AccessPoints: aps,
+		})
+	}
+
 	return UserDTO{
 		ID:           u.ID,
 		Username:     u.Username,
@@ -537,6 +582,7 @@ func mapUserDTO(u *ent.User) UserDTO {
 		Email:        u.Email,
 		EmployeeCode: u.EmployeeCode,
 		AccessCode:   u.AccessCode,
+		Branches:     branches,
 	}
 }
 
@@ -845,4 +891,49 @@ func mapUserExcelExportDTO(u *ent.User) UserExcelExportDTO {
 	}
 
 	return dto
+}
+
+/* =========================
+   QR SESSION
+   ========================= */
+
+// GenerateQRSession godoc
+// @Summary      Generar sesión QR
+// @Description  POST genera un token QR única válida por 15 horas. El usuario usa este token en la app mobile para marcar asistencia.
+// @Tags         QR
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path     int  true  "ID del usuario"
+// @Success      201   {object} services.QRResponse
+// @Failure      401   {object} ErrorResponse
+// @Failure      404   {object} ErrorResponse
+// @Failure      500   {object} ErrorResponse
+// @Router       /api/v1/users/{id}/qr-session [post]
+func (h *UsersHandler) GenerateQRSession(w http.ResponseWriter, r *http.Request, userID int) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Verificar que el usuario existe
+	u, err := h.Svc.GetByID(r.Context(), userID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			http.Error(w, "Not Found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Generar QR
+	qr, err := h.QRSvc.GenerateQRSession(r.Context(), u.ID)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(qr)
 }

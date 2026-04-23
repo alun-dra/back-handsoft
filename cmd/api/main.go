@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"os"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 
 	"back/internal/config"
 	"back/internal/database"
@@ -28,7 +30,6 @@ import (
 // @host localhost:8080
 // @BasePath /
 
-// 🔐 AUTH JWT
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
@@ -47,6 +48,16 @@ func main() {
 	cfg := config.Load()
 	log.Println("Config:", cfg.StringSafe())
 
+	db, err := sql.Open("postgres", cfg.DatabaseURL)
+	if err != nil {
+		log.Fatal("Error conectando a Postgres (sql.DB):", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(); err != nil {
+		log.Fatal("Error validando conexión sql.DB:", err)
+	}
+
 	client, err := database.NewEntClient(cfg.DatabaseURL)
 	if err != nil {
 		log.Fatal("Error conectando a Postgres (Ent):", err)
@@ -57,7 +68,7 @@ func main() {
 		log.Fatal("Error creando esquema (migración Ent):", err)
 	}
 
-	srv := server.New(cfg, client)
+	srv := server.New(cfg, client, db)
 
 	log.Println("Server escuchando en puerto:", cfg.Port)
 	log.Fatal(srv.ListenAndServe())

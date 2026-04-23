@@ -180,6 +180,11 @@ func (s *UsersService) Create(ctx context.Context, in CreateUserInput) (*ent.Use
 func (s *UsersService) List(ctx context.Context) ([]*ent.User, error) {
 	return s.Client.User.
 		Query().
+		WithUserBranches(func(ubq *ent.UserBranchQuery) {
+			ubq.WithBranch(func(bq *ent.BranchQuery) {
+				bq.WithAccessPoints()
+			})
+		}).
 		Order(ent.Asc(user.FieldFirstName), ent.Asc(user.FieldLastName), ent.Asc(user.FieldUsername)).
 		All(ctx)
 }
@@ -409,17 +414,29 @@ func (s *UsersService) GetUserFullData(ctx context.Context, userID int) (*ent.Us
 			})
 		}).
 		WithUserBranches(func(ubq *ent.UserBranchQuery) {
-			ubq.WithBranch()
+			ubq.WithBranch(func(bq *ent.BranchQuery) {
+				bq.WithAccessPoints()
+			})
 		}).
 		WithUserAccessPoints(func(uapq *ent.UserAccessPointQuery) {
-			uapq.WithAccessPoint()
+			uapq.WithAccessPoint(func(apq *ent.AccessPointQuery) {
+				apq.WithBranch()
+			})
 		}).
-		WithAttendanceDays().
+		WithAttendanceDays(func(adq *ent.AttendanceDayQuery) {
+			adq.WithBranch()
+			adq.WithAccessPoint()
+			adq.Order(ent.Desc("work_date"), ent.Desc("id"))
+		}).
 		WithShiftAssignments(func(saq *ent.UserShiftAssignmentQuery) {
-			saq.WithShift()
+			saq.WithShift(func(sq *ent.ShiftQuery) {
+				sq.WithDays()
+			})
 		}).
 		WithDayOverrides(func(doq *ent.UserDayOverrideQuery) {
-			doq.WithShift()
+			doq.WithShift(func(sq *ent.ShiftQuery) {
+				sq.WithDays()
+			})
 		}).
 		WithRefreshTokens().
 		WithQrSessions().

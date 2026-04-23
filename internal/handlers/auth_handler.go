@@ -8,7 +8,7 @@ import (
 
 	"back/internal/config"
 	"back/internal/ent"
-	"back/internal/ent/user"
+
 	"back/internal/middleware"
 	"back/internal/services"
 )
@@ -95,15 +95,74 @@ type MeAddress struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 
+type MeAccessPoint struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	IsActive bool   `json:"is_active"`
+}
+
+type MeBranch struct {
+	ID           int             `json:"id"`
+	Name         string          `json:"name"`
+	Code         *string         `json:"code,omitempty"`
+	IsActive     bool            `json:"is_active"`
+	RoleInBranch *string         `json:"role_in_branch,omitempty"`
+	AccessPoints []MeAccessPoint `json:"access_points"`
+}
+
+type MeCurrentShift struct {
+	ShiftID       int      `json:"shift_id"`
+	Name          string   `json:"name"`
+	Description   *string  `json:"description,omitempty"`
+	StartTime     string   `json:"start_time"`
+	EndTime       string   `json:"end_time"`
+	BreakMinutes  int      `json:"break_minutes"`
+	CrossesMidnight bool   `json:"crosses_midnight"`
+	WorkDays      []string `json:"work_days"`
+}
+
+type MeTodaySummary struct {
+	WorkDate      string     `json:"work_date"`
+	WorkInAt      *time.Time `json:"work_in_at,omitempty"`
+	BreakOutAt    *time.Time `json:"break_out_at,omitempty"`
+	BreakInAt     *time.Time `json:"break_in_at,omitempty"`
+	WorkOutAt     *time.Time `json:"work_out_at,omitempty"`
+	MarkingsCount int        `json:"markings_count"`
+	WorkedMinutes int        `json:"worked_minutes"`
+	WorkedHours   string     `json:"worked_hours"`
+}
+
+type MeAttendanceRecord struct {
+	ID              int        `json:"id"`
+	WorkDate        string     `json:"work_date"`
+	BranchID        int        `json:"branch_id"`
+	BranchName      string     `json:"branch_name,omitempty"`
+	AccessPointID   *int       `json:"access_point_id,omitempty"`
+	AccessPointName *string    `json:"access_point_name,omitempty"`
+	WorkInAt        *time.Time `json:"work_in_at,omitempty"`
+	BreakOutAt      *time.Time `json:"break_out_at,omitempty"`
+	BreakInAt       *time.Time `json:"break_in_at,omitempty"`
+	WorkOutAt       *time.Time `json:"work_out_at,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
+	MarkingsCount   int        `json:"markings_count"`
+	WorkedMinutes   int        `json:"worked_minutes"`
+	WorkedHours     string     `json:"worked_hours"`
+}
+
 type MeResponse struct {
-	ID        int         `json:"id" example:"1"`
-	Username  string      `json:"username" example:"admin"`
-	Role      string      `json:"role" example:"admin"`
-	IsActive  bool        `json:"is_active" example:"true"`
-	Issuer    string      `json:"issuer" example:"dominio-api-development"`
-	Audience  []string    `json:"audience" example:"web,ios,android"`
-	Expires   any         `json:"expires"` // jwt.NumericDate en runtime
-	Addresses []MeAddress `json:"addresses"`
+	ID               int                  `json:"id" example:"1"`
+	Username         string               `json:"username" example:"admin"`
+	Role             string               `json:"role" example:"admin"`
+	IsActive         bool                 `json:"is_active" example:"true"`
+	Issuer           string               `json:"issuer" example:"dominio-api-development"`
+	Audience         []string             `json:"audience" example:"web,ios,android"`
+	Expires          any                  `json:"expires"`
+	Addresses        []MeAddress          `json:"addresses"`
+	Branches         []MeBranch           `json:"branches"`
+	CurrentShift     *MeCurrentShift      `json:"current_shift,omitempty"`
+	TodaySummary     *MeTodaySummary      `json:"today_summary,omitempty"`
+	AttendanceHistory []MeAttendanceRecord `json:"attendance_history"`
 }
 
 type SessionsResponse struct {
@@ -311,69 +370,276 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := h.Users.Client.User.
-		Query().
-		Where(user.IDEQ(userID)).
-		WithAddresses(func(aq *ent.AddressQuery) {
-			aq.WithCommune(func(cq *ent.CommuneQuery) {
-				cq.WithCity(func(cyq *ent.CityQuery) {
-					cyq.WithRegion()
-				})
-			})
-		}).
-		Only(r.Context())
+	u, err := h.Users.GetUserFullData(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	addresses := make([]map[string]any, 0, len(u.Edges.Addresses))
+	addresses := make([]MeAddress, 0, len(u.Edges.Addresses))
 	for _, a := range u.Edges.Addresses {
-		var commune any = nil
-		var city any = nil
-		var region any = nil
+		var commune *MeCommune
+		var city *MeCity
+		var region *MeRegion
 
 		if a.Edges.Commune != nil {
 			c := a.Edges.Commune
-			commune = map[string]any{"id": c.ID, "name": c.Name}
+			commune = &MeCommune{ID: c.ID, Name: c.Name}
 
 			if c.Edges.City != nil {
 				cy := c.Edges.City
-				city = map[string]any{"id": cy.ID, "name": cy.Name}
+				city = &MeCity{ID: cy.ID, Name: cy.Name}
 
 				if cy.Edges.Region != nil {
 					rg := cy.Edges.Region
-					region = map[string]any{"id": rg.ID, "name": rg.Name, "code": rg.Code}
+					region = &MeRegion{ID: rg.ID, Name: rg.Name, Code: rg.Code}
 				}
 			}
 		}
 
-		addresses = append(addresses, map[string]any{
-			"id":         a.ID,
-			"street":     a.Street,
-			"number":     a.Number,
-			"apartment":  a.Apartment,
-			"commune":    commune,
-			"city":       city,
-			"region":     region,
-			"created_at": a.CreatedAt,
-			"updated_at": a.UpdatedAt,
+		addresses = append(addresses, MeAddress{
+			ID:        a.ID,
+			Street:    a.Street,
+			Number:    a.Number,
+			Apartment: a.Apartment,
+			Commune:   commune,
+			City:      city,
+			Region:    region,
+			CreatedAt: a.CreatedAt,
+			UpdatedAt: a.UpdatedAt,
 		})
 	}
 
+	branches := mapMeBranches(u)
+	currentShift := resolveMeCurrentShift(u, time.Now())
+	todaySummary := buildMeTodaySummary(u, time.Now())
+	history := buildMeAttendanceHistory(u)
+
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"id":        u.ID,
-		"username":  u.Username,
-		"role":      u.Role,
-		"is_active": u.IsActive,
-
-		"issuer":   claims.Issuer,
-		"audience": []string(claims.Audience),
-		"expires":  claims.ExpiresAt,
-
-		"addresses": addresses,
+	_ = json.NewEncoder(w).Encode(MeResponse{
+		ID:                u.ID,
+		Username:          u.Username,
+		Role:              u.Role,
+		IsActive:          u.IsActive,
+		Issuer:            claims.Issuer,
+		Audience:          []string(claims.Audience),
+		Expires:           claims.ExpiresAt,
+		Addresses:         addresses,
+		Branches:          branches,
+		CurrentShift:      currentShift,
+		TodaySummary:      todaySummary,
+		AttendanceHistory: history,
 	})
+}
+
+func mapMeBranches(u *ent.User) []MeBranch {
+	branches := make([]MeBranch, 0, len(u.Edges.UserBranches))
+	for _, ub := range u.Edges.UserBranches {
+		if ub.Edges.Branch == nil {
+			continue
+		}
+
+		accessPoints := make([]MeAccessPoint, 0, len(ub.Edges.Branch.Edges.AccessPoints))
+		for _, ap := range ub.Edges.Branch.Edges.AccessPoints {
+			accessPoints = append(accessPoints, MeAccessPoint{
+				ID:       ap.ID,
+				Name:     ap.Name,
+				IsActive: ap.IsActive,
+			})
+		}
+
+		branches = append(branches, MeBranch{
+			ID:           ub.Edges.Branch.ID,
+			Name:         ub.Edges.Branch.Name,
+			Code:         ub.Edges.Branch.Code,
+			IsActive:     ub.Edges.Branch.IsActive,
+			RoleInBranch: ub.RoleInBranch,
+			AccessPoints: accessPoints,
+		})
+	}
+	return branches
+}
+
+func resolveMeCurrentShift(u *ent.User, now time.Time) *MeCurrentShift {
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	for _, override := range u.Edges.DayOverrides {
+		if sameDate(override.Date, today) {
+			if override.IsDayOff || override.Edges.Shift == nil {
+				return nil
+			}
+			return mapMeCurrentShift(override.Edges.Shift)
+		}
+	}
+
+	for _, assignment := range u.Edges.ShiftAssignments {
+		if !assignment.IsActive || assignment.Edges.Shift == nil {
+			continue
+		}
+		if assignment.StartDate.After(today) {
+			continue
+		}
+		if assignment.EndDate != nil && assignment.EndDate.Before(today) {
+			continue
+		}
+		return mapMeCurrentShift(assignment.Edges.Shift)
+	}
+
+	return nil
+}
+
+func mapMeCurrentShift(shift *ent.Shift) *MeCurrentShift {
+	if shift == nil {
+		return nil
+	}
+
+	workDays := make([]string, 0, len(shift.Edges.Days))
+	for _, day := range shift.Edges.Days {
+		if day.IsWorkingDay {
+			workDays = append(workDays, weekdayName(day.Weekday))
+		}
+	}
+
+	return &MeCurrentShift{
+		ShiftID:          shift.ID,
+		Name:             shift.Name,
+		Description:      shift.Description,
+		StartTime:        shift.StartTime,
+		EndTime:          shift.EndTime,
+		BreakMinutes:     shift.BreakMinutes,
+		CrossesMidnight:  shift.CrossesMidnight,
+		WorkDays:         workDays,
+	}
+}
+
+func buildMeTodaySummary(u *ent.User, now time.Time) *MeTodaySummary {
+	for _, ad := range u.Edges.AttendanceDays {
+		if sameDate(ad.WorkDate, now) {
+			workedMinutes := attendanceWorkedMinutes(ad)
+			return &MeTodaySummary{
+				WorkDate:      ad.WorkDate.Format("2006-01-02"),
+				WorkInAt:      ad.WorkInAt,
+				BreakOutAt:    ad.BreakOutAt,
+				BreakInAt:     ad.BreakInAt,
+				WorkOutAt:     ad.WorkOutAt,
+				MarkingsCount: attendanceMarkingsCount(ad),
+				WorkedMinutes: workedMinutes,
+				WorkedHours:   formatWorkedHours(workedMinutes),
+			}
+		}
+	}
+
+	return &MeTodaySummary{WorkDate: now.Format("2006-01-02")}
+}
+
+func buildMeAttendanceHistory(u *ent.User) []MeAttendanceRecord {
+	history := make([]MeAttendanceRecord, 0, len(u.Edges.AttendanceDays))
+	for _, ad := range u.Edges.AttendanceDays {
+		workedMinutes := attendanceWorkedMinutes(ad)
+		record := MeAttendanceRecord{
+			ID:            ad.ID,
+			WorkDate:      ad.WorkDate.Format("2006-01-02"),
+			BranchID:      ad.BranchID,
+			WorkInAt:      ad.WorkInAt,
+			BreakOutAt:    ad.BreakOutAt,
+			BreakInAt:     ad.BreakInAt,
+			WorkOutAt:     ad.WorkOutAt,
+			CreatedAt:     ad.CreatedAt,
+			UpdatedAt:     ad.UpdatedAt,
+			MarkingsCount: attendanceMarkingsCount(ad),
+			WorkedMinutes: workedMinutes,
+			WorkedHours:   formatWorkedHours(workedMinutes),
+		}
+
+		if ad.Edges.Branch != nil {
+			record.BranchName = ad.Edges.Branch.Name
+		}
+		if ad.AccessPointID != nil {
+			record.AccessPointID = ad.AccessPointID
+		}
+		if ad.Edges.AccessPoint != nil {
+			name := ad.Edges.AccessPoint.Name
+			record.AccessPointName = &name
+		}
+
+		history = append(history, record)
+	}
+	return history
+}
+
+func attendanceMarkingsCount(ad *ent.AttendanceDay) int {
+	count := 0
+	if ad.WorkInAt != nil {
+		count++
+	}
+	if ad.BreakOutAt != nil {
+		count++
+	}
+	if ad.BreakInAt != nil {
+		count++
+	}
+	if ad.WorkOutAt != nil {
+		count++
+	}
+	return count
+}
+
+func attendanceWorkedMinutes(ad *ent.AttendanceDay) int {
+	if ad.WorkInAt == nil {
+		return 0
+	}
+
+	end := time.Now()
+	if ad.WorkOutAt != nil {
+		end = *ad.WorkOutAt
+	}
+
+	worked := int(end.Sub(*ad.WorkInAt).Minutes())
+	if ad.BreakOutAt != nil && ad.BreakInAt != nil {
+		worked -= int(ad.BreakInAt.Sub(*ad.BreakOutAt).Minutes())
+	}
+	if worked < 0 {
+		return 0
+	}
+	return worked
+}
+
+func formatWorkedHours(minutes int) string {
+	return strconv.Itoa(minutes/60) + ":" + twoDigitsAuth(minutes%60)
+}
+
+func sameDate(a, b time.Time) bool {
+	ay, am, ad := a.Date()
+	by, bm, bd := b.Date()
+	return ay == by && am == bm && ad == bd
+}
+
+func weekdayName(n int) string {
+	switch n {
+	case 1:
+		return "Lunes"
+	case 2:
+		return "Martes"
+	case 3:
+		return "Miercoles"
+	case 4:
+		return "Jueves"
+	case 5:
+		return "Viernes"
+	case 6:
+		return "Sabado"
+	case 7:
+		return "Domingo"
+	default:
+		return ""
+	}
+}
+
+func twoDigitsAuth(n int) string {
+	if n < 10 {
+		return "0" + strconv.Itoa(n)
+	}
+	return strconv.Itoa(n)
 }
 
 /* =========================

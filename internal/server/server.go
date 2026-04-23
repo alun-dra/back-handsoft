@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"net/http"
 	"strings"
 
@@ -16,7 +17,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-func New(cfg *config.Config, client *ent.Client) *http.Server {
+func New(cfg *config.Config, client *ent.Client, db *sql.DB) *http.Server {
 	mux := http.NewServeMux()
 
 	// =========================
@@ -48,12 +49,15 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 
 	shiftService := services.NewShiftService(client)
 	shiftDayService := services.NewShiftDayService(client)
+	qrSessionService := services.NewQRSessionService(client)
+	attendanceService := services.NewAttendanceService(client, qrSessionService)
+	dashboardService := services.NewDashboardService(client, db)
 
 	// =========================
 	// Handlers
 	// =========================
 	authHandler := handlers.NewAuthHandler(cfg, usersService, tokenService)
-	usersHandler := handlers.NewUsersHandler(usersService)
+	usersHandler := handlers.NewUsersHandler(usersService, qrSessionService)
 	userBranchHandler := handlers.NewUserBranchHandler(userBranchService)
 	userAccessPointHandler := handlers.NewUserAccessPointHandler(userAccessPointService)
 	userShiftAssignmentHandler := handlers.NewUserShiftAssignmentHandler(userShiftAssignmentService)
@@ -66,6 +70,8 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	branchHandler := handlers.NewBranchHandler(branchService)
 	accessPointHandler := handlers.NewAccessPointHandler(accessPointService)
 	deviceHandler := handlers.NewDeviceHandler(deviceService)
+	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
+	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 
 	shiftHandler := handlers.NewShiftHandler(shiftService)
 	shiftDayHandler := handlers.NewShiftDayHandler(shiftDayService)
@@ -78,11 +84,9 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// =========================
 	// Swagger UI (LOGIN PROPIO)
 	// =========================
-	// Login visual para Swagger
 	mux.HandleFunc("/swagger-login", swaggerLoginHandler.Handle)
 	mux.HandleFunc("/swagger-logout", swaggerLoginHandler.Logout)
 
-	// Protege toda la UI de Swagger y sus assets
 	protectedDocs := middleware.Chain(
 		httpSwagger.WrapHandler,
 		middleware.RequireSwaggerSession,
@@ -108,6 +112,11 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// Public routes (DEVICE AUTH)
 	// =========================
 	mux.HandleFunc("/api/v1/device-auth/login", deviceAuthHandler.Login)
+
+	// =========================
+	// Public routes (ATTENDANCE)
+	// =========================
+	mux.HandleFunc("/api/v1/attendance/validate-qr", attendanceHandler.ValidateQR)
 
 	// =========================
 	// Public routes (CATÁLOGO)
@@ -153,21 +162,12 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	)
 	mux.Handle("/api/v1/users", protectedUsers)
 
-	// Vista general de todos los usuarios (nombre, email, role, branches, shift)
 	protectedUsersOverview := middleware.Chain(
 		http.HandlerFunc(usersHandler.UsersOverview),
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/users/overview", protectedUsersOverview)
 
-	// Un solo prefijo para:
-	// - /api/v1/users/{id}
-	// - /api/v1/users/{id}/branches
-	// - /api/v1/users/{id}/branches/{branch_id}
-	// - /api/v1/users/{id}/access-points
-	// - /api/v1/users/{id}/access-points/{access_point_id}
-	// - /api/v1/users/{id}/shift-assignments
-	// - /api/v1/users/{id}/day-overrides
 	protectedUserSubroutes := middleware.Chain(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			path := strings.Trim(r.URL.Path, "/")
@@ -179,6 +179,10 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "users" &&
 				parts[4] == "branches" {
+				if parseID(parts[3]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
 				userBranchHandler.UserBranches(w, r)
 				return
 			}
@@ -189,6 +193,10 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "users" &&
 				parts[4] == "branches" {
+				if parseID(parts[3]) <= 0 || parseID(parts[5]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
 				userBranchHandler.UserBranchByID(w, r)
 				return
 			}
@@ -199,6 +207,10 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "users" &&
 				parts[4] == "access-points" {
+				if parseID(parts[3]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
 				userAccessPointHandler.UserAccessPoints(w, r)
 				return
 			}
@@ -209,6 +221,10 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "users" &&
 				parts[4] == "access-points" {
+				if parseID(parts[3]) <= 0 || parseID(parts[5]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
 				userAccessPointHandler.UserAccessPointByID(w, r)
 				return
 			}
@@ -219,7 +235,12 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "users" &&
 				parts[4] == "shift-assignments" {
-				userShiftAssignmentHandler.Assignments(w, r, parseUserID(parts[3]))
+				userID := parseID(parts[3])
+				if userID <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				userShiftAssignmentHandler.Assignments(w, r, userID)
 				return
 			}
 
@@ -229,7 +250,12 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "users" &&
 				parts[4] == "day-overrides" {
-				userDayOverrideHandler.Overrides(w, r, parseUserID(parts[3]))
+				userID := parseID(parts[3])
+				if userID <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				userDayOverrideHandler.Overrides(w, r, userID)
 				return
 			}
 
@@ -239,6 +265,10 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "users" &&
 				parts[4] == "overview" {
+				if parseID(parts[3]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
 				usersHandler.UserOverview(w, r)
 				return
 			}
@@ -249,12 +279,44 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "users" &&
 				parts[4] == "export" {
-				usersHandler.UserExcelExport(w, r, parseUserID(parts[3]))
+				userID := parseID(parts[3])
+				if userID <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				usersHandler.UserExcelExport(w, r, userID)
+				return
+			}
+
+			// /api/v1/users/{id}/qr-session
+			if len(parts) == 5 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "users" &&
+				parts[4] == "qr-session" {
+				userID := parseID(parts[3])
+				if userID <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				usersHandler.GenerateQRSession(w, r, userID)
 				return
 			}
 
 			// /api/v1/users/{id}
-			usersHandler.UserByID(w, r)
+			if len(parts) == 4 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "users" {
+				if parseID(parts[3]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				usersHandler.UserByID(w, r)
+				return
+			}
+
+			http.NotFound(w, r)
 		}),
 		middleware.JWT(cfg),
 	)
@@ -276,9 +338,6 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	mux.Handle("/api/v1/calendar", protectedCalendar)
 	mux.Handle("/api/v1/calendar/", protectedCalendar)
 
-	// Un solo prefijo para:
-	// - /api/v1/shifts/{id}
-	// - /api/v1/shifts/{id}/days
 	protectedShiftSubroutes := middleware.Chain(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			path := strings.Trim(r.URL.Path, "/")
@@ -290,7 +349,7 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "shifts" &&
 				parts[4] == "days" {
-				shiftID := parseUserID(parts[3])
+				shiftID := parseID(parts[3])
 				if shiftID <= 0 {
 					http.Error(w, "Not Found", http.StatusNotFound)
 					return
@@ -300,7 +359,19 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 			}
 
 			// /api/v1/shifts/{id}
-			shiftHandler.ShiftByID(w, r)
+			if len(parts) == 4 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "shifts" {
+				if parseID(parts[3]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				shiftHandler.ShiftByID(w, r)
+				return
+			}
+
+			http.NotFound(w, r)
 		}),
 		middleware.JWT(cfg),
 	)
@@ -330,9 +401,6 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	)
 	mux.Handle("/api/v1/branches", protectedBranches)
 
-	// Un solo prefijo para:
-	// - /api/v1/branches/{id}
-	// - /api/v1/branches/{id}/access-points
 	protectedBranchSubroutes := middleware.Chain(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			path := strings.Trim(r.URL.Path, "/")
@@ -344,12 +412,28 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "branches" &&
 				parts[4] == "access-points" {
+				if parseID(parts[3]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
 				accessPointHandler.BranchAccessPoints(w, r)
 				return
 			}
 
 			// /api/v1/branches/{id}
-			branchHandler.BranchByID(w, r)
+			if len(parts) == 4 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "branches" {
+				if parseID(parts[3]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				branchHandler.BranchByID(w, r)
+				return
+			}
+
+			http.NotFound(w, r)
 		}),
 		middleware.JWT(cfg),
 	)
@@ -358,9 +442,6 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	// =========================
 	// Protected routes (ACCESS POINTS + DEVICES by Access Point)
 	// =========================
-	// Un solo prefijo para:
-	// - /api/v1/access-points/{id}
-	// - /api/v1/access-points/{id}/devices
 	protectedAccessPointSubroutes := middleware.Chain(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			path := strings.Trim(r.URL.Path, "/")
@@ -372,12 +453,28 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 				parts[1] == "v1" &&
 				parts[2] == "access-points" &&
 				parts[4] == "devices" {
+				if parseID(parts[3]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
 				deviceHandler.AccessPointDevices(w, r)
 				return
 			}
 
 			// /api/v1/access-points/{id}
-			accessPointHandler.AccessPointByID(w, r)
+			if len(parts) == 4 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "access-points" {
+				if parseID(parts[3]) <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				accessPointHandler.AccessPointByID(w, r)
+				return
+			}
+
+			http.NotFound(w, r)
 		}),
 		middleware.JWT(cfg),
 	)
@@ -391,6 +488,27 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/devices/", protectedDeviceByID)
+
+	// =========================
+	// Protected routes (DASHBOARD)
+	// =========================
+	protectedDashboardStats := middleware.Chain(
+		http.HandlerFunc(dashboardHandler.Stats),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/dashboard/stats", protectedDashboardStats)
+
+	protectedDashboardLive := middleware.Chain(
+		http.HandlerFunc(dashboardHandler.Live),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/dashboard/live", protectedDashboardLive)
+
+	protectedDashboardPunctuality := middleware.Chain(
+		http.HandlerFunc(dashboardHandler.Punctuality),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/dashboard/punctuality", protectedDashboardPunctuality)
 
 	// =========================
 	// Global middlewares
@@ -410,7 +528,7 @@ func New(cfg *config.Config, client *ent.Client) *http.Server {
 	}
 }
 
-func parseUserID(s string) int {
+func parseID(s string) int {
 	n := 0
 	for _, ch := range s {
 		if ch < '0' || ch > '9' {
