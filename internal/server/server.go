@@ -273,6 +273,21 @@ func New(cfg *config.Config, client *ent.Client, db *sql.DB) *http.Server {
 				return
 			}
 
+			// /api/v1/users/{id}/access-code
+			if len(parts) == 5 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "users" &&
+				parts[4] == "access-code" {
+				userID := parseID(parts[3])
+				if userID <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				usersHandler.UserAccessCode(w, r, userID)
+				return
+			}
+
 			// /api/v1/users/{id}/export
 			if len(parts) == 5 &&
 				parts[0] == "api" &&

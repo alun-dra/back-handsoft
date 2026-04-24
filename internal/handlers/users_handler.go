@@ -221,6 +221,11 @@ type UserExcelExportDTO struct {
 	QRSessions        []UserQRSessionDTO             `json:"qr_sessions,omitempty"`
 }
 
+type UserAccessCodeResponse struct {
+	UserID     int     `json:"user_id"`
+	AccessCode *string `json:"access_code,omitempty"`
+}
+
 /* =========================
    ROUTES
    ========================= */
@@ -445,6 +450,29 @@ func (h *UsersHandler) getByID(w http.ResponseWriter, r *http.Request, userID in
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func (h *UsersHandler) UserAccessCode(w http.ResponseWriter, r *http.Request, userID int) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	u, err := h.Svc.GetByID(r.Context(), userID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			http.Error(w, "Not Found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(UserAccessCodeResponse{
+		UserID:     u.ID,
+		AccessCode: u.AccessCode,
+	})
 }
 
 func (h *UsersHandler) patch(w http.ResponseWriter, r *http.Request, userID int) {

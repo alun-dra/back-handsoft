@@ -3,10 +3,19 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 
 	"back/internal/ent"
+	"back/internal/ent/address"
+	"back/internal/ent/refreshtoken"
 	"back/internal/ent/user"
+	"back/internal/ent/useraccesspoint"
+	"back/internal/ent/userbranch"
+	"back/internal/ent/userdayoverride"
+	"back/internal/ent/userqrsession"
+	"back/internal/ent/usershiftassignment"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -353,7 +362,61 @@ func (s *UsersService) Delete(ctx context.Context, userID int) error {
 	if userID <= 0 {
 		return ErrInvalidInput
 	}
-	return s.Client.User.DeleteOneID(userID).Exec(ctx)
+
+	tx, err := s.Client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Remove only user-owned/dependent records. This does NOT delete branches or shifts.
+	if _, err := tx.RefreshToken.Delete().Where(refreshtoken.HasUserWith(user.IDEQ(userID))).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if _, err := tx.UserQRSession.Delete().Where(userqrsession.UserIDEQ(userID)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if _, err := tx.Address.Delete().Where(address.HasUserWith(user.IDEQ(userID))).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if _, err := tx.UserAccessPoint.Delete().Where(useraccesspoint.UserIDEQ(userID)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if _, err := tx.UserBranch.Delete().Where(userbranch.UserIDEQ(userID)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if _, err := tx.UserShiftAssignment.Delete().Where(usershiftassignment.UserIDEQ(userID)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if _, err := tx.UserDayOverride.Delete().Where(userdayoverride.UserIDEQ(userID)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	// Preserve attendance_days for audit: anonymize and deactivate the user instead of hard delete.
+	deletedUsername := fmt.Sprintf("deleted_user_%d_%d", userID, time.Now().UnixNano())
+	if _, err := tx.User.UpdateOneID(userID).
+		SetUsername(deletedUsername).
+		SetPasswordHash("deleted").
+		SetRole("user").
+		SetIsActive(false).
+		ClearFirstName().
+		ClearLastName().
+		ClearMiddleName().
+		ClearEmail().
+		ClearEmployeeCode().
+		ClearAccessCode().
+		Save(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (s *UsersService) VerifyLogin(ctx context.Context, username, password string) (*ent.User, error) {
