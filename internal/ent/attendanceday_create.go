@@ -111,6 +111,48 @@ func (_c *AttendanceDayCreate) SetNillableWorkOutAt(v *time.Time) *AttendanceDay
 	return _c
 }
 
+// SetLateMinutes sets the "late_minutes" field.
+func (_c *AttendanceDayCreate) SetLateMinutes(v int) *AttendanceDayCreate {
+	_c.mutation.SetLateMinutes(v)
+	return _c
+}
+
+// SetNillableLateMinutes sets the "late_minutes" field if the given value is not nil.
+func (_c *AttendanceDayCreate) SetNillableLateMinutes(v *int) *AttendanceDayCreate {
+	if v != nil {
+		_c.SetLateMinutes(*v)
+	}
+	return _c
+}
+
+// SetOvertimeMinutes sets the "overtime_minutes" field.
+func (_c *AttendanceDayCreate) SetOvertimeMinutes(v int) *AttendanceDayCreate {
+	_c.mutation.SetOvertimeMinutes(v)
+	return _c
+}
+
+// SetNillableOvertimeMinutes sets the "overtime_minutes" field if the given value is not nil.
+func (_c *AttendanceDayCreate) SetNillableOvertimeMinutes(v *int) *AttendanceDayCreate {
+	if v != nil {
+		_c.SetOvertimeMinutes(*v)
+	}
+	return _c
+}
+
+// SetEarlyExitMinutes sets the "early_exit_minutes" field.
+func (_c *AttendanceDayCreate) SetEarlyExitMinutes(v int) *AttendanceDayCreate {
+	_c.mutation.SetEarlyExitMinutes(v)
+	return _c
+}
+
+// SetNillableEarlyExitMinutes sets the "early_exit_minutes" field if the given value is not nil.
+func (_c *AttendanceDayCreate) SetNillableEarlyExitMinutes(v *int) *AttendanceDayCreate {
+	if v != nil {
+		_c.SetEarlyExitMinutes(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *AttendanceDayCreate) SetCreatedAt(v time.Time) *AttendanceDayCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -267,6 +309,18 @@ func (_c *AttendanceDayCreate) createSpec() (*AttendanceDay, *sqlgraph.CreateSpe
 	if value, ok := _c.mutation.WorkOutAt(); ok {
 		_spec.SetField(attendanceday.FieldWorkOutAt, field.TypeTime, value)
 		_node.WorkOutAt = &value
+	}
+	if value, ok := _c.mutation.LateMinutes(); ok {
+		_spec.SetField(attendanceday.FieldLateMinutes, field.TypeInt, value)
+		_node.LateMinutes = &value
+	}
+	if value, ok := _c.mutation.OvertimeMinutes(); ok {
+		_spec.SetField(attendanceday.FieldOvertimeMinutes, field.TypeInt, value)
+		_node.OvertimeMinutes = &value
+	}
+	if value, ok := _c.mutation.EarlyExitMinutes(); ok {
+		_spec.SetField(attendanceday.FieldEarlyExitMinutes, field.TypeInt, value)
+		_node.EarlyExitMinutes = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(attendanceday.FieldCreatedAt, field.TypeTime, value)

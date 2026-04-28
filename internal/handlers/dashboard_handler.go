@@ -213,3 +213,73 @@ func (h *DashboardHandler) Punctuality(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *DashboardHandler) Export(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	rangeValue := r.URL.Query().Get("range")
+	if rangeValue == "" {
+		rangeValue = "today"
+	}
+
+	var branchID *int
+	branchStr := r.URL.Query().Get("branch_id")
+	if branchStr != "" && branchStr != "all" {
+		id, err := strconv.Atoi(branchStr)
+		if err != nil || id <= 0 {
+			http.Error(w, "branch_id invalido", http.StatusBadRequest)
+			return
+		}
+		branchID = &id
+	}
+
+	var startDate, endDate *time.Time
+	startStr := r.URL.Query().Get("start_date")
+	endStr := r.URL.Query().Get("end_date")
+	if startStr != "" && endStr != "" {
+		start, err := time.Parse("2006-01-02", startStr)
+		if err != nil {
+			http.Error(w, "start_date invalido (formato: YYYY-MM-DD)", http.StatusBadRequest)
+			return
+		}
+		end, err := time.Parse("2006-01-02", endStr)
+		if err != nil {
+			http.Error(w, "end_date invalido (formato: YYYY-MM-DD)", http.StatusBadRequest)
+			return
+		}
+		if end.Before(start) {
+			http.Error(w, "end_date debe ser posterior a start_date", http.StatusBadRequest)
+			return
+		}
+		startDate = &start
+		endDate = &end
+		rangeValue = "custom"
+	}
+
+	resp, err := h.Svc.GetExport(r.Context(), services.DashboardFilters{
+		BranchID:  branchID,
+		Range:     rangeValue,
+		StartDate: startDate,
+		EndDate:   endDate,
+	})
+	if err != nil {
+		if errors.Is(err, services.ErrInvalidDashboardRange) {
+			http.Error(w, "range invalido", http.StatusBadRequest)
+			return
+		}
+		log.Printf("[dashboard] error getting export: range=%s branch_id=%v start=%v end=%v err=%v",
+			rangeValue, branchID, startDate, endDate, err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("[dashboard] error encoding export response: %v", err)
+		http.Error(w, "error serializando respuesta", http.StatusInternalServerError)
+		return
+	}
+}

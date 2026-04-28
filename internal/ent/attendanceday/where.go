@@ -95,6 +95,21 @@ func WorkOutAt(v time.Time) predicate.AttendanceDay {
 	return predicate.AttendanceDay(sql.FieldEQ(FieldWorkOutAt, v))
 }
 
+// LateMinutes applies equality check predicate on the "late_minutes" field. It's identical to LateMinutesEQ.
+func LateMinutes(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldLateMinutes, v))
+}
+
+// OvertimeMinutes applies equality check predicate on the "overtime_minutes" field. It's identical to OvertimeMinutesEQ.
+func OvertimeMinutes(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldOvertimeMinutes, v))
+}
+
+// EarlyExitMinutes applies equality check predicate on the "early_exit_minutes" field. It's identical to EarlyExitMinutesEQ.
+func EarlyExitMinutes(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldEarlyExitMinutes, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.AttendanceDay {
 	return predicate.AttendanceDay(sql.FieldEQ(FieldCreatedAt, v))
@@ -413,6 +428,156 @@ func WorkOutAtIsNil() predicate.AttendanceDay {
 // WorkOutAtNotNil applies the NotNil predicate on the "work_out_at" field.
 func WorkOutAtNotNil() predicate.AttendanceDay {
 	return predicate.AttendanceDay(sql.FieldNotNull(FieldWorkOutAt))
+}
+
+// LateMinutesEQ applies the EQ predicate on the "late_minutes" field.
+func LateMinutesEQ(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldLateMinutes, v))
+}
+
+// LateMinutesNEQ applies the NEQ predicate on the "late_minutes" field.
+func LateMinutesNEQ(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNEQ(FieldLateMinutes, v))
+}
+
+// LateMinutesIn applies the In predicate on the "late_minutes" field.
+func LateMinutesIn(vs ...int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIn(FieldLateMinutes, vs...))
+}
+
+// LateMinutesNotIn applies the NotIn predicate on the "late_minutes" field.
+func LateMinutesNotIn(vs ...int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotIn(FieldLateMinutes, vs...))
+}
+
+// LateMinutesGT applies the GT predicate on the "late_minutes" field.
+func LateMinutesGT(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGT(FieldLateMinutes, v))
+}
+
+// LateMinutesGTE applies the GTE predicate on the "late_minutes" field.
+func LateMinutesGTE(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGTE(FieldLateMinutes, v))
+}
+
+// LateMinutesLT applies the LT predicate on the "late_minutes" field.
+func LateMinutesLT(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLT(FieldLateMinutes, v))
+}
+
+// LateMinutesLTE applies the LTE predicate on the "late_minutes" field.
+func LateMinutesLTE(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLTE(FieldLateMinutes, v))
+}
+
+// LateMinutesIsNil applies the IsNil predicate on the "late_minutes" field.
+func LateMinutesIsNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIsNull(FieldLateMinutes))
+}
+
+// LateMinutesNotNil applies the NotNil predicate on the "late_minutes" field.
+func LateMinutesNotNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotNull(FieldLateMinutes))
+}
+
+// OvertimeMinutesEQ applies the EQ predicate on the "overtime_minutes" field.
+func OvertimeMinutesEQ(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldOvertimeMinutes, v))
+}
+
+// OvertimeMinutesNEQ applies the NEQ predicate on the "overtime_minutes" field.
+func OvertimeMinutesNEQ(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNEQ(FieldOvertimeMinutes, v))
+}
+
+// OvertimeMinutesIn applies the In predicate on the "overtime_minutes" field.
+func OvertimeMinutesIn(vs ...int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIn(FieldOvertimeMinutes, vs...))
+}
+
+// OvertimeMinutesNotIn applies the NotIn predicate on the "overtime_minutes" field.
+func OvertimeMinutesNotIn(vs ...int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotIn(FieldOvertimeMinutes, vs...))
+}
+
+// OvertimeMinutesGT applies the GT predicate on the "overtime_minutes" field.
+func OvertimeMinutesGT(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGT(FieldOvertimeMinutes, v))
+}
+
+// OvertimeMinutesGTE applies the GTE predicate on the "overtime_minutes" field.
+func OvertimeMinutesGTE(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGTE(FieldOvertimeMinutes, v))
+}
+
+// OvertimeMinutesLT applies the LT predicate on the "overtime_minutes" field.
+func OvertimeMinutesLT(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLT(FieldOvertimeMinutes, v))
+}
+
+// OvertimeMinutesLTE applies the LTE predicate on the "overtime_minutes" field.
+func OvertimeMinutesLTE(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLTE(FieldOvertimeMinutes, v))
+}
+
+// OvertimeMinutesIsNil applies the IsNil predicate on the "overtime_minutes" field.
+func OvertimeMinutesIsNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIsNull(FieldOvertimeMinutes))
+}
+
+// OvertimeMinutesNotNil applies the NotNil predicate on the "overtime_minutes" field.
+func OvertimeMinutesNotNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotNull(FieldOvertimeMinutes))
+}
+
+// EarlyExitMinutesEQ applies the EQ predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesEQ(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldEarlyExitMinutes, v))
+}
+
+// EarlyExitMinutesNEQ applies the NEQ predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesNEQ(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNEQ(FieldEarlyExitMinutes, v))
+}
+
+// EarlyExitMinutesIn applies the In predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesIn(vs ...int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIn(FieldEarlyExitMinutes, vs...))
+}
+
+// EarlyExitMinutesNotIn applies the NotIn predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesNotIn(vs ...int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotIn(FieldEarlyExitMinutes, vs...))
+}
+
+// EarlyExitMinutesGT applies the GT predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesGT(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGT(FieldEarlyExitMinutes, v))
+}
+
+// EarlyExitMinutesGTE applies the GTE predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesGTE(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGTE(FieldEarlyExitMinutes, v))
+}
+
+// EarlyExitMinutesLT applies the LT predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesLT(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLT(FieldEarlyExitMinutes, v))
+}
+
+// EarlyExitMinutesLTE applies the LTE predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesLTE(v int) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLTE(FieldEarlyExitMinutes, v))
+}
+
+// EarlyExitMinutesIsNil applies the IsNil predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesIsNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIsNull(FieldEarlyExitMinutes))
+}
+
+// EarlyExitMinutesNotNil applies the NotNil predicate on the "early_exit_minutes" field.
+func EarlyExitMinutesNotNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotNull(FieldEarlyExitMinutes))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

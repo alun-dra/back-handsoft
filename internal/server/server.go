@@ -117,6 +117,7 @@ func New(cfg *config.Config, client *ent.Client, db *sql.DB) *http.Server {
 	// Public routes (ATTENDANCE)
 	// =========================
 	mux.HandleFunc("/api/v1/attendance/validate-qr", attendanceHandler.ValidateQR)
+	mux.HandleFunc("/api/v1/attendance/validate-access-code", attendanceHandler.ValidateAccessCode)
 
 	// =========================
 	// Public routes (CATÁLOGO)
@@ -524,6 +525,12 @@ func New(cfg *config.Config, client *ent.Client, db *sql.DB) *http.Server {
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/dashboard/punctuality", protectedDashboardPunctuality)
+
+	protectedDashboardExport := middleware.Chain(
+		http.HandlerFunc(dashboardHandler.Export),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/dashboard/export", protectedDashboardExport)
 
 	// =========================
 	// Global middlewares

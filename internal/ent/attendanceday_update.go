@@ -173,6 +173,87 @@ func (_u *AttendanceDayUpdate) ClearWorkOutAt() *AttendanceDayUpdate {
 	return _u
 }
 
+// SetLateMinutes sets the "late_minutes" field.
+func (_u *AttendanceDayUpdate) SetLateMinutes(v int) *AttendanceDayUpdate {
+	_u.mutation.ResetLateMinutes()
+	_u.mutation.SetLateMinutes(v)
+	return _u
+}
+
+// SetNillableLateMinutes sets the "late_minutes" field if the given value is not nil.
+func (_u *AttendanceDayUpdate) SetNillableLateMinutes(v *int) *AttendanceDayUpdate {
+	if v != nil {
+		_u.SetLateMinutes(*v)
+	}
+	return _u
+}
+
+// AddLateMinutes adds value to the "late_minutes" field.
+func (_u *AttendanceDayUpdate) AddLateMinutes(v int) *AttendanceDayUpdate {
+	_u.mutation.AddLateMinutes(v)
+	return _u
+}
+
+// ClearLateMinutes clears the value of the "late_minutes" field.
+func (_u *AttendanceDayUpdate) ClearLateMinutes() *AttendanceDayUpdate {
+	_u.mutation.ClearLateMinutes()
+	return _u
+}
+
+// SetOvertimeMinutes sets the "overtime_minutes" field.
+func (_u *AttendanceDayUpdate) SetOvertimeMinutes(v int) *AttendanceDayUpdate {
+	_u.mutation.ResetOvertimeMinutes()
+	_u.mutation.SetOvertimeMinutes(v)
+	return _u
+}
+
+// SetNillableOvertimeMinutes sets the "overtime_minutes" field if the given value is not nil.
+func (_u *AttendanceDayUpdate) SetNillableOvertimeMinutes(v *int) *AttendanceDayUpdate {
+	if v != nil {
+		_u.SetOvertimeMinutes(*v)
+	}
+	return _u
+}
+
+// AddOvertimeMinutes adds value to the "overtime_minutes" field.
+func (_u *AttendanceDayUpdate) AddOvertimeMinutes(v int) *AttendanceDayUpdate {
+	_u.mutation.AddOvertimeMinutes(v)
+	return _u
+}
+
+// ClearOvertimeMinutes clears the value of the "overtime_minutes" field.
+func (_u *AttendanceDayUpdate) ClearOvertimeMinutes() *AttendanceDayUpdate {
+	_u.mutation.ClearOvertimeMinutes()
+	return _u
+}
+
+// SetEarlyExitMinutes sets the "early_exit_minutes" field.
+func (_u *AttendanceDayUpdate) SetEarlyExitMinutes(v int) *AttendanceDayUpdate {
+	_u.mutation.ResetEarlyExitMinutes()
+	_u.mutation.SetEarlyExitMinutes(v)
+	return _u
+}
+
+// SetNillableEarlyExitMinutes sets the "early_exit_minutes" field if the given value is not nil.
+func (_u *AttendanceDayUpdate) SetNillableEarlyExitMinutes(v *int) *AttendanceDayUpdate {
+	if v != nil {
+		_u.SetEarlyExitMinutes(*v)
+	}
+	return _u
+}
+
+// AddEarlyExitMinutes adds value to the "early_exit_minutes" field.
+func (_u *AttendanceDayUpdate) AddEarlyExitMinutes(v int) *AttendanceDayUpdate {
+	_u.mutation.AddEarlyExitMinutes(v)
+	return _u
+}
+
+// ClearEarlyExitMinutes clears the value of the "early_exit_minutes" field.
+func (_u *AttendanceDayUpdate) ClearEarlyExitMinutes() *AttendanceDayUpdate {
+	_u.mutation.ClearEarlyExitMinutes()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *AttendanceDayUpdate) SetCreatedAt(v time.Time) *AttendanceDayUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -316,6 +397,33 @@ func (_u *AttendanceDayUpdate) sqlSave(ctx context.Context) (_node int, err erro
 	}
 	if _u.mutation.WorkOutAtCleared() {
 		_spec.ClearField(attendanceday.FieldWorkOutAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LateMinutes(); ok {
+		_spec.SetField(attendanceday.FieldLateMinutes, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedLateMinutes(); ok {
+		_spec.AddField(attendanceday.FieldLateMinutes, field.TypeInt, value)
+	}
+	if _u.mutation.LateMinutesCleared() {
+		_spec.ClearField(attendanceday.FieldLateMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.OvertimeMinutes(); ok {
+		_spec.SetField(attendanceday.FieldOvertimeMinutes, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedOvertimeMinutes(); ok {
+		_spec.AddField(attendanceday.FieldOvertimeMinutes, field.TypeInt, value)
+	}
+	if _u.mutation.OvertimeMinutesCleared() {
+		_spec.ClearField(attendanceday.FieldOvertimeMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.EarlyExitMinutes(); ok {
+		_spec.SetField(attendanceday.FieldEarlyExitMinutes, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedEarlyExitMinutes(); ok {
+		_spec.AddField(attendanceday.FieldEarlyExitMinutes, field.TypeInt, value)
+	}
+	if _u.mutation.EarlyExitMinutesCleared() {
+		_spec.ClearField(attendanceday.FieldEarlyExitMinutes, field.TypeInt)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(attendanceday.FieldCreatedAt, field.TypeTime, value)
@@ -572,6 +680,87 @@ func (_u *AttendanceDayUpdateOne) ClearWorkOutAt() *AttendanceDayUpdateOne {
 	return _u
 }
 
+// SetLateMinutes sets the "late_minutes" field.
+func (_u *AttendanceDayUpdateOne) SetLateMinutes(v int) *AttendanceDayUpdateOne {
+	_u.mutation.ResetLateMinutes()
+	_u.mutation.SetLateMinutes(v)
+	return _u
+}
+
+// SetNillableLateMinutes sets the "late_minutes" field if the given value is not nil.
+func (_u *AttendanceDayUpdateOne) SetNillableLateMinutes(v *int) *AttendanceDayUpdateOne {
+	if v != nil {
+		_u.SetLateMinutes(*v)
+	}
+	return _u
+}
+
+// AddLateMinutes adds value to the "late_minutes" field.
+func (_u *AttendanceDayUpdateOne) AddLateMinutes(v int) *AttendanceDayUpdateOne {
+	_u.mutation.AddLateMinutes(v)
+	return _u
+}
+
+// ClearLateMinutes clears the value of the "late_minutes" field.
+func (_u *AttendanceDayUpdateOne) ClearLateMinutes() *AttendanceDayUpdateOne {
+	_u.mutation.ClearLateMinutes()
+	return _u
+}
+
+// SetOvertimeMinutes sets the "overtime_minutes" field.
+func (_u *AttendanceDayUpdateOne) SetOvertimeMinutes(v int) *AttendanceDayUpdateOne {
+	_u.mutation.ResetOvertimeMinutes()
+	_u.mutation.SetOvertimeMinutes(v)
+	return _u
+}
+
+// SetNillableOvertimeMinutes sets the "overtime_minutes" field if the given value is not nil.
+func (_u *AttendanceDayUpdateOne) SetNillableOvertimeMinutes(v *int) *AttendanceDayUpdateOne {
+	if v != nil {
+		_u.SetOvertimeMinutes(*v)
+	}
+	return _u
+}
+
+// AddOvertimeMinutes adds value to the "overtime_minutes" field.
+func (_u *AttendanceDayUpdateOne) AddOvertimeMinutes(v int) *AttendanceDayUpdateOne {
+	_u.mutation.AddOvertimeMinutes(v)
+	return _u
+}
+
+// ClearOvertimeMinutes clears the value of the "overtime_minutes" field.
+func (_u *AttendanceDayUpdateOne) ClearOvertimeMinutes() *AttendanceDayUpdateOne {
+	_u.mutation.ClearOvertimeMinutes()
+	return _u
+}
+
+// SetEarlyExitMinutes sets the "early_exit_minutes" field.
+func (_u *AttendanceDayUpdateOne) SetEarlyExitMinutes(v int) *AttendanceDayUpdateOne {
+	_u.mutation.ResetEarlyExitMinutes()
+	_u.mutation.SetEarlyExitMinutes(v)
+	return _u
+}
+
+// SetNillableEarlyExitMinutes sets the "early_exit_minutes" field if the given value is not nil.
+func (_u *AttendanceDayUpdateOne) SetNillableEarlyExitMinutes(v *int) *AttendanceDayUpdateOne {
+	if v != nil {
+		_u.SetEarlyExitMinutes(*v)
+	}
+	return _u
+}
+
+// AddEarlyExitMinutes adds value to the "early_exit_minutes" field.
+func (_u *AttendanceDayUpdateOne) AddEarlyExitMinutes(v int) *AttendanceDayUpdateOne {
+	_u.mutation.AddEarlyExitMinutes(v)
+	return _u
+}
+
+// ClearEarlyExitMinutes clears the value of the "early_exit_minutes" field.
+func (_u *AttendanceDayUpdateOne) ClearEarlyExitMinutes() *AttendanceDayUpdateOne {
+	_u.mutation.ClearEarlyExitMinutes()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *AttendanceDayUpdateOne) SetCreatedAt(v time.Time) *AttendanceDayUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -745,6 +934,33 @@ func (_u *AttendanceDayUpdateOne) sqlSave(ctx context.Context) (_node *Attendanc
 	}
 	if _u.mutation.WorkOutAtCleared() {
 		_spec.ClearField(attendanceday.FieldWorkOutAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LateMinutes(); ok {
+		_spec.SetField(attendanceday.FieldLateMinutes, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedLateMinutes(); ok {
+		_spec.AddField(attendanceday.FieldLateMinutes, field.TypeInt, value)
+	}
+	if _u.mutation.LateMinutesCleared() {
+		_spec.ClearField(attendanceday.FieldLateMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.OvertimeMinutes(); ok {
+		_spec.SetField(attendanceday.FieldOvertimeMinutes, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedOvertimeMinutes(); ok {
+		_spec.AddField(attendanceday.FieldOvertimeMinutes, field.TypeInt, value)
+	}
+	if _u.mutation.OvertimeMinutesCleared() {
+		_spec.ClearField(attendanceday.FieldOvertimeMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.EarlyExitMinutes(); ok {
+		_spec.SetField(attendanceday.FieldEarlyExitMinutes, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedEarlyExitMinutes(); ok {
+		_spec.AddField(attendanceday.FieldEarlyExitMinutes, field.TypeInt, value)
+	}
+	if _u.mutation.EarlyExitMinutesCleared() {
+		_spec.ClearField(attendanceday.FieldEarlyExitMinutes, field.TypeInt)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(attendanceday.FieldCreatedAt, field.TypeTime, value)

@@ -235,6 +235,15 @@ definitions:
         example: Unauthorized
         type: string
     type: object
+  handlers.MeAccessPoint:
+    properties:
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
   handlers.MeAddress:
     properties:
       apartment:
@@ -260,6 +269,56 @@ definitions:
       updated_at:
         type: string
     type: object
+  handlers.MeAttendanceRecord:
+    properties:
+      access_point_id:
+        type: integer
+      access_point_name:
+        type: string
+      branch_id:
+        type: integer
+      branch_name:
+        type: string
+      break_in_at:
+        type: string
+      break_out_at:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      markings_count:
+        type: integer
+      updated_at:
+        type: string
+      work_date:
+        type: string
+      work_in_at:
+        type: string
+      work_out_at:
+        type: string
+      worked_hours:
+        type: string
+      worked_minutes:
+        type: integer
+    type: object
+  handlers.MeBranch:
+    properties:
+      access_points:
+        items:
+          $ref: '#/definitions/handlers.MeAccessPoint'
+        type: array
+      code:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      role_in_branch:
+        type: string
+    type: object
   handlers.MeCity:
     properties:
       id:
@@ -277,6 +336,27 @@ definitions:
       name:
         example: Santiago
         type: string
+    type: object
+  handlers.MeCurrentShift:
+    properties:
+      break_minutes:
+        type: integer
+      crosses_midnight:
+        type: boolean
+      description:
+        type: string
+      end_time:
+        type: string
+      name:
+        type: string
+      shift_id:
+        type: integer
+      start_time:
+        type: string
+      work_days:
+        items:
+          type: string
+        type: array
     type: object
   handlers.MeRegion:
     properties:
@@ -296,6 +376,10 @@ definitions:
         items:
           $ref: '#/definitions/handlers.MeAddress'
         type: array
+      attendance_history:
+        items:
+          $ref: '#/definitions/handlers.MeAttendanceRecord'
+        type: array
       audience:
         example:
         - web
@@ -304,8 +388,13 @@ definitions:
         items:
           type: string
         type: array
-      expires:
-        description: jwt.NumericDate en runtime
+      branches:
+        items:
+          $ref: '#/definitions/handlers.MeBranch'
+        type: array
+      current_shift:
+        $ref: '#/definitions/handlers.MeCurrentShift'
+      expires: {}
       id:
         example: 1
         type: integer
@@ -318,9 +407,30 @@ definitions:
       role:
         example: admin
         type: string
+      today_summary:
+        $ref: '#/definitions/handlers.MeTodaySummary'
       username:
         example: admin
         type: string
+    type: object
+  handlers.MeTodaySummary:
+    properties:
+      break_in_at:
+        type: string
+      break_out_at:
+        type: string
+      markings_count:
+        type: integer
+      work_date:
+        type: string
+      work_in_at:
+        type: string
+      work_out_at:
+        type: string
+      worked_hours:
+        type: string
+      worked_minutes:
+        type: integer
     type: object
   handlers.NoContentResponse:
     type: object
@@ -402,6 +512,10 @@ definitions:
         type: string
       updated_at:
         type: string
+      work_days:
+        items:
+          $ref: '#/definitions/handlers.WorkDayDTO'
+        type: array
     type: object
   handlers.ShiftDayDTO:
     properties:
@@ -497,6 +611,10 @@ definitions:
     properties:
       access_code:
         type: string
+      branches:
+        items:
+          $ref: '#/definitions/handlers.UsersBranchDTO'
+        type: array
       email:
         type: string
       employee_code:
@@ -697,6 +815,43 @@ definitions:
         type: string
       start_date:
         type: string
+    type: object
+  handlers.UsersAccessPointDTO:
+    properties:
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  handlers.UsersBranchDTO:
+    properties:
+      access_points:
+        items:
+          $ref: '#/definitions/handlers.UsersAccessPointDTO'
+        type: array
+      branch_code:
+        type: string
+      branch_id:
+        type: integer
+      branch_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      role_in_branch:
+        type: string
+    type: object
+  handlers.WorkDayDTO:
+    properties:
+      is_working_day:
+        type: boolean
+      mode:
+        type: string
+      weekday:
+        type: integer
     type: object
   handlers.createAccessPointRequest:
     properties:
@@ -1065,6 +1220,13 @@ definitions:
         type: string
       street:
         example: Av. Siempre Viva
+        type: string
+    type: object
+  services.QRResponse:
+    properties:
+      expires_in:
+        type: integer
+      token:
         type: string
     type: object
   services.WorkDayInput:
@@ -3062,6 +3224,40 @@ paths:
       summary: Vista general del usuario
       tags:
       - Users
+  /api/v1/users/{id}/qr-session:
+    post:
+      description: POST genera un token QR única válida por 15 horas. El usuario usa
+        este token en la app mobile para marcar asistencia.
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/services.QRResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Generar sesión QR
+      tags:
+      - QR
   /api/v1/users/{id}/shift-assignments:
     get:
       consumes:

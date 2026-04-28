@@ -1606,26 +1606,32 @@ func (m *AddressMutation) ResetEdge(name string) error {
 // AttendanceDayMutation represents an operation that mutates the AttendanceDay nodes in the graph.
 type AttendanceDayMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *int
-	work_date           *time.Time
-	work_in_at          *time.Time
-	break_out_at        *time.Time
-	break_in_at         *time.Time
-	work_out_at         *time.Time
-	created_at          *time.Time
-	updated_at          *time.Time
-	clearedFields       map[string]struct{}
-	user                *int
-	cleareduser         bool
-	branch              *int
-	clearedbranch       bool
-	access_point        *int
-	clearedaccess_point bool
-	done                bool
-	oldValue            func(context.Context) (*AttendanceDay, error)
-	predicates          []predicate.AttendanceDay
+	op                    Op
+	typ                   string
+	id                    *int
+	work_date             *time.Time
+	work_in_at            *time.Time
+	break_out_at          *time.Time
+	break_in_at           *time.Time
+	work_out_at           *time.Time
+	late_minutes          *int
+	addlate_minutes       *int
+	overtime_minutes      *int
+	addovertime_minutes   *int
+	early_exit_minutes    *int
+	addearly_exit_minutes *int
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	user                  *int
+	cleareduser           bool
+	branch                *int
+	clearedbranch         bool
+	access_point          *int
+	clearedaccess_point   bool
+	done                  bool
+	oldValue              func(context.Context) (*AttendanceDay, error)
+	predicates            []predicate.AttendanceDay
 }
 
 var _ ent.Mutation = (*AttendanceDayMutation)(nil)
@@ -2079,6 +2085,216 @@ func (m *AttendanceDayMutation) ResetWorkOutAt() {
 	delete(m.clearedFields, attendanceday.FieldWorkOutAt)
 }
 
+// SetLateMinutes sets the "late_minutes" field.
+func (m *AttendanceDayMutation) SetLateMinutes(i int) {
+	m.late_minutes = &i
+	m.addlate_minutes = nil
+}
+
+// LateMinutes returns the value of the "late_minutes" field in the mutation.
+func (m *AttendanceDayMutation) LateMinutes() (r int, exists bool) {
+	v := m.late_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLateMinutes returns the old "late_minutes" field's value of the AttendanceDay entity.
+// If the AttendanceDay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttendanceDayMutation) OldLateMinutes(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLateMinutes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLateMinutes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLateMinutes: %w", err)
+	}
+	return oldValue.LateMinutes, nil
+}
+
+// AddLateMinutes adds i to the "late_minutes" field.
+func (m *AttendanceDayMutation) AddLateMinutes(i int) {
+	if m.addlate_minutes != nil {
+		*m.addlate_minutes += i
+	} else {
+		m.addlate_minutes = &i
+	}
+}
+
+// AddedLateMinutes returns the value that was added to the "late_minutes" field in this mutation.
+func (m *AttendanceDayMutation) AddedLateMinutes() (r int, exists bool) {
+	v := m.addlate_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLateMinutes clears the value of the "late_minutes" field.
+func (m *AttendanceDayMutation) ClearLateMinutes() {
+	m.late_minutes = nil
+	m.addlate_minutes = nil
+	m.clearedFields[attendanceday.FieldLateMinutes] = struct{}{}
+}
+
+// LateMinutesCleared returns if the "late_minutes" field was cleared in this mutation.
+func (m *AttendanceDayMutation) LateMinutesCleared() bool {
+	_, ok := m.clearedFields[attendanceday.FieldLateMinutes]
+	return ok
+}
+
+// ResetLateMinutes resets all changes to the "late_minutes" field.
+func (m *AttendanceDayMutation) ResetLateMinutes() {
+	m.late_minutes = nil
+	m.addlate_minutes = nil
+	delete(m.clearedFields, attendanceday.FieldLateMinutes)
+}
+
+// SetOvertimeMinutes sets the "overtime_minutes" field.
+func (m *AttendanceDayMutation) SetOvertimeMinutes(i int) {
+	m.overtime_minutes = &i
+	m.addovertime_minutes = nil
+}
+
+// OvertimeMinutes returns the value of the "overtime_minutes" field in the mutation.
+func (m *AttendanceDayMutation) OvertimeMinutes() (r int, exists bool) {
+	v := m.overtime_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOvertimeMinutes returns the old "overtime_minutes" field's value of the AttendanceDay entity.
+// If the AttendanceDay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttendanceDayMutation) OldOvertimeMinutes(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOvertimeMinutes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOvertimeMinutes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOvertimeMinutes: %w", err)
+	}
+	return oldValue.OvertimeMinutes, nil
+}
+
+// AddOvertimeMinutes adds i to the "overtime_minutes" field.
+func (m *AttendanceDayMutation) AddOvertimeMinutes(i int) {
+	if m.addovertime_minutes != nil {
+		*m.addovertime_minutes += i
+	} else {
+		m.addovertime_minutes = &i
+	}
+}
+
+// AddedOvertimeMinutes returns the value that was added to the "overtime_minutes" field in this mutation.
+func (m *AttendanceDayMutation) AddedOvertimeMinutes() (r int, exists bool) {
+	v := m.addovertime_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearOvertimeMinutes clears the value of the "overtime_minutes" field.
+func (m *AttendanceDayMutation) ClearOvertimeMinutes() {
+	m.overtime_minutes = nil
+	m.addovertime_minutes = nil
+	m.clearedFields[attendanceday.FieldOvertimeMinutes] = struct{}{}
+}
+
+// OvertimeMinutesCleared returns if the "overtime_minutes" field was cleared in this mutation.
+func (m *AttendanceDayMutation) OvertimeMinutesCleared() bool {
+	_, ok := m.clearedFields[attendanceday.FieldOvertimeMinutes]
+	return ok
+}
+
+// ResetOvertimeMinutes resets all changes to the "overtime_minutes" field.
+func (m *AttendanceDayMutation) ResetOvertimeMinutes() {
+	m.overtime_minutes = nil
+	m.addovertime_minutes = nil
+	delete(m.clearedFields, attendanceday.FieldOvertimeMinutes)
+}
+
+// SetEarlyExitMinutes sets the "early_exit_minutes" field.
+func (m *AttendanceDayMutation) SetEarlyExitMinutes(i int) {
+	m.early_exit_minutes = &i
+	m.addearly_exit_minutes = nil
+}
+
+// EarlyExitMinutes returns the value of the "early_exit_minutes" field in the mutation.
+func (m *AttendanceDayMutation) EarlyExitMinutes() (r int, exists bool) {
+	v := m.early_exit_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEarlyExitMinutes returns the old "early_exit_minutes" field's value of the AttendanceDay entity.
+// If the AttendanceDay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttendanceDayMutation) OldEarlyExitMinutes(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEarlyExitMinutes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEarlyExitMinutes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEarlyExitMinutes: %w", err)
+	}
+	return oldValue.EarlyExitMinutes, nil
+}
+
+// AddEarlyExitMinutes adds i to the "early_exit_minutes" field.
+func (m *AttendanceDayMutation) AddEarlyExitMinutes(i int) {
+	if m.addearly_exit_minutes != nil {
+		*m.addearly_exit_minutes += i
+	} else {
+		m.addearly_exit_minutes = &i
+	}
+}
+
+// AddedEarlyExitMinutes returns the value that was added to the "early_exit_minutes" field in this mutation.
+func (m *AttendanceDayMutation) AddedEarlyExitMinutes() (r int, exists bool) {
+	v := m.addearly_exit_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearEarlyExitMinutes clears the value of the "early_exit_minutes" field.
+func (m *AttendanceDayMutation) ClearEarlyExitMinutes() {
+	m.early_exit_minutes = nil
+	m.addearly_exit_minutes = nil
+	m.clearedFields[attendanceday.FieldEarlyExitMinutes] = struct{}{}
+}
+
+// EarlyExitMinutesCleared returns if the "early_exit_minutes" field was cleared in this mutation.
+func (m *AttendanceDayMutation) EarlyExitMinutesCleared() bool {
+	_, ok := m.clearedFields[attendanceday.FieldEarlyExitMinutes]
+	return ok
+}
+
+// ResetEarlyExitMinutes resets all changes to the "early_exit_minutes" field.
+func (m *AttendanceDayMutation) ResetEarlyExitMinutes() {
+	m.early_exit_minutes = nil
+	m.addearly_exit_minutes = nil
+	delete(m.clearedFields, attendanceday.FieldEarlyExitMinutes)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *AttendanceDayMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -2266,7 +2482,7 @@ func (m *AttendanceDayMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AttendanceDayMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 13)
 	if m.user != nil {
 		fields = append(fields, attendanceday.FieldUserID)
 	}
@@ -2290,6 +2506,15 @@ func (m *AttendanceDayMutation) Fields() []string {
 	}
 	if m.work_out_at != nil {
 		fields = append(fields, attendanceday.FieldWorkOutAt)
+	}
+	if m.late_minutes != nil {
+		fields = append(fields, attendanceday.FieldLateMinutes)
+	}
+	if m.overtime_minutes != nil {
+		fields = append(fields, attendanceday.FieldOvertimeMinutes)
+	}
+	if m.early_exit_minutes != nil {
+		fields = append(fields, attendanceday.FieldEarlyExitMinutes)
 	}
 	if m.created_at != nil {
 		fields = append(fields, attendanceday.FieldCreatedAt)
@@ -2321,6 +2546,12 @@ func (m *AttendanceDayMutation) Field(name string) (ent.Value, bool) {
 		return m.BreakInAt()
 	case attendanceday.FieldWorkOutAt:
 		return m.WorkOutAt()
+	case attendanceday.FieldLateMinutes:
+		return m.LateMinutes()
+	case attendanceday.FieldOvertimeMinutes:
+		return m.OvertimeMinutes()
+	case attendanceday.FieldEarlyExitMinutes:
+		return m.EarlyExitMinutes()
 	case attendanceday.FieldCreatedAt:
 		return m.CreatedAt()
 	case attendanceday.FieldUpdatedAt:
@@ -2350,6 +2581,12 @@ func (m *AttendanceDayMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldBreakInAt(ctx)
 	case attendanceday.FieldWorkOutAt:
 		return m.OldWorkOutAt(ctx)
+	case attendanceday.FieldLateMinutes:
+		return m.OldLateMinutes(ctx)
+	case attendanceday.FieldOvertimeMinutes:
+		return m.OldOvertimeMinutes(ctx)
+	case attendanceday.FieldEarlyExitMinutes:
+		return m.OldEarlyExitMinutes(ctx)
 	case attendanceday.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case attendanceday.FieldUpdatedAt:
@@ -2419,6 +2656,27 @@ func (m *AttendanceDayMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetWorkOutAt(v)
 		return nil
+	case attendanceday.FieldLateMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLateMinutes(v)
+		return nil
+	case attendanceday.FieldOvertimeMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOvertimeMinutes(v)
+		return nil
+	case attendanceday.FieldEarlyExitMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEarlyExitMinutes(v)
+		return nil
 	case attendanceday.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -2441,6 +2699,15 @@ func (m *AttendanceDayMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *AttendanceDayMutation) AddedFields() []string {
 	var fields []string
+	if m.addlate_minutes != nil {
+		fields = append(fields, attendanceday.FieldLateMinutes)
+	}
+	if m.addovertime_minutes != nil {
+		fields = append(fields, attendanceday.FieldOvertimeMinutes)
+	}
+	if m.addearly_exit_minutes != nil {
+		fields = append(fields, attendanceday.FieldEarlyExitMinutes)
+	}
 	return fields
 }
 
@@ -2449,6 +2716,12 @@ func (m *AttendanceDayMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *AttendanceDayMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case attendanceday.FieldLateMinutes:
+		return m.AddedLateMinutes()
+	case attendanceday.FieldOvertimeMinutes:
+		return m.AddedOvertimeMinutes()
+	case attendanceday.FieldEarlyExitMinutes:
+		return m.AddedEarlyExitMinutes()
 	}
 	return nil, false
 }
@@ -2458,6 +2731,27 @@ func (m *AttendanceDayMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *AttendanceDayMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case attendanceday.FieldLateMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLateMinutes(v)
+		return nil
+	case attendanceday.FieldOvertimeMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOvertimeMinutes(v)
+		return nil
+	case attendanceday.FieldEarlyExitMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddEarlyExitMinutes(v)
+		return nil
 	}
 	return fmt.Errorf("unknown AttendanceDay numeric field %s", name)
 }
@@ -2480,6 +2774,15 @@ func (m *AttendanceDayMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(attendanceday.FieldWorkOutAt) {
 		fields = append(fields, attendanceday.FieldWorkOutAt)
+	}
+	if m.FieldCleared(attendanceday.FieldLateMinutes) {
+		fields = append(fields, attendanceday.FieldLateMinutes)
+	}
+	if m.FieldCleared(attendanceday.FieldOvertimeMinutes) {
+		fields = append(fields, attendanceday.FieldOvertimeMinutes)
+	}
+	if m.FieldCleared(attendanceday.FieldEarlyExitMinutes) {
+		fields = append(fields, attendanceday.FieldEarlyExitMinutes)
 	}
 	return fields
 }
@@ -2509,6 +2812,15 @@ func (m *AttendanceDayMutation) ClearField(name string) error {
 		return nil
 	case attendanceday.FieldWorkOutAt:
 		m.ClearWorkOutAt()
+		return nil
+	case attendanceday.FieldLateMinutes:
+		m.ClearLateMinutes()
+		return nil
+	case attendanceday.FieldOvertimeMinutes:
+		m.ClearOvertimeMinutes()
+		return nil
+	case attendanceday.FieldEarlyExitMinutes:
+		m.ClearEarlyExitMinutes()
 		return nil
 	}
 	return fmt.Errorf("unknown AttendanceDay nullable field %s", name)
@@ -2541,6 +2853,15 @@ func (m *AttendanceDayMutation) ResetField(name string) error {
 		return nil
 	case attendanceday.FieldWorkOutAt:
 		m.ResetWorkOutAt()
+		return nil
+	case attendanceday.FieldLateMinutes:
+		m.ResetLateMinutes()
+		return nil
+	case attendanceday.FieldOvertimeMinutes:
+		m.ResetOvertimeMinutes()
+		return nil
+	case attendanceday.FieldEarlyExitMinutes:
+		m.ResetEarlyExitMinutes()
 		return nil
 	case attendanceday.FieldCreatedAt:
 		m.ResetCreatedAt()

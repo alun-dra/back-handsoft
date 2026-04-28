@@ -1060,3 +1060,242 @@ func (s *DashboardService) getTodayPunctuality(ctx context.Context, branchID *in
 
 	return items, nil
 }
+
+// ── EXPORT ──────────────────────────────────────────────────────────────────
+
+type DashboardExportResponse struct {
+	Filters     DashboardFiltersResponse `json:"filters"`
+	Summary     DashboardSummary         `json:"summary"`
+	Charts      DashboardCharts          `json:"charts"`
+	Markings    []DashboardLastMarkItem  `json:"markings"`
+	Punctuality []TodayPunctualityItem   `json:"punctuality"`
+	InsideNow   []DashboardInsideNowItem `json:"inside_now"`
+}
+
+// GetExport devuelve todos los datos del rango sin límite de registros.
+func (s *DashboardService) GetExport(ctx context.Context, f DashboardFilters) (*DashboardExportResponse, error) {
+	var start, end time.Time
+	var err error
+
+	if f.StartDate != nil && f.EndDate != nil {
+		start = *f.StartDate
+		end = f.EndDate.Add(24 * time.Hour)
+	} else {
+		if f.Range == "" {
+			f.Range = "today"
+		}
+		start, end, err = resolveRange(f.Range)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	todayStart, todayEnd := dayBounds(time.Now())
+	yesterdayStart, yesterdayEnd := dayBounds(time.Now().AddDate(0, 0, -1))
+
+	summary, err := s.getSummary(ctx, f.BranchID, todayStart, todayEnd, yesterdayStart, yesterdayEnd)
+	if err != nil {
+		return nil, err
+	}
+	markingsByDay, err := s.getMarkingsByRange(ctx, f.BranchID, start, end)
+	if err != nil {
+		return nil, err
+	}
+	entriesVsExits, err := s.getEntriesVsExits(ctx, f.BranchID, start, end)
+	if err != nil {
+		return nil, err
+	}
+	currentStatus, err := s.getCurrentStatus(ctx, f.BranchID, todayStart, todayEnd)
+	if err != nil {
+		return nil, err
+	}
+	activityByHour, err := s.getActivityByHour(ctx, f.BranchID, start, end)
+	if err != nil {
+		return nil, err
+	}
+	topLates, err := s.getTopLates(ctx, f.BranchID, start, end)
+	if err != nil {
+		return nil, err
+	}
+	topBranches, err := s.getTopBranches(ctx, f.BranchID, start, end)
+	if err != nil {
+		return nil, err
+	}
+	allMarkings, err := s.getAllMarks(ctx, f.BranchID, start, end)
+	if err != nil {
+		return nil, err
+	}
+	punctuality, err := s.getTodayPunctuality(ctx, f.BranchID, start, end)
+	if err != nil {
+		return nil, err
+	}
+	insideNow, err := s.getAllInsideNow(ctx, f.BranchID, todayStart, todayEnd)
+	if err != nil {
+		return nil, err
+	}
+
+	if markingsByDay == nil {
+		markingsByDay = []ChartPoint{}
+	}
+	if activityByHour == nil {
+		activityByHour = []ChartPoint{}
+	}
+	if topLates == nil {
+		topLates = []TopLateItem{}
+	}
+	if topBranches == nil {
+		topBranches = []TopBranchMovementItem{}
+	}
+	if allMarkings == nil {
+		allMarkings = []DashboardLastMarkItem{}
+	}
+	if punctuality == nil {
+		punctuality = []TodayPunctualityItem{}
+	}
+	if insideNow == nil {
+		insideNow = []DashboardInsideNowItem{}
+	}
+
+	return &DashboardExportResponse{
+		Filters: DashboardFiltersResponse{
+			BranchID:  f.BranchID,
+			Range:     f.Range,
+			StartDate: f.StartDate,
+			EndDate:   f.EndDate,
+		},
+		Summary: summary,
+		Charts: DashboardCharts{
+			MarkingsLast7Days: markingsByDay,
+			EntriesVsExits:    entriesVsExits,
+			CurrentStatus:     currentStatus,
+			ActivityByHour:    activityByHour,
+			TopLates:          topLates,
+			TopBranches:       topBranches,
+		},
+		Markings:    allMarkings,
+		Punctuality: punctuality,
+		InsideNow:   insideNow,
+	}, nil
+}
+
+// getAllMarks trae todas las marcaciones (entry, exit, break_out, break_in) del rango sin LIMIT.
+func (s *DashboardService) getAllMarks(ctx context.Context, branchID *int, start, end time.Time) ([]DashboardLastMarkItem, error) {
+	args := []any{start, end}
+	branchWhere := buildBranchFilter("ad.branch_id", branchID, &args)
+
+	query := fmt.Sprintf(`
+		SELECT marking_id, user_id, name, type, marked_at, branch_id, branch_name
+		FROM (
+			SELECT (ad.id * 10 + 1) AS marking_id,
+				u.id AS user_id,
+				CONCAT_WS(' ', u.first_name, u.last_name) AS name,
+				'entry' AS type,
+				ad.work_in_at AS marked_at,
+				ad.branch_id,
+				b.name AS branch_name
+			FROM attendance_days ad
+			JOIN users u ON u.id = ad.user_id
+			JOIN branches b ON b.id = ad.branch_id
+			WHERE ad.work_in_at IS NOT NULL
+			  AND ad.work_date >= $1 AND ad.work_date < $2
+			%s
+			UNION ALL
+			SELECT (ad.id * 10 + 2) AS marking_id,
+				u.id AS user_id,
+				CONCAT_WS(' ', u.first_name, u.last_name) AS name,
+				'exit' AS type,
+				ad.work_out_at AS marked_at,
+				ad.branch_id,
+				b.name AS branch_name
+			FROM attendance_days ad
+			JOIN users u ON u.id = ad.user_id
+			JOIN branches b ON b.id = ad.branch_id
+			WHERE ad.work_out_at IS NOT NULL
+			  AND ad.work_date >= $1 AND ad.work_date < $2
+			%s
+			UNION ALL
+			SELECT (ad.id * 10 + 3) AS marking_id,
+				u.id AS user_id,
+				CONCAT_WS(' ', u.first_name, u.last_name) AS name,
+				'break_out' AS type,
+				ad.break_out_at AS marked_at,
+				ad.branch_id,
+				b.name AS branch_name
+			FROM attendance_days ad
+			JOIN users u ON u.id = ad.user_id
+			JOIN branches b ON b.id = ad.branch_id
+			WHERE ad.break_out_at IS NOT NULL
+			  AND ad.work_date >= $1 AND ad.work_date < $2
+			%s
+			UNION ALL
+			SELECT (ad.id * 10 + 4) AS marking_id,
+				u.id AS user_id,
+				CONCAT_WS(' ', u.first_name, u.last_name) AS name,
+				'break_in' AS type,
+				ad.break_in_at AS marked_at,
+				ad.branch_id,
+				b.name AS branch_name
+			FROM attendance_days ad
+			JOIN users u ON u.id = ad.user_id
+			JOIN branches b ON b.id = ad.branch_id
+			WHERE ad.break_in_at IS NOT NULL
+			  AND ad.work_date >= $1 AND ad.work_date < $2
+			%s
+		) AS marks
+		ORDER BY marked_at DESC
+	`, branchWhere, branchWhere, branchWhere, branchWhere)
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]DashboardLastMarkItem, 0)
+	for rows.Next() {
+		var it DashboardLastMarkItem
+		if err := rows.Scan(&it.MarkingID, &it.UserID, &it.Name, &it.Type, &it.MarkedAt, &it.BranchID, &it.BranchName); err != nil {
+			return nil, err
+		}
+		items = append(items, it)
+	}
+	return items, rows.Err()
+}
+
+// getAllInsideNow trae todos los usuarios actualmente dentro, sin LIMIT.
+func (s *DashboardService) getAllInsideNow(ctx context.Context, branchID *int, start, end time.Time) ([]DashboardInsideNowItem, error) {
+	args := []any{start, end}
+	branchWhere := buildBranchFilter("ad.branch_id", branchID, &args)
+
+	query := fmt.Sprintf(`
+		SELECT u.id AS user_id,
+			CONCAT_WS(' ', u.first_name, u.last_name) AS name,
+			ad.work_in_at AS entered_at,
+			ad.branch_id,
+			b.name AS branch_name
+		FROM attendance_days ad
+		JOIN users u ON u.id = ad.user_id
+		JOIN branches b ON b.id = ad.branch_id
+		WHERE ad.work_in_at IS NOT NULL
+		  AND ad.work_out_at IS NULL
+		  AND ad.work_date >= $1 AND ad.work_date < $2
+		%s
+		ORDER BY ad.work_in_at DESC
+	`, branchWhere)
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]DashboardInsideNowItem, 0)
+	for rows.Next() {
+		var it DashboardInsideNowItem
+		if err := rows.Scan(&it.UserID, &it.Name, &it.EnteredAt, &it.BranchID, &it.BranchName); err != nil {
+			return nil, err
+		}
+		items = append(items, it)
+	}
+	return items, rows.Err()
+}

@@ -30,6 +30,12 @@ const (
 	FieldBreakInAt = "break_in_at"
 	// FieldWorkOutAt holds the string denoting the work_out_at field in the database.
 	FieldWorkOutAt = "work_out_at"
+	// FieldLateMinutes holds the string denoting the late_minutes field in the database.
+	FieldLateMinutes = "late_minutes"
+	// FieldOvertimeMinutes holds the string denoting the overtime_minutes field in the database.
+	FieldOvertimeMinutes = "overtime_minutes"
+	// FieldEarlyExitMinutes holds the string denoting the early_exit_minutes field in the database.
+	FieldEarlyExitMinutes = "early_exit_minutes"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -76,6 +82,9 @@ var Columns = []string{
 	FieldBreakOutAt,
 	FieldBreakInAt,
 	FieldWorkOutAt,
+	FieldLateMinutes,
+	FieldOvertimeMinutes,
+	FieldEarlyExitMinutes,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -157,6 +166,21 @@ func ByBreakInAt(opts ...sql.OrderTermOption) OrderOption {
 // ByWorkOutAt orders the results by the work_out_at field.
 func ByWorkOutAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldWorkOutAt, opts...).ToFunc()
+}
+
+// ByLateMinutes orders the results by the late_minutes field.
+func ByLateMinutes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLateMinutes, opts...).ToFunc()
+}
+
+// ByOvertimeMinutes orders the results by the overtime_minutes field.
+func ByOvertimeMinutes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOvertimeMinutes, opts...).ToFunc()
+}
+
+// ByEarlyExitMinutes orders the results by the early_exit_minutes field.
+func ByEarlyExitMinutes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEarlyExitMinutes, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

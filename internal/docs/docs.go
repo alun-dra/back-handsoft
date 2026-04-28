@@ -3102,6 +3102,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/{id}/qr-session": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "POST genera un token QR única válida por 15 horas. El usuario usa este token en la app mobile para marcar asistencia.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "QR"
+                ],
+                "summary": "Generar sesión QR",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del usuario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/services.QRResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/{id}/shift-assignments": {
             "get": {
                 "security": [
@@ -3616,6 +3668,20 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.MeAccessPoint": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.MeAddress": {
             "type": "object",
             "properties": {
@@ -3652,6 +3718,82 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.MeAttendanceRecord": {
+            "type": "object",
+            "properties": {
+                "access_point_id": {
+                    "type": "integer"
+                },
+                "access_point_name": {
+                    "type": "string"
+                },
+                "branch_id": {
+                    "type": "integer"
+                },
+                "branch_name": {
+                    "type": "string"
+                },
+                "break_in_at": {
+                    "type": "string"
+                },
+                "break_out_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "markings_count": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "work_date": {
+                    "type": "string"
+                },
+                "work_in_at": {
+                    "type": "string"
+                },
+                "work_out_at": {
+                    "type": "string"
+                },
+                "worked_hours": {
+                    "type": "string"
+                },
+                "worked_minutes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.MeBranch": {
+            "type": "object",
+            "properties": {
+                "access_points": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.MeAccessPoint"
+                    }
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role_in_branch": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.MeCity": {
             "type": "object",
             "properties": {
@@ -3675,6 +3817,38 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "Santiago"
+                }
+            }
+        },
+        "handlers.MeCurrentShift": {
+            "type": "object",
+            "properties": {
+                "break_minutes": {
+                    "type": "integer"
+                },
+                "crosses_midnight": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "shift_id": {
+                    "type": "integer"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "work_days": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -3704,6 +3878,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/handlers.MeAddress"
                     }
                 },
+                "attendance_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.MeAttendanceRecord"
+                    }
+                },
                 "audience": {
                     "type": "array",
                     "items": {
@@ -3715,9 +3895,16 @@ const docTemplate = `{
                         "android"
                     ]
                 },
-                "expires": {
-                    "description": "jwt.NumericDate en runtime"
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.MeBranch"
+                    }
                 },
+                "current_shift": {
+                    "$ref": "#/definitions/handlers.MeCurrentShift"
+                },
+                "expires": {},
                 "id": {
                     "type": "integer",
                     "example": 1
@@ -3734,9 +3921,41 @@ const docTemplate = `{
                     "type": "string",
                     "example": "admin"
                 },
+                "today_summary": {
+                    "$ref": "#/definitions/handlers.MeTodaySummary"
+                },
                 "username": {
                     "type": "string",
                     "example": "admin"
+                }
+            }
+        },
+        "handlers.MeTodaySummary": {
+            "type": "object",
+            "properties": {
+                "break_in_at": {
+                    "type": "string"
+                },
+                "break_out_at": {
+                    "type": "string"
+                },
+                "markings_count": {
+                    "type": "integer"
+                },
+                "work_date": {
+                    "type": "string"
+                },
+                "work_in_at": {
+                    "type": "string"
+                },
+                "work_out_at": {
+                    "type": "string"
+                },
+                "worked_hours": {
+                    "type": "string"
+                },
+                "worked_minutes": {
+                    "type": "integer"
                 }
             }
         },
@@ -3852,6 +4071,12 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "work_days": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.WorkDayDTO"
+                    }
                 }
             }
         },
@@ -3989,6 +4214,12 @@ const docTemplate = `{
             "properties": {
                 "access_code": {
                     "type": "string"
+                },
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.UsersBranchDTO"
+                    }
                 },
                 "email": {
                     "type": "string"
@@ -4285,6 +4516,63 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.UsersAccessPointDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UsersBranchDTO": {
+            "type": "object",
+            "properties": {
+                "access_points": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.UsersAccessPointDTO"
+                    }
+                },
+                "branch_code": {
+                    "type": "string"
+                },
+                "branch_id": {
+                    "type": "integer"
+                },
+                "branch_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "role_in_branch": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.WorkDayDTO": {
+            "type": "object",
+            "properties": {
+                "is_working_day": {
+                    "type": "boolean"
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "weekday": {
+                    "type": "integer"
                 }
             }
         },
@@ -4799,6 +5087,17 @@ const docTemplate = `{
                 "street": {
                     "type": "string",
                     "example": "Av. Siempre Viva"
+                }
+            }
+        },
+        "services.QRResponse": {
+            "type": "object",
+            "properties": {
+                "expires_in": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         },

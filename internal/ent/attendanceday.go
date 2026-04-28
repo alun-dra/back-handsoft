@@ -36,6 +36,12 @@ type AttendanceDay struct {
 	BreakInAt *time.Time `json:"break_in_at,omitempty"`
 	// WorkOutAt holds the value of the "work_out_at" field.
 	WorkOutAt *time.Time `json:"work_out_at,omitempty"`
+	// LateMinutes holds the value of the "late_minutes" field.
+	LateMinutes *int `json:"late_minutes,omitempty"`
+	// OvertimeMinutes holds the value of the "overtime_minutes" field.
+	OvertimeMinutes *int `json:"overtime_minutes,omitempty"`
+	// EarlyExitMinutes holds the value of the "early_exit_minutes" field.
+	EarlyExitMinutes *int `json:"early_exit_minutes,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -99,7 +105,7 @@ func (*AttendanceDay) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case attendanceday.FieldID, attendanceday.FieldUserID, attendanceday.FieldBranchID, attendanceday.FieldAccessPointID:
+		case attendanceday.FieldID, attendanceday.FieldUserID, attendanceday.FieldBranchID, attendanceday.FieldAccessPointID, attendanceday.FieldLateMinutes, attendanceday.FieldOvertimeMinutes, attendanceday.FieldEarlyExitMinutes:
 			values[i] = new(sql.NullInt64)
 		case attendanceday.FieldWorkDate, attendanceday.FieldWorkInAt, attendanceday.FieldBreakOutAt, attendanceday.FieldBreakInAt, attendanceday.FieldWorkOutAt, attendanceday.FieldCreatedAt, attendanceday.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -180,6 +186,27 @@ func (_m *AttendanceDay) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.WorkOutAt = new(time.Time)
 				*_m.WorkOutAt = value.Time
+			}
+		case attendanceday.FieldLateMinutes:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field late_minutes", values[i])
+			} else if value.Valid {
+				_m.LateMinutes = new(int)
+				*_m.LateMinutes = int(value.Int64)
+			}
+		case attendanceday.FieldOvertimeMinutes:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field overtime_minutes", values[i])
+			} else if value.Valid {
+				_m.OvertimeMinutes = new(int)
+				*_m.OvertimeMinutes = int(value.Int64)
+			}
+		case attendanceday.FieldEarlyExitMinutes:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field early_exit_minutes", values[i])
+			} else if value.Valid {
+				_m.EarlyExitMinutes = new(int)
+				*_m.EarlyExitMinutes = int(value.Int64)
 			}
 		case attendanceday.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -290,6 +317,21 @@ func (_m *AttendanceDay) String() string {
 	if v := _m.WorkOutAt; v != nil {
 		builder.WriteString("work_out_at=")
 		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.LateMinutes; v != nil {
+		builder.WriteString("late_minutes=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.OvertimeMinutes; v != nil {
+		builder.WriteString("overtime_minutes=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.EarlyExitMinutes; v != nil {
+		builder.WriteString("early_exit_minutes=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")

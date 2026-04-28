@@ -82,6 +82,9 @@ var (
 		{Name: "break_out_at", Type: field.TypeTime, Nullable: true},
 		{Name: "break_in_at", Type: field.TypeTime, Nullable: true},
 		{Name: "work_out_at", Type: field.TypeTime, Nullable: true},
+		{Name: "late_minutes", Type: field.TypeInt, Nullable: true},
+		{Name: "overtime_minutes", Type: field.TypeInt, Nullable: true},
+		{Name: "early_exit_minutes", Type: field.TypeInt, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "access_point_attendance_days", Type: field.TypeInt, Nullable: true},
@@ -98,31 +101,31 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "attendance_days_access_points_attendance_days",
-				Columns:    []*schema.Column{AttendanceDaysColumns[8]},
-				RefColumns: []*schema.Column{AccessPointsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "attendance_days_users_user",
-				Columns:    []*schema.Column{AttendanceDaysColumns[9]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "attendance_days_branches_branch",
-				Columns:    []*schema.Column{AttendanceDaysColumns[10]},
-				RefColumns: []*schema.Column{BranchesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "attendance_days_access_points_access_point",
 				Columns:    []*schema.Column{AttendanceDaysColumns[11]},
 				RefColumns: []*schema.Column{AccessPointsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:     "attendance_days_users_attendance_days",
+				Symbol:     "attendance_days_users_user",
 				Columns:    []*schema.Column{AttendanceDaysColumns[12]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "attendance_days_branches_branch",
+				Columns:    []*schema.Column{AttendanceDaysColumns[13]},
+				RefColumns: []*schema.Column{BranchesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "attendance_days_access_points_access_point",
+				Columns:    []*schema.Column{AttendanceDaysColumns[14]},
+				RefColumns: []*schema.Column{AccessPointsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "attendance_days_users_attendance_days",
+				Columns:    []*schema.Column{AttendanceDaysColumns[15]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -131,7 +134,7 @@ var (
 			{
 				Name:    "ux_attendance_day",
 				Unique:  true,
-				Columns: []*schema.Column{AttendanceDaysColumns[9], AttendanceDaysColumns[10], AttendanceDaysColumns[1]},
+				Columns: []*schema.Column{AttendanceDaysColumns[12], AttendanceDaysColumns[13], AttendanceDaysColumns[1]},
 			},
 		},
 	}

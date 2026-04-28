@@ -30,6 +30,13 @@ func (AttendanceDay) Fields() []ent.Field {
 		field.Time("break_in_at").Optional().Nillable(),
 		field.Time("work_out_at").Optional().Nillable(),
 
+		// minutos de atraso en entrada (positivo = llegó tarde)
+		field.Int("late_minutes").Optional().Nillable(),
+		// minutos de horas extra al salir (positivo = salió después del horario)
+		field.Int("overtime_minutes").Optional().Nillable(),
+		// minutos de salida anticipada (positivo = salió antes del horario)
+		field.Int("early_exit_minutes").Optional().Nillable(),
+
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}
