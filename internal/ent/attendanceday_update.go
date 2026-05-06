@@ -254,6 +254,60 @@ func (_u *AttendanceDayUpdate) ClearEarlyExitMinutes() *AttendanceDayUpdate {
 	return _u
 }
 
+// SetEdited sets the "edited" field.
+func (_u *AttendanceDayUpdate) SetEdited(v bool) *AttendanceDayUpdate {
+	_u.mutation.SetEdited(v)
+	return _u
+}
+
+// SetNillableEdited sets the "edited" field if the given value is not nil.
+func (_u *AttendanceDayUpdate) SetNillableEdited(v *bool) *AttendanceDayUpdate {
+	if v != nil {
+		_u.SetEdited(*v)
+	}
+	return _u
+}
+
+// SetLastEditReason sets the "last_edit_reason" field.
+func (_u *AttendanceDayUpdate) SetLastEditReason(v string) *AttendanceDayUpdate {
+	_u.mutation.SetLastEditReason(v)
+	return _u
+}
+
+// SetNillableLastEditReason sets the "last_edit_reason" field if the given value is not nil.
+func (_u *AttendanceDayUpdate) SetNillableLastEditReason(v *string) *AttendanceDayUpdate {
+	if v != nil {
+		_u.SetLastEditReason(*v)
+	}
+	return _u
+}
+
+// ClearLastEditReason clears the value of the "last_edit_reason" field.
+func (_u *AttendanceDayUpdate) ClearLastEditReason() *AttendanceDayUpdate {
+	_u.mutation.ClearLastEditReason()
+	return _u
+}
+
+// SetEditedAt sets the "edited_at" field.
+func (_u *AttendanceDayUpdate) SetEditedAt(v time.Time) *AttendanceDayUpdate {
+	_u.mutation.SetEditedAt(v)
+	return _u
+}
+
+// SetNillableEditedAt sets the "edited_at" field if the given value is not nil.
+func (_u *AttendanceDayUpdate) SetNillableEditedAt(v *time.Time) *AttendanceDayUpdate {
+	if v != nil {
+		_u.SetEditedAt(*v)
+	}
+	return _u
+}
+
+// ClearEditedAt clears the value of the "edited_at" field.
+func (_u *AttendanceDayUpdate) ClearEditedAt() *AttendanceDayUpdate {
+	_u.mutation.ClearEditedAt()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *AttendanceDayUpdate) SetCreatedAt(v time.Time) *AttendanceDayUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -424,6 +478,21 @@ func (_u *AttendanceDayUpdate) sqlSave(ctx context.Context) (_node int, err erro
 	}
 	if _u.mutation.EarlyExitMinutesCleared() {
 		_spec.ClearField(attendanceday.FieldEarlyExitMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.Edited(); ok {
+		_spec.SetField(attendanceday.FieldEdited, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.LastEditReason(); ok {
+		_spec.SetField(attendanceday.FieldLastEditReason, field.TypeString, value)
+	}
+	if _u.mutation.LastEditReasonCleared() {
+		_spec.ClearField(attendanceday.FieldLastEditReason, field.TypeString)
+	}
+	if value, ok := _u.mutation.EditedAt(); ok {
+		_spec.SetField(attendanceday.FieldEditedAt, field.TypeTime, value)
+	}
+	if _u.mutation.EditedAtCleared() {
+		_spec.ClearField(attendanceday.FieldEditedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(attendanceday.FieldCreatedAt, field.TypeTime, value)
@@ -761,6 +830,60 @@ func (_u *AttendanceDayUpdateOne) ClearEarlyExitMinutes() *AttendanceDayUpdateOn
 	return _u
 }
 
+// SetEdited sets the "edited" field.
+func (_u *AttendanceDayUpdateOne) SetEdited(v bool) *AttendanceDayUpdateOne {
+	_u.mutation.SetEdited(v)
+	return _u
+}
+
+// SetNillableEdited sets the "edited" field if the given value is not nil.
+func (_u *AttendanceDayUpdateOne) SetNillableEdited(v *bool) *AttendanceDayUpdateOne {
+	if v != nil {
+		_u.SetEdited(*v)
+	}
+	return _u
+}
+
+// SetLastEditReason sets the "last_edit_reason" field.
+func (_u *AttendanceDayUpdateOne) SetLastEditReason(v string) *AttendanceDayUpdateOne {
+	_u.mutation.SetLastEditReason(v)
+	return _u
+}
+
+// SetNillableLastEditReason sets the "last_edit_reason" field if the given value is not nil.
+func (_u *AttendanceDayUpdateOne) SetNillableLastEditReason(v *string) *AttendanceDayUpdateOne {
+	if v != nil {
+		_u.SetLastEditReason(*v)
+	}
+	return _u
+}
+
+// ClearLastEditReason clears the value of the "last_edit_reason" field.
+func (_u *AttendanceDayUpdateOne) ClearLastEditReason() *AttendanceDayUpdateOne {
+	_u.mutation.ClearLastEditReason()
+	return _u
+}
+
+// SetEditedAt sets the "edited_at" field.
+func (_u *AttendanceDayUpdateOne) SetEditedAt(v time.Time) *AttendanceDayUpdateOne {
+	_u.mutation.SetEditedAt(v)
+	return _u
+}
+
+// SetNillableEditedAt sets the "edited_at" field if the given value is not nil.
+func (_u *AttendanceDayUpdateOne) SetNillableEditedAt(v *time.Time) *AttendanceDayUpdateOne {
+	if v != nil {
+		_u.SetEditedAt(*v)
+	}
+	return _u
+}
+
+// ClearEditedAt clears the value of the "edited_at" field.
+func (_u *AttendanceDayUpdateOne) ClearEditedAt() *AttendanceDayUpdateOne {
+	_u.mutation.ClearEditedAt()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *AttendanceDayUpdateOne) SetCreatedAt(v time.Time) *AttendanceDayUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -961,6 +1084,21 @@ func (_u *AttendanceDayUpdateOne) sqlSave(ctx context.Context) (_node *Attendanc
 	}
 	if _u.mutation.EarlyExitMinutesCleared() {
 		_spec.ClearField(attendanceday.FieldEarlyExitMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.Edited(); ok {
+		_spec.SetField(attendanceday.FieldEdited, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.LastEditReason(); ok {
+		_spec.SetField(attendanceday.FieldLastEditReason, field.TypeString, value)
+	}
+	if _u.mutation.LastEditReasonCleared() {
+		_spec.ClearField(attendanceday.FieldLastEditReason, field.TypeString)
+	}
+	if value, ok := _u.mutation.EditedAt(); ok {
+		_spec.SetField(attendanceday.FieldEditedAt, field.TypeTime, value)
+	}
+	if _u.mutation.EditedAtCleared() {
+		_spec.ClearField(attendanceday.FieldEditedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(attendanceday.FieldCreatedAt, field.TypeTime, value)

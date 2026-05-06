@@ -110,6 +110,21 @@ func EarlyExitMinutes(v int) predicate.AttendanceDay {
 	return predicate.AttendanceDay(sql.FieldEQ(FieldEarlyExitMinutes, v))
 }
 
+// Edited applies equality check predicate on the "edited" field. It's identical to EditedEQ.
+func Edited(v bool) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldEdited, v))
+}
+
+// LastEditReason applies equality check predicate on the "last_edit_reason" field. It's identical to LastEditReasonEQ.
+func LastEditReason(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldLastEditReason, v))
+}
+
+// EditedAt applies equality check predicate on the "edited_at" field. It's identical to EditedAtEQ.
+func EditedAt(v time.Time) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldEditedAt, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.AttendanceDay {
 	return predicate.AttendanceDay(sql.FieldEQ(FieldCreatedAt, v))
@@ -578,6 +593,141 @@ func EarlyExitMinutesIsNil() predicate.AttendanceDay {
 // EarlyExitMinutesNotNil applies the NotNil predicate on the "early_exit_minutes" field.
 func EarlyExitMinutesNotNil() predicate.AttendanceDay {
 	return predicate.AttendanceDay(sql.FieldNotNull(FieldEarlyExitMinutes))
+}
+
+// EditedEQ applies the EQ predicate on the "edited" field.
+func EditedEQ(v bool) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldEdited, v))
+}
+
+// EditedNEQ applies the NEQ predicate on the "edited" field.
+func EditedNEQ(v bool) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNEQ(FieldEdited, v))
+}
+
+// LastEditReasonEQ applies the EQ predicate on the "last_edit_reason" field.
+func LastEditReasonEQ(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldLastEditReason, v))
+}
+
+// LastEditReasonNEQ applies the NEQ predicate on the "last_edit_reason" field.
+func LastEditReasonNEQ(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNEQ(FieldLastEditReason, v))
+}
+
+// LastEditReasonIn applies the In predicate on the "last_edit_reason" field.
+func LastEditReasonIn(vs ...string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIn(FieldLastEditReason, vs...))
+}
+
+// LastEditReasonNotIn applies the NotIn predicate on the "last_edit_reason" field.
+func LastEditReasonNotIn(vs ...string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotIn(FieldLastEditReason, vs...))
+}
+
+// LastEditReasonGT applies the GT predicate on the "last_edit_reason" field.
+func LastEditReasonGT(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGT(FieldLastEditReason, v))
+}
+
+// LastEditReasonGTE applies the GTE predicate on the "last_edit_reason" field.
+func LastEditReasonGTE(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGTE(FieldLastEditReason, v))
+}
+
+// LastEditReasonLT applies the LT predicate on the "last_edit_reason" field.
+func LastEditReasonLT(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLT(FieldLastEditReason, v))
+}
+
+// LastEditReasonLTE applies the LTE predicate on the "last_edit_reason" field.
+func LastEditReasonLTE(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLTE(FieldLastEditReason, v))
+}
+
+// LastEditReasonContains applies the Contains predicate on the "last_edit_reason" field.
+func LastEditReasonContains(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldContains(FieldLastEditReason, v))
+}
+
+// LastEditReasonHasPrefix applies the HasPrefix predicate on the "last_edit_reason" field.
+func LastEditReasonHasPrefix(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldHasPrefix(FieldLastEditReason, v))
+}
+
+// LastEditReasonHasSuffix applies the HasSuffix predicate on the "last_edit_reason" field.
+func LastEditReasonHasSuffix(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldHasSuffix(FieldLastEditReason, v))
+}
+
+// LastEditReasonIsNil applies the IsNil predicate on the "last_edit_reason" field.
+func LastEditReasonIsNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIsNull(FieldLastEditReason))
+}
+
+// LastEditReasonNotNil applies the NotNil predicate on the "last_edit_reason" field.
+func LastEditReasonNotNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotNull(FieldLastEditReason))
+}
+
+// LastEditReasonEqualFold applies the EqualFold predicate on the "last_edit_reason" field.
+func LastEditReasonEqualFold(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEqualFold(FieldLastEditReason, v))
+}
+
+// LastEditReasonContainsFold applies the ContainsFold predicate on the "last_edit_reason" field.
+func LastEditReasonContainsFold(v string) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldContainsFold(FieldLastEditReason, v))
+}
+
+// EditedAtEQ applies the EQ predicate on the "edited_at" field.
+func EditedAtEQ(v time.Time) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldEQ(FieldEditedAt, v))
+}
+
+// EditedAtNEQ applies the NEQ predicate on the "edited_at" field.
+func EditedAtNEQ(v time.Time) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNEQ(FieldEditedAt, v))
+}
+
+// EditedAtIn applies the In predicate on the "edited_at" field.
+func EditedAtIn(vs ...time.Time) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIn(FieldEditedAt, vs...))
+}
+
+// EditedAtNotIn applies the NotIn predicate on the "edited_at" field.
+func EditedAtNotIn(vs ...time.Time) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotIn(FieldEditedAt, vs...))
+}
+
+// EditedAtGT applies the GT predicate on the "edited_at" field.
+func EditedAtGT(v time.Time) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGT(FieldEditedAt, v))
+}
+
+// EditedAtGTE applies the GTE predicate on the "edited_at" field.
+func EditedAtGTE(v time.Time) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldGTE(FieldEditedAt, v))
+}
+
+// EditedAtLT applies the LT predicate on the "edited_at" field.
+func EditedAtLT(v time.Time) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLT(FieldEditedAt, v))
+}
+
+// EditedAtLTE applies the LTE predicate on the "edited_at" field.
+func EditedAtLTE(v time.Time) predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldLTE(FieldEditedAt, v))
+}
+
+// EditedAtIsNil applies the IsNil predicate on the "edited_at" field.
+func EditedAtIsNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldIsNull(FieldEditedAt))
+}
+
+// EditedAtNotNil applies the NotNil predicate on the "edited_at" field.
+func EditedAtNotNil() predicate.AttendanceDay {
+	return predicate.AttendanceDay(sql.FieldNotNull(FieldEditedAt))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

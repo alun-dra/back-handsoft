@@ -72,12 +72,16 @@ func init() {
 	address.UpdateDefaultUpdatedAt = addressDescUpdatedAt.UpdateDefault.(func() time.Time)
 	attendancedayFields := schema.AttendanceDay{}.Fields()
 	_ = attendancedayFields
+	// attendancedayDescEdited is the schema descriptor for edited field.
+	attendancedayDescEdited := attendancedayFields[11].Descriptor()
+	// attendanceday.DefaultEdited holds the default value on creation for the edited field.
+	attendanceday.DefaultEdited = attendancedayDescEdited.Default.(bool)
 	// attendancedayDescCreatedAt is the schema descriptor for created_at field.
-	attendancedayDescCreatedAt := attendancedayFields[11].Descriptor()
+	attendancedayDescCreatedAt := attendancedayFields[14].Descriptor()
 	// attendanceday.DefaultCreatedAt holds the default value on creation for the created_at field.
 	attendanceday.DefaultCreatedAt = attendancedayDescCreatedAt.Default.(func() time.Time)
 	// attendancedayDescUpdatedAt is the schema descriptor for updated_at field.
-	attendancedayDescUpdatedAt := attendancedayFields[12].Descriptor()
+	attendancedayDescUpdatedAt := attendancedayFields[15].Descriptor()
 	// attendanceday.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	attendanceday.DefaultUpdatedAt = attendancedayDescUpdatedAt.Default.(func() time.Time)
 	// attendanceday.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

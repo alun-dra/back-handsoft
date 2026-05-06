@@ -37,6 +37,11 @@ func (AttendanceDay) Fields() []ent.Field {
 		// minutos de salida anticipada (positivo = salió antes del horario)
 		field.Int("early_exit_minutes").Optional().Nillable(),
 
+		// auditoría de edición manual
+		field.Bool("edited").Default(false),
+		field.String("last_edit_reason").Optional().Nillable(),
+		field.Time("edited_at").Optional().Nillable(),
+
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

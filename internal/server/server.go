@@ -52,6 +52,7 @@ func New(cfg *config.Config, client *ent.Client, db *sql.DB) *http.Server {
 	qrSessionService := services.NewQRSessionService(client)
 	attendanceService := services.NewAttendanceService(client, qrSessionService)
 	dashboardService := services.NewDashboardService(client, db)
+	markingsService := services.NewMarkingsService(client, db)
 
 	// =========================
 	// Handlers
@@ -72,6 +73,7 @@ func New(cfg *config.Config, client *ent.Client, db *sql.DB) *http.Server {
 	deviceHandler := handlers.NewDeviceHandler(deviceService)
 	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
+	markingsHandler := handlers.NewMarkingsHandler(markingsService)
 
 	shiftHandler := handlers.NewShiftHandler(shiftService)
 	shiftDayHandler := handlers.NewShiftDayHandler(shiftDayService)
@@ -531,6 +533,49 @@ func New(cfg *config.Config, client *ent.Client, db *sql.DB) *http.Server {
 		middleware.JWT(cfg),
 	)
 	mux.Handle("/api/v1/dashboard/export", protectedDashboardExport)
+
+	protectedMarkings := middleware.Chain(
+		http.HandlerFunc(markingsHandler.List),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/markings", protectedMarkings)
+
+	protectedMarkingsFilters := middleware.Chain(
+		http.HandlerFunc(markingsHandler.Filters),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/markings/filters", protectedMarkingsFilters)
+
+	protectedMarkingsTopBranches := middleware.Chain(
+		http.HandlerFunc(markingsHandler.TopBranches),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/markings/top-branches", protectedMarkingsTopBranches)
+
+	protectedMarkingsSubroutes := middleware.Chain(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			path := strings.Trim(r.URL.Path, "/")
+			parts := strings.Split(path, "/")
+
+			// /api/v1/markings/{id}
+			if len(parts) == 4 &&
+				parts[0] == "api" &&
+				parts[1] == "v1" &&
+				parts[2] == "markings" {
+				markingID := parseID(parts[3])
+				if markingID <= 0 {
+					http.Error(w, "Not Found", http.StatusNotFound)
+					return
+				}
+				markingsHandler.Update(w, r, markingID)
+				return
+			}
+
+			http.NotFound(w, r)
+		}),
+		middleware.JWT(cfg),
+	)
+	mux.Handle("/api/v1/markings/", protectedMarkingsSubroutes)
 
 	// =========================
 	// Global middlewares

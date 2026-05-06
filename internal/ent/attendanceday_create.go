@@ -153,6 +153,48 @@ func (_c *AttendanceDayCreate) SetNillableEarlyExitMinutes(v *int) *AttendanceDa
 	return _c
 }
 
+// SetEdited sets the "edited" field.
+func (_c *AttendanceDayCreate) SetEdited(v bool) *AttendanceDayCreate {
+	_c.mutation.SetEdited(v)
+	return _c
+}
+
+// SetNillableEdited sets the "edited" field if the given value is not nil.
+func (_c *AttendanceDayCreate) SetNillableEdited(v *bool) *AttendanceDayCreate {
+	if v != nil {
+		_c.SetEdited(*v)
+	}
+	return _c
+}
+
+// SetLastEditReason sets the "last_edit_reason" field.
+func (_c *AttendanceDayCreate) SetLastEditReason(v string) *AttendanceDayCreate {
+	_c.mutation.SetLastEditReason(v)
+	return _c
+}
+
+// SetNillableLastEditReason sets the "last_edit_reason" field if the given value is not nil.
+func (_c *AttendanceDayCreate) SetNillableLastEditReason(v *string) *AttendanceDayCreate {
+	if v != nil {
+		_c.SetLastEditReason(*v)
+	}
+	return _c
+}
+
+// SetEditedAt sets the "edited_at" field.
+func (_c *AttendanceDayCreate) SetEditedAt(v time.Time) *AttendanceDayCreate {
+	_c.mutation.SetEditedAt(v)
+	return _c
+}
+
+// SetNillableEditedAt sets the "edited_at" field if the given value is not nil.
+func (_c *AttendanceDayCreate) SetNillableEditedAt(v *time.Time) *AttendanceDayCreate {
+	if v != nil {
+		_c.SetEditedAt(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *AttendanceDayCreate) SetCreatedAt(v time.Time) *AttendanceDayCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -231,6 +273,10 @@ func (_c *AttendanceDayCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *AttendanceDayCreate) defaults() {
+	if _, ok := _c.mutation.Edited(); !ok {
+		v := attendanceday.DefaultEdited
+		_c.mutation.SetEdited(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := attendanceday.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -251,6 +297,9 @@ func (_c *AttendanceDayCreate) check() error {
 	}
 	if _, ok := _c.mutation.WorkDate(); !ok {
 		return &ValidationError{Name: "work_date", err: errors.New(`ent: missing required field "AttendanceDay.work_date"`)}
+	}
+	if _, ok := _c.mutation.Edited(); !ok {
+		return &ValidationError{Name: "edited", err: errors.New(`ent: missing required field "AttendanceDay.edited"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "AttendanceDay.created_at"`)}
@@ -321,6 +370,18 @@ func (_c *AttendanceDayCreate) createSpec() (*AttendanceDay, *sqlgraph.CreateSpe
 	if value, ok := _c.mutation.EarlyExitMinutes(); ok {
 		_spec.SetField(attendanceday.FieldEarlyExitMinutes, field.TypeInt, value)
 		_node.EarlyExitMinutes = &value
+	}
+	if value, ok := _c.mutation.Edited(); ok {
+		_spec.SetField(attendanceday.FieldEdited, field.TypeBool, value)
+		_node.Edited = value
+	}
+	if value, ok := _c.mutation.LastEditReason(); ok {
+		_spec.SetField(attendanceday.FieldLastEditReason, field.TypeString, value)
+		_node.LastEditReason = &value
+	}
+	if value, ok := _c.mutation.EditedAt(); ok {
+		_spec.SetField(attendanceday.FieldEditedAt, field.TypeTime, value)
+		_node.EditedAt = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(attendanceday.FieldCreatedAt, field.TypeTime, value)

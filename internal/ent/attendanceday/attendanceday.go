@@ -36,6 +36,12 @@ const (
 	FieldOvertimeMinutes = "overtime_minutes"
 	// FieldEarlyExitMinutes holds the string denoting the early_exit_minutes field in the database.
 	FieldEarlyExitMinutes = "early_exit_minutes"
+	// FieldEdited holds the string denoting the edited field in the database.
+	FieldEdited = "edited"
+	// FieldLastEditReason holds the string denoting the last_edit_reason field in the database.
+	FieldLastEditReason = "last_edit_reason"
+	// FieldEditedAt holds the string denoting the edited_at field in the database.
+	FieldEditedAt = "edited_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -85,6 +91,9 @@ var Columns = []string{
 	FieldLateMinutes,
 	FieldOvertimeMinutes,
 	FieldEarlyExitMinutes,
+	FieldEdited,
+	FieldLastEditReason,
+	FieldEditedAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -112,6 +121,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultEdited holds the default value on creation for the "edited" field.
+	DefaultEdited bool
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -181,6 +192,21 @@ func ByOvertimeMinutes(opts ...sql.OrderTermOption) OrderOption {
 // ByEarlyExitMinutes orders the results by the early_exit_minutes field.
 func ByEarlyExitMinutes(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEarlyExitMinutes, opts...).ToFunc()
+}
+
+// ByEdited orders the results by the edited field.
+func ByEdited(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEdited, opts...).ToFunc()
+}
+
+// ByLastEditReason orders the results by the last_edit_reason field.
+func ByLastEditReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastEditReason, opts...).ToFunc()
+}
+
+// ByEditedAt orders the results by the edited_at field.
+func ByEditedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEditedAt, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

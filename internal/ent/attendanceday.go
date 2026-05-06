@@ -42,6 +42,12 @@ type AttendanceDay struct {
 	OvertimeMinutes *int `json:"overtime_minutes,omitempty"`
 	// EarlyExitMinutes holds the value of the "early_exit_minutes" field.
 	EarlyExitMinutes *int `json:"early_exit_minutes,omitempty"`
+	// Edited holds the value of the "edited" field.
+	Edited bool `json:"edited,omitempty"`
+	// LastEditReason holds the value of the "last_edit_reason" field.
+	LastEditReason *string `json:"last_edit_reason,omitempty"`
+	// EditedAt holds the value of the "edited_at" field.
+	EditedAt *time.Time `json:"edited_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -105,9 +111,13 @@ func (*AttendanceDay) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case attendanceday.FieldEdited:
+			values[i] = new(sql.NullBool)
 		case attendanceday.FieldID, attendanceday.FieldUserID, attendanceday.FieldBranchID, attendanceday.FieldAccessPointID, attendanceday.FieldLateMinutes, attendanceday.FieldOvertimeMinutes, attendanceday.FieldEarlyExitMinutes:
 			values[i] = new(sql.NullInt64)
-		case attendanceday.FieldWorkDate, attendanceday.FieldWorkInAt, attendanceday.FieldBreakOutAt, attendanceday.FieldBreakInAt, attendanceday.FieldWorkOutAt, attendanceday.FieldCreatedAt, attendanceday.FieldUpdatedAt:
+		case attendanceday.FieldLastEditReason:
+			values[i] = new(sql.NullString)
+		case attendanceday.FieldWorkDate, attendanceday.FieldWorkInAt, attendanceday.FieldBreakOutAt, attendanceday.FieldBreakInAt, attendanceday.FieldWorkOutAt, attendanceday.FieldEditedAt, attendanceday.FieldCreatedAt, attendanceday.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case attendanceday.ForeignKeys[0]: // access_point_attendance_days
 			values[i] = new(sql.NullInt64)
@@ -207,6 +217,26 @@ func (_m *AttendanceDay) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.EarlyExitMinutes = new(int)
 				*_m.EarlyExitMinutes = int(value.Int64)
+			}
+		case attendanceday.FieldEdited:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field edited", values[i])
+			} else if value.Valid {
+				_m.Edited = value.Bool
+			}
+		case attendanceday.FieldLastEditReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field last_edit_reason", values[i])
+			} else if value.Valid {
+				_m.LastEditReason = new(string)
+				*_m.LastEditReason = value.String
+			}
+		case attendanceday.FieldEditedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field edited_at", values[i])
+			} else if value.Valid {
+				_m.EditedAt = new(time.Time)
+				*_m.EditedAt = value.Time
 			}
 		case attendanceday.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -332,6 +362,19 @@ func (_m *AttendanceDay) String() string {
 	if v := _m.EarlyExitMinutes; v != nil {
 		builder.WriteString("early_exit_minutes=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("edited=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Edited))
+	builder.WriteString(", ")
+	if v := _m.LastEditReason; v != nil {
+		builder.WriteString("last_edit_reason=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.EditedAt; v != nil {
+		builder.WriteString("edited_at=")
+		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")

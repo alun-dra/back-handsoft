@@ -1620,6 +1620,9 @@ type AttendanceDayMutation struct {
 	addovertime_minutes   *int
 	early_exit_minutes    *int
 	addearly_exit_minutes *int
+	edited                *bool
+	last_edit_reason      *string
+	edited_at             *time.Time
 	created_at            *time.Time
 	updated_at            *time.Time
 	clearedFields         map[string]struct{}
@@ -2295,6 +2298,140 @@ func (m *AttendanceDayMutation) ResetEarlyExitMinutes() {
 	delete(m.clearedFields, attendanceday.FieldEarlyExitMinutes)
 }
 
+// SetEdited sets the "edited" field.
+func (m *AttendanceDayMutation) SetEdited(b bool) {
+	m.edited = &b
+}
+
+// Edited returns the value of the "edited" field in the mutation.
+func (m *AttendanceDayMutation) Edited() (r bool, exists bool) {
+	v := m.edited
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEdited returns the old "edited" field's value of the AttendanceDay entity.
+// If the AttendanceDay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttendanceDayMutation) OldEdited(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEdited is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEdited requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEdited: %w", err)
+	}
+	return oldValue.Edited, nil
+}
+
+// ResetEdited resets all changes to the "edited" field.
+func (m *AttendanceDayMutation) ResetEdited() {
+	m.edited = nil
+}
+
+// SetLastEditReason sets the "last_edit_reason" field.
+func (m *AttendanceDayMutation) SetLastEditReason(s string) {
+	m.last_edit_reason = &s
+}
+
+// LastEditReason returns the value of the "last_edit_reason" field in the mutation.
+func (m *AttendanceDayMutation) LastEditReason() (r string, exists bool) {
+	v := m.last_edit_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastEditReason returns the old "last_edit_reason" field's value of the AttendanceDay entity.
+// If the AttendanceDay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttendanceDayMutation) OldLastEditReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastEditReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastEditReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastEditReason: %w", err)
+	}
+	return oldValue.LastEditReason, nil
+}
+
+// ClearLastEditReason clears the value of the "last_edit_reason" field.
+func (m *AttendanceDayMutation) ClearLastEditReason() {
+	m.last_edit_reason = nil
+	m.clearedFields[attendanceday.FieldLastEditReason] = struct{}{}
+}
+
+// LastEditReasonCleared returns if the "last_edit_reason" field was cleared in this mutation.
+func (m *AttendanceDayMutation) LastEditReasonCleared() bool {
+	_, ok := m.clearedFields[attendanceday.FieldLastEditReason]
+	return ok
+}
+
+// ResetLastEditReason resets all changes to the "last_edit_reason" field.
+func (m *AttendanceDayMutation) ResetLastEditReason() {
+	m.last_edit_reason = nil
+	delete(m.clearedFields, attendanceday.FieldLastEditReason)
+}
+
+// SetEditedAt sets the "edited_at" field.
+func (m *AttendanceDayMutation) SetEditedAt(t time.Time) {
+	m.edited_at = &t
+}
+
+// EditedAt returns the value of the "edited_at" field in the mutation.
+func (m *AttendanceDayMutation) EditedAt() (r time.Time, exists bool) {
+	v := m.edited_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEditedAt returns the old "edited_at" field's value of the AttendanceDay entity.
+// If the AttendanceDay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttendanceDayMutation) OldEditedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEditedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEditedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEditedAt: %w", err)
+	}
+	return oldValue.EditedAt, nil
+}
+
+// ClearEditedAt clears the value of the "edited_at" field.
+func (m *AttendanceDayMutation) ClearEditedAt() {
+	m.edited_at = nil
+	m.clearedFields[attendanceday.FieldEditedAt] = struct{}{}
+}
+
+// EditedAtCleared returns if the "edited_at" field was cleared in this mutation.
+func (m *AttendanceDayMutation) EditedAtCleared() bool {
+	_, ok := m.clearedFields[attendanceday.FieldEditedAt]
+	return ok
+}
+
+// ResetEditedAt resets all changes to the "edited_at" field.
+func (m *AttendanceDayMutation) ResetEditedAt() {
+	m.edited_at = nil
+	delete(m.clearedFields, attendanceday.FieldEditedAt)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *AttendanceDayMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -2482,7 +2619,7 @@ func (m *AttendanceDayMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AttendanceDayMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 16)
 	if m.user != nil {
 		fields = append(fields, attendanceday.FieldUserID)
 	}
@@ -2515,6 +2652,15 @@ func (m *AttendanceDayMutation) Fields() []string {
 	}
 	if m.early_exit_minutes != nil {
 		fields = append(fields, attendanceday.FieldEarlyExitMinutes)
+	}
+	if m.edited != nil {
+		fields = append(fields, attendanceday.FieldEdited)
+	}
+	if m.last_edit_reason != nil {
+		fields = append(fields, attendanceday.FieldLastEditReason)
+	}
+	if m.edited_at != nil {
+		fields = append(fields, attendanceday.FieldEditedAt)
 	}
 	if m.created_at != nil {
 		fields = append(fields, attendanceday.FieldCreatedAt)
@@ -2552,6 +2698,12 @@ func (m *AttendanceDayMutation) Field(name string) (ent.Value, bool) {
 		return m.OvertimeMinutes()
 	case attendanceday.FieldEarlyExitMinutes:
 		return m.EarlyExitMinutes()
+	case attendanceday.FieldEdited:
+		return m.Edited()
+	case attendanceday.FieldLastEditReason:
+		return m.LastEditReason()
+	case attendanceday.FieldEditedAt:
+		return m.EditedAt()
 	case attendanceday.FieldCreatedAt:
 		return m.CreatedAt()
 	case attendanceday.FieldUpdatedAt:
@@ -2587,6 +2739,12 @@ func (m *AttendanceDayMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldOvertimeMinutes(ctx)
 	case attendanceday.FieldEarlyExitMinutes:
 		return m.OldEarlyExitMinutes(ctx)
+	case attendanceday.FieldEdited:
+		return m.OldEdited(ctx)
+	case attendanceday.FieldLastEditReason:
+		return m.OldLastEditReason(ctx)
+	case attendanceday.FieldEditedAt:
+		return m.OldEditedAt(ctx)
 	case attendanceday.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case attendanceday.FieldUpdatedAt:
@@ -2676,6 +2834,27 @@ func (m *AttendanceDayMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetEarlyExitMinutes(v)
+		return nil
+	case attendanceday.FieldEdited:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEdited(v)
+		return nil
+	case attendanceday.FieldLastEditReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastEditReason(v)
+		return nil
+	case attendanceday.FieldEditedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEditedAt(v)
 		return nil
 	case attendanceday.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -2784,6 +2963,12 @@ func (m *AttendanceDayMutation) ClearedFields() []string {
 	if m.FieldCleared(attendanceday.FieldEarlyExitMinutes) {
 		fields = append(fields, attendanceday.FieldEarlyExitMinutes)
 	}
+	if m.FieldCleared(attendanceday.FieldLastEditReason) {
+		fields = append(fields, attendanceday.FieldLastEditReason)
+	}
+	if m.FieldCleared(attendanceday.FieldEditedAt) {
+		fields = append(fields, attendanceday.FieldEditedAt)
+	}
 	return fields
 }
 
@@ -2821,6 +3006,12 @@ func (m *AttendanceDayMutation) ClearField(name string) error {
 		return nil
 	case attendanceday.FieldEarlyExitMinutes:
 		m.ClearEarlyExitMinutes()
+		return nil
+	case attendanceday.FieldLastEditReason:
+		m.ClearLastEditReason()
+		return nil
+	case attendanceday.FieldEditedAt:
+		m.ClearEditedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown AttendanceDay nullable field %s", name)
@@ -2862,6 +3053,15 @@ func (m *AttendanceDayMutation) ResetField(name string) error {
 		return nil
 	case attendanceday.FieldEarlyExitMinutes:
 		m.ResetEarlyExitMinutes()
+		return nil
+	case attendanceday.FieldEdited:
+		m.ResetEdited()
+		return nil
+	case attendanceday.FieldLastEditReason:
+		m.ResetLastEditReason()
+		return nil
+	case attendanceday.FieldEditedAt:
+		m.ResetEditedAt()
 		return nil
 	case attendanceday.FieldCreatedAt:
 		m.ResetCreatedAt()
