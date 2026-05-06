@@ -254,6 +254,60 @@ func (_u *AttendanceDayUpdate) ClearEarlyExitMinutes() *AttendanceDayUpdate {
 	return _u
 }
 
+// SetBreakDiffMinutes sets the "break_diff_minutes" field.
+func (_u *AttendanceDayUpdate) SetBreakDiffMinutes(v int) *AttendanceDayUpdate {
+	_u.mutation.ResetBreakDiffMinutes()
+	_u.mutation.SetBreakDiffMinutes(v)
+	return _u
+}
+
+// SetNillableBreakDiffMinutes sets the "break_diff_minutes" field if the given value is not nil.
+func (_u *AttendanceDayUpdate) SetNillableBreakDiffMinutes(v *int) *AttendanceDayUpdate {
+	if v != nil {
+		_u.SetBreakDiffMinutes(*v)
+	}
+	return _u
+}
+
+// AddBreakDiffMinutes adds value to the "break_diff_minutes" field.
+func (_u *AttendanceDayUpdate) AddBreakDiffMinutes(v int) *AttendanceDayUpdate {
+	_u.mutation.AddBreakDiffMinutes(v)
+	return _u
+}
+
+// ClearBreakDiffMinutes clears the value of the "break_diff_minutes" field.
+func (_u *AttendanceDayUpdate) ClearBreakDiffMinutes() *AttendanceDayUpdate {
+	_u.mutation.ClearBreakDiffMinutes()
+	return _u
+}
+
+// SetNetMinutesBalance sets the "net_minutes_balance" field.
+func (_u *AttendanceDayUpdate) SetNetMinutesBalance(v int) *AttendanceDayUpdate {
+	_u.mutation.ResetNetMinutesBalance()
+	_u.mutation.SetNetMinutesBalance(v)
+	return _u
+}
+
+// SetNillableNetMinutesBalance sets the "net_minutes_balance" field if the given value is not nil.
+func (_u *AttendanceDayUpdate) SetNillableNetMinutesBalance(v *int) *AttendanceDayUpdate {
+	if v != nil {
+		_u.SetNetMinutesBalance(*v)
+	}
+	return _u
+}
+
+// AddNetMinutesBalance adds value to the "net_minutes_balance" field.
+func (_u *AttendanceDayUpdate) AddNetMinutesBalance(v int) *AttendanceDayUpdate {
+	_u.mutation.AddNetMinutesBalance(v)
+	return _u
+}
+
+// ClearNetMinutesBalance clears the value of the "net_minutes_balance" field.
+func (_u *AttendanceDayUpdate) ClearNetMinutesBalance() *AttendanceDayUpdate {
+	_u.mutation.ClearNetMinutesBalance()
+	return _u
+}
+
 // SetEdited sets the "edited" field.
 func (_u *AttendanceDayUpdate) SetEdited(v bool) *AttendanceDayUpdate {
 	_u.mutation.SetEdited(v)
@@ -478,6 +532,24 @@ func (_u *AttendanceDayUpdate) sqlSave(ctx context.Context) (_node int, err erro
 	}
 	if _u.mutation.EarlyExitMinutesCleared() {
 		_spec.ClearField(attendanceday.FieldEarlyExitMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.BreakDiffMinutes(); ok {
+		_spec.SetField(attendanceday.FieldBreakDiffMinutes, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedBreakDiffMinutes(); ok {
+		_spec.AddField(attendanceday.FieldBreakDiffMinutes, field.TypeInt, value)
+	}
+	if _u.mutation.BreakDiffMinutesCleared() {
+		_spec.ClearField(attendanceday.FieldBreakDiffMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.NetMinutesBalance(); ok {
+		_spec.SetField(attendanceday.FieldNetMinutesBalance, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedNetMinutesBalance(); ok {
+		_spec.AddField(attendanceday.FieldNetMinutesBalance, field.TypeInt, value)
+	}
+	if _u.mutation.NetMinutesBalanceCleared() {
+		_spec.ClearField(attendanceday.FieldNetMinutesBalance, field.TypeInt)
 	}
 	if value, ok := _u.mutation.Edited(); ok {
 		_spec.SetField(attendanceday.FieldEdited, field.TypeBool, value)
@@ -830,6 +902,60 @@ func (_u *AttendanceDayUpdateOne) ClearEarlyExitMinutes() *AttendanceDayUpdateOn
 	return _u
 }
 
+// SetBreakDiffMinutes sets the "break_diff_minutes" field.
+func (_u *AttendanceDayUpdateOne) SetBreakDiffMinutes(v int) *AttendanceDayUpdateOne {
+	_u.mutation.ResetBreakDiffMinutes()
+	_u.mutation.SetBreakDiffMinutes(v)
+	return _u
+}
+
+// SetNillableBreakDiffMinutes sets the "break_diff_minutes" field if the given value is not nil.
+func (_u *AttendanceDayUpdateOne) SetNillableBreakDiffMinutes(v *int) *AttendanceDayUpdateOne {
+	if v != nil {
+		_u.SetBreakDiffMinutes(*v)
+	}
+	return _u
+}
+
+// AddBreakDiffMinutes adds value to the "break_diff_minutes" field.
+func (_u *AttendanceDayUpdateOne) AddBreakDiffMinutes(v int) *AttendanceDayUpdateOne {
+	_u.mutation.AddBreakDiffMinutes(v)
+	return _u
+}
+
+// ClearBreakDiffMinutes clears the value of the "break_diff_minutes" field.
+func (_u *AttendanceDayUpdateOne) ClearBreakDiffMinutes() *AttendanceDayUpdateOne {
+	_u.mutation.ClearBreakDiffMinutes()
+	return _u
+}
+
+// SetNetMinutesBalance sets the "net_minutes_balance" field.
+func (_u *AttendanceDayUpdateOne) SetNetMinutesBalance(v int) *AttendanceDayUpdateOne {
+	_u.mutation.ResetNetMinutesBalance()
+	_u.mutation.SetNetMinutesBalance(v)
+	return _u
+}
+
+// SetNillableNetMinutesBalance sets the "net_minutes_balance" field if the given value is not nil.
+func (_u *AttendanceDayUpdateOne) SetNillableNetMinutesBalance(v *int) *AttendanceDayUpdateOne {
+	if v != nil {
+		_u.SetNetMinutesBalance(*v)
+	}
+	return _u
+}
+
+// AddNetMinutesBalance adds value to the "net_minutes_balance" field.
+func (_u *AttendanceDayUpdateOne) AddNetMinutesBalance(v int) *AttendanceDayUpdateOne {
+	_u.mutation.AddNetMinutesBalance(v)
+	return _u
+}
+
+// ClearNetMinutesBalance clears the value of the "net_minutes_balance" field.
+func (_u *AttendanceDayUpdateOne) ClearNetMinutesBalance() *AttendanceDayUpdateOne {
+	_u.mutation.ClearNetMinutesBalance()
+	return _u
+}
+
 // SetEdited sets the "edited" field.
 func (_u *AttendanceDayUpdateOne) SetEdited(v bool) *AttendanceDayUpdateOne {
 	_u.mutation.SetEdited(v)
@@ -1084,6 +1210,24 @@ func (_u *AttendanceDayUpdateOne) sqlSave(ctx context.Context) (_node *Attendanc
 	}
 	if _u.mutation.EarlyExitMinutesCleared() {
 		_spec.ClearField(attendanceday.FieldEarlyExitMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.BreakDiffMinutes(); ok {
+		_spec.SetField(attendanceday.FieldBreakDiffMinutes, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedBreakDiffMinutes(); ok {
+		_spec.AddField(attendanceday.FieldBreakDiffMinutes, field.TypeInt, value)
+	}
+	if _u.mutation.BreakDiffMinutesCleared() {
+		_spec.ClearField(attendanceday.FieldBreakDiffMinutes, field.TypeInt)
+	}
+	if value, ok := _u.mutation.NetMinutesBalance(); ok {
+		_spec.SetField(attendanceday.FieldNetMinutesBalance, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedNetMinutesBalance(); ok {
+		_spec.AddField(attendanceday.FieldNetMinutesBalance, field.TypeInt, value)
+	}
+	if _u.mutation.NetMinutesBalanceCleared() {
+		_spec.ClearField(attendanceday.FieldNetMinutesBalance, field.TypeInt)
 	}
 	if value, ok := _u.mutation.Edited(); ok {
 		_spec.SetField(attendanceday.FieldEdited, field.TypeBool, value)

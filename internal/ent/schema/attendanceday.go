@@ -36,6 +36,10 @@ func (AttendanceDay) Fields() []ent.Field {
 		field.Int("overtime_minutes").Optional().Nillable(),
 		// minutos de salida anticipada (positivo = salió antes del horario)
 		field.Int("early_exit_minutes").Optional().Nillable(),
+		// diferencia de colación respecto al turno (positivo = se pasó, negativo = tomó menos)
+		field.Int("break_diff_minutes").Optional().Nillable(),
+		// balance neto del día: horas extra - atraso - salida anticipada - exceso de colación
+		field.Int("net_minutes_balance").Optional().Nillable(),
 
 		// auditoría de edición manual
 		field.Bool("edited").Default(false),

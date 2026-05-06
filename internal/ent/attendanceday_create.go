@@ -153,6 +153,34 @@ func (_c *AttendanceDayCreate) SetNillableEarlyExitMinutes(v *int) *AttendanceDa
 	return _c
 }
 
+// SetBreakDiffMinutes sets the "break_diff_minutes" field.
+func (_c *AttendanceDayCreate) SetBreakDiffMinutes(v int) *AttendanceDayCreate {
+	_c.mutation.SetBreakDiffMinutes(v)
+	return _c
+}
+
+// SetNillableBreakDiffMinutes sets the "break_diff_minutes" field if the given value is not nil.
+func (_c *AttendanceDayCreate) SetNillableBreakDiffMinutes(v *int) *AttendanceDayCreate {
+	if v != nil {
+		_c.SetBreakDiffMinutes(*v)
+	}
+	return _c
+}
+
+// SetNetMinutesBalance sets the "net_minutes_balance" field.
+func (_c *AttendanceDayCreate) SetNetMinutesBalance(v int) *AttendanceDayCreate {
+	_c.mutation.SetNetMinutesBalance(v)
+	return _c
+}
+
+// SetNillableNetMinutesBalance sets the "net_minutes_balance" field if the given value is not nil.
+func (_c *AttendanceDayCreate) SetNillableNetMinutesBalance(v *int) *AttendanceDayCreate {
+	if v != nil {
+		_c.SetNetMinutesBalance(*v)
+	}
+	return _c
+}
+
 // SetEdited sets the "edited" field.
 func (_c *AttendanceDayCreate) SetEdited(v bool) *AttendanceDayCreate {
 	_c.mutation.SetEdited(v)
@@ -370,6 +398,14 @@ func (_c *AttendanceDayCreate) createSpec() (*AttendanceDay, *sqlgraph.CreateSpe
 	if value, ok := _c.mutation.EarlyExitMinutes(); ok {
 		_spec.SetField(attendanceday.FieldEarlyExitMinutes, field.TypeInt, value)
 		_node.EarlyExitMinutes = &value
+	}
+	if value, ok := _c.mutation.BreakDiffMinutes(); ok {
+		_spec.SetField(attendanceday.FieldBreakDiffMinutes, field.TypeInt, value)
+		_node.BreakDiffMinutes = &value
+	}
+	if value, ok := _c.mutation.NetMinutesBalance(); ok {
+		_spec.SetField(attendanceday.FieldNetMinutesBalance, field.TypeInt, value)
+		_node.NetMinutesBalance = &value
 	}
 	if value, ok := _c.mutation.Edited(); ok {
 		_spec.SetField(attendanceday.FieldEdited, field.TypeBool, value)

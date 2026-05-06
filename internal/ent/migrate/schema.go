@@ -85,6 +85,8 @@ var (
 		{Name: "late_minutes", Type: field.TypeInt, Nullable: true},
 		{Name: "overtime_minutes", Type: field.TypeInt, Nullable: true},
 		{Name: "early_exit_minutes", Type: field.TypeInt, Nullable: true},
+		{Name: "break_diff_minutes", Type: field.TypeInt, Nullable: true},
+		{Name: "net_minutes_balance", Type: field.TypeInt, Nullable: true},
 		{Name: "edited", Type: field.TypeBool, Default: false},
 		{Name: "last_edit_reason", Type: field.TypeString, Nullable: true},
 		{Name: "edited_at", Type: field.TypeTime, Nullable: true},
@@ -104,31 +106,31 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "attendance_days_access_points_attendance_days",
-				Columns:    []*schema.Column{AttendanceDaysColumns[14]},
+				Columns:    []*schema.Column{AttendanceDaysColumns[16]},
 				RefColumns: []*schema.Column{AccessPointsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "attendance_days_users_user",
-				Columns:    []*schema.Column{AttendanceDaysColumns[15]},
+				Columns:    []*schema.Column{AttendanceDaysColumns[17]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "attendance_days_branches_branch",
-				Columns:    []*schema.Column{AttendanceDaysColumns[16]},
+				Columns:    []*schema.Column{AttendanceDaysColumns[18]},
 				RefColumns: []*schema.Column{BranchesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "attendance_days_access_points_access_point",
-				Columns:    []*schema.Column{AttendanceDaysColumns[17]},
+				Columns:    []*schema.Column{AttendanceDaysColumns[19]},
 				RefColumns: []*schema.Column{AccessPointsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "attendance_days_users_attendance_days",
-				Columns:    []*schema.Column{AttendanceDaysColumns[18]},
+				Columns:    []*schema.Column{AttendanceDaysColumns[20]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -137,7 +139,7 @@ var (
 			{
 				Name:    "ux_attendance_day",
 				Unique:  true,
-				Columns: []*schema.Column{AttendanceDaysColumns[15], AttendanceDaysColumns[16], AttendanceDaysColumns[1]},
+				Columns: []*schema.Column{AttendanceDaysColumns[17], AttendanceDaysColumns[18], AttendanceDaysColumns[1]},
 			},
 		},
 	}

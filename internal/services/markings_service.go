@@ -85,6 +85,8 @@ type MarkingItem struct {
 	HasOvertime    bool       `json:"has_overtime"`
 	OvertimeMins   int        `json:"overtime_minutes"`
 	EarlyExitMins  int        `json:"early_exit_minutes"`
+	NetMinutes     int        `json:"net_minutes_balance"`
+	NetStatus      string     `json:"net_status"`
 	Edited         bool       `json:"edited"`
 	LastEditReason *string    `json:"last_edit_reason"`
 }
@@ -130,6 +132,7 @@ type shiftSchedule struct {
 	StartTime      string
 	EndTime        string
 	CrossesMidnight bool
+	BreakMinutes   int
 }
 
 func parseHHMM(hhmm string) (int, int, error) {
@@ -163,7 +166,7 @@ func toShiftDateTime(workDate time.Time, hhmm string, shift *shiftSchedule) (tim
 
 func (s *MarkingsService) getShiftSchedule(ctx context.Context, userID int, workDate time.Time) (*shiftSchedule, error) {
 	overrideQuery := `
-		SELECT sh.start_time, sh.end_time, sh.crosses_midnight
+		SELECT sh.start_time, sh.end_time, sh.crosses_midnight, sh.break_minutes
 		FROM user_day_overrides udo
 		JOIN shifts sh ON sh.id = udo.shift_id
 		WHERE udo.user_id = $1
@@ -174,16 +177,16 @@ func (s *MarkingsService) getShiftSchedule(ctx context.Context, userID int, work
 	`
 
 	var out shiftSchedule
-	err := s.db.QueryRowContext(ctx, overrideQuery, userID, workDate).Scan(&out.StartTime, &out.EndTime, &out.CrossesMidnight)
+	err := s.db.QueryRowContext(ctx, overrideQuery, userID, workDate).Scan(&out.StartTime, &out.EndTime, &out.CrossesMidnight, &out.BreakMinutes)
 	if err == nil {
 		return &out, nil
 	}
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
 	query := `
-		SELECT sh.start_time, sh.end_time, sh.crosses_midnight
+		SELECT sh.start_time, sh.end_time, sh.crosses_midnight, sh.break_minutes
 		FROM user_shift_assignments usa
 		JOIN shifts sh ON sh.id = usa.shift_id
 		WHERE usa.user_id = $1
@@ -194,7 +197,7 @@ func (s *MarkingsService) getShiftSchedule(ctx context.Context, userID int, work
 		LIMIT 1
 	`
 
-	err = s.db.QueryRowContext(ctx, query, userID, workDate).Scan(&out.StartTime, &out.EndTime, &out.CrossesMidnight)
+	err = s.db.QueryRowContext(ctx, query, userID, workDate).Scan(&out.StartTime, &out.EndTime, &out.CrossesMidnight, &out.BreakMinutes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -325,11 +328,26 @@ func (s *MarkingsService) List(ctx context.Context, f MarkingsFilters) (*Marking
 			ad.break_out_at,
 			ad.break_in_at,
 			COALESCE(ad.late_minutes, 0) AS late_minutes,
-			CASE WHEN ad.break_out_at IS NOT NULL AND ad.break_in_at IS NOT NULL THEN
-				ROUND(EXTRACT(EPOCH FROM (ad.break_in_at - ad.break_out_at)) / 60)::int - COALESCE(sh.break_minutes, 0)
+			CASE
+				WHEN ad.break_diff_minutes IS NOT NULL THEN ad.break_diff_minutes
+				WHEN ad.break_out_at IS NOT NULL AND ad.break_in_at IS NOT NULL THEN
+					ROUND(EXTRACT(EPOCH FROM (ad.break_in_at - ad.break_out_at)) / 60)::int - COALESCE(sh.break_minutes, 0)
 			ELSE NULL END AS break_diff,
 			COALESCE(ad.overtime_minutes, 0) AS overtime_minutes,
 			COALESCE(ad.early_exit_minutes, 0) AS early_exit_minutes,
+			COALESCE(
+				ad.net_minutes_balance,
+				COALESCE(ad.overtime_minutes, 0) -
+				COALESCE(ad.late_minutes, 0) -
+				COALESCE(ad.early_exit_minutes, 0) -
+				COALESCE(
+					ad.break_diff_minutes,
+					CASE
+						WHEN ad.break_out_at IS NOT NULL AND ad.break_in_at IS NOT NULL THEN ROUND(EXTRACT(EPOCH FROM (ad.break_in_at - ad.break_out_at)) / 60)::int - COALESCE(sh.break_minutes, 0)
+						ELSE 0
+					END
+				)
+			) AS net_minutes_balance,
 			ad.edited,
 			ad.last_edit_reason
 		FROM attendance_days ad
@@ -393,6 +411,7 @@ func (s *MarkingsService) List(ctx context.Context, f MarkingsFilters) (*Marking
 			&breakDiff,
 			&it.OvertimeMins,
 			&it.EarlyExitMins,
+			&it.NetMinutes,
 			&it.Edited,
 			&lastEditReason,
 		); err != nil {
@@ -436,6 +455,15 @@ func (s *MarkingsService) List(ctx context.Context, f MarkingsFilters) (*Marking
 			it.ExitDiff = -it.EarlyExitMins
 		} else {
 			it.ExitDiff = 0
+		}
+
+		switch {
+		case it.NetMinutes > 0:
+			it.NetStatus = "positive"
+		case it.NetMinutes < 0:
+			it.NetStatus = "negative"
+		default:
+			it.NetStatus = "neutral"
 		}
 
 		if it.WorkInAt == nil {
@@ -556,68 +584,71 @@ func (s *MarkingsService) Update(ctx context.Context, id int, in UpdateMarkingIn
 		}
 	}
 
+	breakOut := ad.BreakOutAt
+
 	if in.BreakOutAt != nil {
 		v := strings.TrimSpace(*in.BreakOutAt)
 		if v == "" {
 			update.ClearBreakOutAt()
+			breakOut = nil
 		} else {
 			t, parseErr := toShiftDateTime(ad.WorkDate, v, shift)
 			if parseErr != nil {
 				return nil, ErrInvalidMarkingUpdate
 			}
 			update.SetBreakOutAt(t)
+			breakOut = &t
 		}
 	}
+
+	breakIn := ad.BreakInAt
 
 	if in.BreakInAt != nil {
 		v := strings.TrimSpace(*in.BreakInAt)
 		if v == "" {
 			update.ClearBreakInAt()
+			breakIn = nil
 		} else {
 			t, parseErr := toShiftDateTime(ad.WorkDate, v, shift)
 			if parseErr != nil {
 				return nil, ErrInvalidMarkingUpdate
 			}
 			update.SetBreakInAt(t)
+			breakIn = &t
 		}
 	}
 
-	if shift != nil && workIn != nil {
-		startT, parseErr := toShiftDateTime(ad.WorkDate, shift.StartTime, nil)
-		if parseErr == nil {
-			late := int(workIn.Sub(startT).Minutes())
-			if late < 0 {
-				late = 0
-			}
-			update.SetLateMinutes(late)
-		}
+	metrics := computeAttendanceMetrics(ad.WorkDate, attendanceMetricsSchedule{
+		StartTime:       shift.StartTime,
+		EndTime:         shift.EndTime,
+		CrossesMidnight: shift.CrossesMidnight,
+		BreakMinutes:    shift.BreakMinutes,
+	}, workIn, breakOut, breakIn, workOut)
+
+	if metrics.LateMinutes != nil {
+		update.SetLateMinutes(*metrics.LateMinutes)
 	} else {
 		update.ClearLateMinutes()
 	}
-
-	if shift != nil && workOut != nil {
-		h, m, parseErr := parseHHMM(shift.EndTime)
-		if parseErr == nil {
-			endT := time.Date(ad.WorkDate.Year(), ad.WorkDate.Month(), ad.WorkDate.Day(), h, m, 0, 0, ad.WorkDate.Location())
-			if shift.CrossesMidnight {
-				endT = endT.Add(24 * time.Hour)
-			}
-
-			diff := int(workOut.Sub(endT).Minutes())
-			if diff > 0 {
-				update.SetOvertimeMinutes(diff)
-				update.SetEarlyExitMinutes(0)
-			} else if diff < 0 {
-				update.SetEarlyExitMinutes(-diff)
-				update.SetOvertimeMinutes(0)
-			} else {
-				update.SetEarlyExitMinutes(0)
-				update.SetOvertimeMinutes(0)
-			}
-		}
+	if metrics.BreakDiffMinutes != nil {
+		update.SetBreakDiffMinutes(*metrics.BreakDiffMinutes)
+	} else {
+		update.ClearBreakDiffMinutes()
+	}
+	if metrics.OvertimeMinutes != nil {
+		update.SetOvertimeMinutes(*metrics.OvertimeMinutes)
 	} else {
 		update.ClearOvertimeMinutes()
+	}
+	if metrics.EarlyExitMinutes != nil {
+		update.SetEarlyExitMinutes(*metrics.EarlyExitMinutes)
+	} else {
 		update.ClearEarlyExitMinutes()
+	}
+	if metrics.NetMinutes != nil {
+		update.SetNetMinutesBalance(*metrics.NetMinutes)
+	} else {
+		update.ClearNetMinutesBalance()
 	}
 
 	now := time.Now()

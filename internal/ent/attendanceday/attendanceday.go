@@ -36,6 +36,10 @@ const (
 	FieldOvertimeMinutes = "overtime_minutes"
 	// FieldEarlyExitMinutes holds the string denoting the early_exit_minutes field in the database.
 	FieldEarlyExitMinutes = "early_exit_minutes"
+	// FieldBreakDiffMinutes holds the string denoting the break_diff_minutes field in the database.
+	FieldBreakDiffMinutes = "break_diff_minutes"
+	// FieldNetMinutesBalance holds the string denoting the net_minutes_balance field in the database.
+	FieldNetMinutesBalance = "net_minutes_balance"
 	// FieldEdited holds the string denoting the edited field in the database.
 	FieldEdited = "edited"
 	// FieldLastEditReason holds the string denoting the last_edit_reason field in the database.
@@ -91,6 +95,8 @@ var Columns = []string{
 	FieldLateMinutes,
 	FieldOvertimeMinutes,
 	FieldEarlyExitMinutes,
+	FieldBreakDiffMinutes,
+	FieldNetMinutesBalance,
 	FieldEdited,
 	FieldLastEditReason,
 	FieldEditedAt,
@@ -192,6 +198,16 @@ func ByOvertimeMinutes(opts ...sql.OrderTermOption) OrderOption {
 // ByEarlyExitMinutes orders the results by the early_exit_minutes field.
 func ByEarlyExitMinutes(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEarlyExitMinutes, opts...).ToFunc()
+}
+
+// ByBreakDiffMinutes orders the results by the break_diff_minutes field.
+func ByBreakDiffMinutes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBreakDiffMinutes, opts...).ToFunc()
+}
+
+// ByNetMinutesBalance orders the results by the net_minutes_balance field.
+func ByNetMinutesBalance(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNetMinutesBalance, opts...).ToFunc()
 }
 
 // ByEdited orders the results by the edited field.

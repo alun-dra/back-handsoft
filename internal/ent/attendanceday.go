@@ -42,6 +42,10 @@ type AttendanceDay struct {
 	OvertimeMinutes *int `json:"overtime_minutes,omitempty"`
 	// EarlyExitMinutes holds the value of the "early_exit_minutes" field.
 	EarlyExitMinutes *int `json:"early_exit_minutes,omitempty"`
+	// BreakDiffMinutes holds the value of the "break_diff_minutes" field.
+	BreakDiffMinutes *int `json:"break_diff_minutes,omitempty"`
+	// NetMinutesBalance holds the value of the "net_minutes_balance" field.
+	NetMinutesBalance *int `json:"net_minutes_balance,omitempty"`
 	// Edited holds the value of the "edited" field.
 	Edited bool `json:"edited,omitempty"`
 	// LastEditReason holds the value of the "last_edit_reason" field.
@@ -113,7 +117,7 @@ func (*AttendanceDay) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case attendanceday.FieldEdited:
 			values[i] = new(sql.NullBool)
-		case attendanceday.FieldID, attendanceday.FieldUserID, attendanceday.FieldBranchID, attendanceday.FieldAccessPointID, attendanceday.FieldLateMinutes, attendanceday.FieldOvertimeMinutes, attendanceday.FieldEarlyExitMinutes:
+		case attendanceday.FieldID, attendanceday.FieldUserID, attendanceday.FieldBranchID, attendanceday.FieldAccessPointID, attendanceday.FieldLateMinutes, attendanceday.FieldOvertimeMinutes, attendanceday.FieldEarlyExitMinutes, attendanceday.FieldBreakDiffMinutes, attendanceday.FieldNetMinutesBalance:
 			values[i] = new(sql.NullInt64)
 		case attendanceday.FieldLastEditReason:
 			values[i] = new(sql.NullString)
@@ -217,6 +221,20 @@ func (_m *AttendanceDay) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.EarlyExitMinutes = new(int)
 				*_m.EarlyExitMinutes = int(value.Int64)
+			}
+		case attendanceday.FieldBreakDiffMinutes:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field break_diff_minutes", values[i])
+			} else if value.Valid {
+				_m.BreakDiffMinutes = new(int)
+				*_m.BreakDiffMinutes = int(value.Int64)
+			}
+		case attendanceday.FieldNetMinutesBalance:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field net_minutes_balance", values[i])
+			} else if value.Valid {
+				_m.NetMinutesBalance = new(int)
+				*_m.NetMinutesBalance = int(value.Int64)
 			}
 		case attendanceday.FieldEdited:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -361,6 +379,16 @@ func (_m *AttendanceDay) String() string {
 	builder.WriteString(", ")
 	if v := _m.EarlyExitMinutes; v != nil {
 		builder.WriteString("early_exit_minutes=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.BreakDiffMinutes; v != nil {
+		builder.WriteString("break_diff_minutes=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.NetMinutesBalance; v != nil {
+		builder.WriteString("net_minutes_balance=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

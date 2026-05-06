@@ -251,12 +251,27 @@ func (s *AttendanceService) createAttendance(ctx context.Context, shift *ent.Shi
 		SetWorkDate(workDate).
 		SetWorkInAt(now)
 
-	if startTime, err := parseShiftTime(workDate, shift.StartTime); err == nil {
-		lateMin := int(now.Sub(startTime).Minutes())
-		if lateMin < 0 {
-			lateMin = 0
-		}
-		create.SetLateMinutes(lateMin)
+	metrics := computeAttendanceMetrics(workDate, attendanceMetricsSchedule{
+		StartTime:       shift.StartTime,
+		EndTime:         shift.EndTime,
+		CrossesMidnight: shift.CrossesMidnight,
+		BreakMinutes:    shift.BreakMinutes,
+	}, &now, nil, nil, nil)
+
+	if metrics.LateMinutes != nil {
+		create.SetLateMinutes(*metrics.LateMinutes)
+	}
+	if metrics.BreakDiffMinutes != nil {
+		create.SetBreakDiffMinutes(*metrics.BreakDiffMinutes)
+	}
+	if metrics.OvertimeMinutes != nil {
+		create.SetOvertimeMinutes(*metrics.OvertimeMinutes)
+	}
+	if metrics.EarlyExitMinutes != nil {
+		create.SetEarlyExitMinutes(*metrics.EarlyExitMinutes)
+	}
+	if metrics.NetMinutes != nil {
+		create.SetNetMinutesBalance(*metrics.NetMinutes)
 	}
 
 	return create.Save(ctx)
@@ -268,42 +283,59 @@ func (s *AttendanceService) updateAttendance(ctx context.Context, shift *ent.Shi
 		update.SetAccessPointID(accessPointID)
 	}
 
+	workIn := attendance.WorkInAt
+	breakOut := attendance.BreakOutAt
+	breakIn := attendance.BreakInAt
+	workOut := attendance.WorkOutAt
+
 	switch {
 	case attendance.WorkInAt == nil:
 		update.SetWorkInAt(now)
-		if startTime, err := parseShiftTime(attendance.WorkDate, shift.StartTime); err == nil {
-			lateMin := int(now.Sub(startTime).Minutes())
-			if lateMin < 0 {
-				lateMin = 0
-			}
-			update.SetLateMinutes(lateMin)
-		}
+		workIn = &now
 	case attendance.BreakOutAt == nil:
 		update.SetBreakOutAt(now)
+		breakOut = &now
 	case attendance.BreakInAt == nil:
 		update.SetBreakInAt(now)
+		breakIn = &now
 	case attendance.WorkOutAt == nil:
 		update.SetWorkOutAt(now)
-		endTime, err := parseShiftTime(attendance.WorkDate, shift.EndTime)
-		if err == nil {
-			// Para turnos nocturnos el end_time es al día siguiente del work_date
-			if shift.CrossesMidnight {
-				endTime = endTime.Add(24 * time.Hour)
-			}
-			diff := int(now.Sub(endTime).Minutes())
-			if diff > 0 {
-				update.SetOvertimeMinutes(diff)
-				update.SetEarlyExitMinutes(0)
-			} else if diff < 0 {
-				update.SetEarlyExitMinutes(-diff)
-				update.SetOvertimeMinutes(0)
-			} else {
-				update.SetOvertimeMinutes(0)
-				update.SetEarlyExitMinutes(0)
-			}
-		}
+		workOut = &now
 	default:
 		return nil, ErrAttendanceAlreadyCompleted
+	}
+
+	metrics := computeAttendanceMetrics(attendance.WorkDate, attendanceMetricsSchedule{
+		StartTime:       shift.StartTime,
+		EndTime:         shift.EndTime,
+		CrossesMidnight: shift.CrossesMidnight,
+		BreakMinutes:    shift.BreakMinutes,
+	}, workIn, breakOut, breakIn, workOut)
+
+	if metrics.LateMinutes != nil {
+		update.SetLateMinutes(*metrics.LateMinutes)
+	} else {
+		update.ClearLateMinutes()
+	}
+	if metrics.BreakDiffMinutes != nil {
+		update.SetBreakDiffMinutes(*metrics.BreakDiffMinutes)
+	} else {
+		update.ClearBreakDiffMinutes()
+	}
+	if metrics.OvertimeMinutes != nil {
+		update.SetOvertimeMinutes(*metrics.OvertimeMinutes)
+	} else {
+		update.ClearOvertimeMinutes()
+	}
+	if metrics.EarlyExitMinutes != nil {
+		update.SetEarlyExitMinutes(*metrics.EarlyExitMinutes)
+	} else {
+		update.ClearEarlyExitMinutes()
+	}
+	if metrics.NetMinutes != nil {
+		update.SetNetMinutesBalance(*metrics.NetMinutes)
+	} else {
+		update.ClearNetMinutesBalance()
 	}
 
 	return update.Save(ctx)
